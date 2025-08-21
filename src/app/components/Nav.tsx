@@ -19,7 +19,7 @@ export default function Nav() {
         <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Funkcje</a>
         <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Cennik</a>
         <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Kontakt</a>
-        <a href="#" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Zaloguj się</a>
+        <Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Zaloguj się</Link>
       </nav>
 
       {/* Mobile Menu Button */}
@@ -45,7 +45,7 @@ export default function Nav() {
           <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Funkcje</a>
           <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Cennik</a>
           <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Kontakt</a>
-          <a href="#" className="py-3 px-4 mt-2 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 transition-colors">Zaloguj się</a>
+          <Link href="/login" className="py-3 px-4 mt-2 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 transition-colors">Zaloguj się</Link>
         </nav>
       </div>
     </header>
