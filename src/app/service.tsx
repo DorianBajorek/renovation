@@ -1,7 +1,7 @@
 import { Sofa, Home, Building, Briefcase } from "lucide-react";
-import roomsData from "@/app/fake-db/rooms.json";
-import projectsData from "@/app/fake-db/projects.json";
 import { Room, Project, IconMap } from "./types";
+import { getRooms as getRoomsFromSupabase, addRoom as addRoomToSupabase } from "@/lib/supabase-service";
+import { getProjects as getProjectsFromSupabase, addProject as addProjectToSupabase, updateProject as updateProjectInSupabase, deleteProject as deleteProjectFromSupabase } from "@/lib/supabase-service";
 
 export const iconMap: IconMap = { 
   Sofa, 
@@ -12,118 +12,57 @@ export const iconMap: IconMap = {
 
 export const getRooms = async (): Promise<Room[]> => {
   try {
-    const response = await fetch('/api/rooms');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.map((room: any) => ({
+    const rooms = await getRoomsFromSupabase();
+    return rooms.map((room: any) => ({
       ...room,
       icon: iconMap[room.icon] || Sofa,
     }));
   } catch (error) {
     console.error('Error fetching rooms:', error);
-    // Fallback to local data if API fails
-    return roomsData.map((room: any) => ({
-      ...room,
-      icon: iconMap[room.icon] || Sofa,
-    }));
+    return [];
   }
 };
 
 export const addRoom = async (room: { name: string; budget: number }) => {
   try {
-    const response = await fetch('/api/rooms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(room),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    const newRoom = await addRoomToSupabase(room);
+    return {
+      ...newRoom,
+      icon: iconMap[newRoom.icon] || Sofa,
+    };
   } catch (error) {
     console.error('Error adding room:', error);
-    // Fallback: create room locally
-    const newRoom = { ...room, icon: Sofa };
-    return newRoom;
+    throw error;
   }
 };
 
 export const getProjects = async (): Promise<Project[]> => {
   try {
-    const response = await fetch('/api/projects');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    // Validate and transform the data to match our Project interface
-    const projects: Project[] = data.map((project: any) => ({
+    const projects = await getProjectsFromSupabase();
+    return projects.map((project: any) => ({
       ...project,
       status: project.status as 'active' | 'planning' | 'completed'
     }));
-    
-    return projects;
   } catch (error) {
     console.error('Error fetching projects:', error);
-    
-    // Fallback to local data if API fails
-    return projectsData.map((project: any) => ({
-      ...project,
-      status: project.status as 'active' | 'planning' | 'completed'
-    }));
+    return [];
   }
 };
 
 export const addProject = async (project: Omit<Project, 'id'>) => {
   try {
-    const response = await fetch('/api/projects', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(project),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    const newProject = await addProjectToSupabase(project);
+    return newProject;
   } catch (error) {
     console.error('Error adding project:', error);
-    // Fallback: create project locally
-    const newProject = { 
-      ...project, 
-      id: Date.now().toString(),
-      icon: project.icon || 'Home'
-    };
-    return newProject;
+    throw error;
   }
 };
 
 export const updateProject = async (id: string, updates: Partial<Project>) => {
   try {
-    const response = await fetch(`/api/projects/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    const updatedProject = await updateProjectInSupabase(id, updates);
+    return updatedProject;
   } catch (error) {
     console.error('Error updating project:', error);
     return null;
@@ -132,15 +71,8 @@ export const updateProject = async (id: string, updates: Partial<Project>) => {
 
 export const deleteProject = async (id: string) => {
   try {
-    const response = await fetch(`/api/projects/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return true;
+    const result = await deleteProjectFromSupabase(id);
+    return result;
   } catch (error) {
     console.error('Error deleting project:', error);
     return false;
