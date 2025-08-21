@@ -11,56 +11,138 @@ export const iconMap: IconMap = {
 };
 
 export const getRooms = async (): Promise<Room[]> => {
-  const stored = localStorage.getItem("rooms");
-  const data = stored ? JSON.parse(stored) : roomsData;
-  return data.map((room: any) => ({
-    ...room,
-    icon: iconMap[room.icon] || Sofa,
-  }));
+  try {
+    const response = await fetch('/api/rooms');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.map((room: any) => ({
+      ...room,
+      icon: iconMap[room.icon] || Sofa,
+    }));
+  } catch (error) {
+    console.error('Error fetching rooms:', error);
+    // Fallback to local data if API fails
+    return roomsData.map((room: any) => ({
+      ...room,
+      icon: iconMap[room.icon] || Sofa,
+    }));
+  }
 };
 
 export const addRoom = async (room: { name: string; budget: number }) => {
-  const stored = localStorage.getItem("rooms");
-  const data = stored ? JSON.parse(stored) : roomsData;
-  const newRoom = { ...room, icon: Sofa };
-  data.push(newRoom);
-  localStorage.setItem("rooms", JSON.stringify(data));
-  return newRoom;
+  try {
+    const response = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(room),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error adding room:', error);
+    // Fallback: create room locally
+    const newRoom = { ...room, icon: Sofa };
+    return newRoom;
+  }
 };
 
 export const getProjects = async (): Promise<Project[]> => {
-  const stored = localStorage.getItem("projects");
-  const data = stored ? JSON.parse(stored) : projectsData;
-  return data;
+  try {
+    const response = await fetch('/api/projects');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Validate and transform the data to match our Project interface
+    const projects: Project[] = data.map((project: any) => ({
+      ...project,
+      status: project.status as 'active' | 'planning' | 'completed'
+    }));
+    
+    return projects;
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    
+    // Fallback to local data if API fails
+    return projectsData.map((project: any) => ({
+      ...project,
+      status: project.status as 'active' | 'planning' | 'completed'
+    }));
+  }
 };
 
 export const addProject = async (project: Omit<Project, 'id'>) => {
-  const stored = localStorage.getItem("projects");
-  const data = stored ? JSON.parse(stored) : projectsData;
-  const newProject = { 
-    ...project, 
-    id: Date.now().toString(),
-    icon: project.icon || 'Home'
-  };
-  data.push(newProject);
-  localStorage.setItem("projects", JSON.stringify(data));
-  return newProject;
+  try {
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(project),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error adding project:', error);
+    // Fallback: create project locally
+    const newProject = { 
+      ...project, 
+      id: Date.now().toString(),
+      icon: project.icon || 'Home'
+    };
+    return newProject;
+  }
 };
 
 export const updateProject = async (id: string, updates: Partial<Project>) => {
-  const stored = localStorage.getItem("projects");
-  const data = stored ? JSON.parse(stored) : projectsData;
-  const updatedData = data.map((project: Project) => 
-    project.id === id ? { ...project, ...updates } : project
-  );
-  localStorage.setItem("projects", JSON.stringify(updatedData));
-  return updatedData.find((project: Project) => project.id === id);
+  try {
+    const response = await fetch(`/api/projects/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating project:', error);
+    return null;
+  }
 };
 
 export const deleteProject = async (id: string) => {
-  const stored = localStorage.getItem("projects");
-  const data = stored ? JSON.parse(stored) : projectsData;
-  const filteredData = data.filter((project: Project) => project.id !== id);
-  localStorage.setItem("projects", JSON.stringify(filteredData));
-  return true;
+  try {
+    const response = await fetch(`/api/projects/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    return false;
+  }
 };
