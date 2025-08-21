@@ -1,0 +1,6 @@
+[
+  { "name": "Salon", "icon": "Sofa", "budget": 1250 },
+  { "name": "Sypialnia", "icon": "Bed", "budget": 870 },
+  { "name": "Łazienka", "icon": "Bath", "budget": 430 },
+  { "name": "Kuchnia", "icon": "Utensils", "budget": 650 }
+]
