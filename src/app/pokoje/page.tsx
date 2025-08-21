@@ -1,7 +1,8 @@
 "use client";
 import { Plus, Home, ChevronRight, PieChart, Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getRooms, addRoom, Room } from "../service";
+import { getRooms, addRoom } from "../service";
+import { Room } from "../types";
 import { AddRoomForm } from "./AddRoomForm";
 
 interface AddRoomFormProps {

@@ -24,7 +24,13 @@ export default function Home() {
               href="/pokoje"
               className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
             >
-              Wypróbuj za darmo
+              Zarządzaj pokojami
+            </Link>
+            <Link
+              href="/projekty"
+              className="px-8 py-4 rounded-xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
+            >
+              Zarządzaj projektami
             </Link>
             <a
               href="#"
@@ -185,7 +191,13 @@ export default function Home() {
               href="/pokoje"
               className="px-8 py-4 rounded-xl bg-white text-blue-600 font-semibold shadow-lg hover:bg-blue-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
             >
-              Wypróbuj za darmo
+              Zarządzaj pokojami
+            </Link>
+            <Link
+              href="/projekty"
+              className="px-8 py-4 rounded-xl bg-white text-green-600 font-semibold shadow-lg hover:bg-green-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
+            >
+              Zarządzaj projektami
             </Link>
             <a
               href="#"

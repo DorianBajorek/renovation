@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { addRoom, Room } from "../service";
+import { addRoom } from "../service";
+import { Room } from "../types";
 import { Home } from "lucide-react";
 
 interface AddRoomFormProps {
