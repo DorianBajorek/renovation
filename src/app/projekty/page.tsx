@@ -1,20 +1,119 @@
 "use client";
-import { Plus, FolderOpen, ChevronRight, PieChart, Download, Calendar, Users, Home, Building, Briefcase } from "lucide-react";
+import { Plus, FolderOpen, ChevronRight, PieChart, Download, Calendar, Users, Home, Building, Briefcase, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getProjects } from "../service";
 import { Project } from "../types";
 import { AddProjectForm } from "../projekty/AddProjectForm";
+import { useAuth } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 export default function ProjektyPage() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    projectId: string | null;
+    projectName: string;
+  }>({
+    isOpen: false,
+    projectId: null,
+    projectName: ''
+  });
 
   useEffect(() => {
-    getProjects().then(setProjects);
-  }, []);
+    if (user) {
+      fetch(`/api/projects?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Map database fields to frontend format and deduplicate by ID
+            const mappedProjects = data.map(project => ({
+              ...project,
+              startDate: project.start_date || project.startDate,
+              endDate: project.end_date || project.endDate,
+            }));
+            
+            // Remove duplicates based on ID
+            const uniqueProjects = mappedProjects.filter((project, index, self) => 
+              index === self.findIndex(p => p.id === project.id)
+            );
+            
+            setProjects(uniqueProjects);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching projects:', error);
+        });
+    }
+  }, [user]);
 
-  const handleAddProject = (project: Project) => {
-    setProjects((prev) => [...prev, project]);
+  const handleAddProject = async (project: Project) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...project,
+          userId: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh data from server after successful addition
+        const refreshResponse = await fetch(`/api/projects?userId=${user.id}`);
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          if (Array.isArray(refreshedData)) {
+            const mappedProjects = refreshedData.map(project => ({
+              ...project,
+              startDate: project.start_date || project.startDate,
+              endDate: project.end_date || project.endDate,
+            }));
+            setProjects(mappedProjects);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error adding project:', error);
+    }
+  };
+
+  const handleProjectFormClose = () => {
+    setShowForm(false);
+  };
+
+  const handleDeleteProject = (projectId: string, projectName: string) => {
+    setDeleteModal({
+      isOpen: true,
+      projectId,
+      projectName
+    });
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!deleteModal.projectId || !user) return;
+
+    try {
+      const response = await fetch(`/api/projects/${deleteModal.projectId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the project from the local state
+        setProjects(prevProjects => 
+          prevProjects.filter(project => project.id !== deleteModal.projectId)
+        );
+      } else {
+        console.error('Failed to delete project');
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+    }
   };
 
   const totalBudget = projects.reduce((sum, project) => sum + project.budget, 0);
@@ -40,7 +139,8 @@ export default function ProjektyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex flex-col">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex flex-col">
       <div className="flex justify-center py-10 px-6">
         <div className="flex items-center gap-3 bg-white/80 backdrop-blur-lg px-8 py-4 rounded-2xl shadow-lg border border-white/30">
           <FolderOpen size={32} className="text-black" />
@@ -167,6 +267,14 @@ export default function ProjektyPage() {
                   <button className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
                     <Users size={16} />
                   </button>
+                  <button 
+                    onClick={() => project.id && handleDeleteProject(project.id, project.name)}
+                    className="px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                    title="Usuń projekt"
+                    disabled={!project.id}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             );
@@ -192,9 +300,21 @@ export default function ProjektyPage() {
       {showForm && (
         <AddProjectForm
           onAdd={handleAddProject}
-          onClose={() => setShowForm(false)}
+          onClose={handleProjectFormClose}
         />
       )}
-    </div>
+
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, projectId: null, projectName: '' })}
+        onConfirm={confirmDeleteProject}
+        title="Usuń projekt"
+        message={`Czy na pewno chcesz usunąć projekt "${deleteModal.projectName}"? Ta operacja jest nieodwracalna.`}
+        confirmText="Usuń"
+        cancelText="Anuluj"
+        type="danger"
+      />
+      </div>
+    </ProtectedRoute>
   );
 }

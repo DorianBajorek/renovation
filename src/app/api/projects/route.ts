@@ -1,10 +1,35 @@
-import { NextResponse } from 'next/server';
-import projectsData from '@/app/fake-db/projects.json';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Return the projects data with proper headers
-    return NextResponse.json(projectsData, {
+    // Get user ID from query parameters (in a real app, you'd get this from session/token)
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch projects for the specific user
+    const { data: projects, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch projects' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(projects, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -23,30 +48,44 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.description || !body.budget) {
+    if (!body.name || !body.description || !body.budget || !body.userId) {
       return NextResponse.json(
-        { error: 'Name, description, and budget are required' },
+        { error: 'Name, description, budget, and userId are required' },
         { status: 400 }
       );
     }
 
-    // Create new project (in a real app, you'd save to database)
-    const newProject = {
-      id: Date.now().toString(),
+    // Create new project in database
+    const projectData = {
+      user_id: body.userId,
       name: body.name,
       description: body.description,
       budget: body.budget,
-      startDate: body.startDate || new Date().toISOString().split('T')[0],
-      endDate: body.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      start_date: body.startDate || body.start_date || new Date().toISOString().split('T')[0],
+      end_date: body.endDate || body.end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: body.status || 'planning',
       rooms: body.rooms || [],
       icon: body.icon || 'Home'
     };
+    
+    const { data: newProject, error } = await supabase
+      .from('projects')
+      .insert(projectData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to create project' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(newProject, {
       status: 201,

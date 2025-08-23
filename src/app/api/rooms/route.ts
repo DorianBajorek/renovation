@@ -1,9 +1,35 @@
-import { NextResponse } from 'next/server';
-import roomsData from '@/app/fake-db/rooms.json';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    return NextResponse.json(roomsData, {
+    // Get user ID from query parameters (in a real app, you'd get this from session/token)
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch rooms for the specific user
+    const { data: rooms, error } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch rooms' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(rooms, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -22,24 +48,37 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.budget) {
+    if (!body.name || !body.budget || !body.userId) {
       return NextResponse.json(
-        { error: 'Name and budget are required' },
+        { error: 'Name, budget, and userId are required' },
         { status: 400 }
       );
     }
 
-    // Create new room (in a real app, you'd save to database)
-    const newRoom = {
-      name: body.name,
-      budget: body.budget,
-      icon: 'Sofa' // Default icon
-    };
+    // Create new room in database
+    const { data: newRoom, error } = await supabase
+      .from('rooms')
+      .insert({
+        user_id: body.userId,
+        name: body.name,
+        budget: body.budget,
+        icon: body.icon || 'Sofa'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to create room' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(newRoom, {
       status: 201,

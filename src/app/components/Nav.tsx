@@ -1,8 +1,10 @@
 "use client"
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Nav() {
+  const { user, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -14,12 +16,28 @@ export default function Nav() {
       
       {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-6 items-center text-sm font-medium">
-        <Link href="/pokoje" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Pokoje</Link>
-        <Link href="/projekty" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Projekty</Link>
-        <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Funkcje</a>
-        <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Cennik</a>
-        <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Kontakt</a>
-        <Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Zaloguj się</Link>
+        {isAuthenticated ? (
+          <>
+            <Link href="/pokoje" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Pokoje</Link>
+            <Link href="/projekty" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Projekty</Link>
+            <div className="flex items-center gap-4">
+              <span className="text-gray-600 text-sm">Witaj, {user?.firstName}!</span>
+              <button 
+                onClick={logout}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Wyloguj się
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Funkcje</a>
+            <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Cennik</a>
+            <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Kontakt</a>
+            <Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Zaloguj się</Link>
+          </>
+        )}
       </nav>
 
       {/* Mobile Menu Button */}
@@ -40,12 +58,26 @@ export default function Nav() {
       {/* Mobile Navigation */}
       <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-full left-0 w-full bg-white shadow-lg border-b border-gray-200 z-10`}>
         <nav className="flex flex-col p-4 gap-2">
-          <Link href="/pokoje" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Pokoje</Link>
-          <Link href="/projekty" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Projekty</Link>
-          <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Funkcje</a>
-          <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Cennik</a>
-          <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Kontakt</a>
-          <Link href="/login" className="py-3 px-4 mt-2 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 transition-colors">Zaloguj się</Link>
+          {isAuthenticated ? (
+            <>
+              <Link href="/pokoje" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Pokoje</Link>
+              <Link href="/projekty" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Projekty</Link>
+              <div className="py-3 px-4 text-gray-600 text-sm">Witaj, {user?.firstName}!</div>
+              <button 
+                onClick={logout}
+                className="py-3 px-4 mt-2 bg-red-600 text-white rounded-lg text-center hover:bg-red-700 transition-colors"
+              >
+                Wyloguj się
+              </button>
+            </>
+          ) : (
+            <>
+              <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Funkcje</a>
+              <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Cennik</a>
+              <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Kontakt</a>
+              <Link href="/login" className="py-3 px-4 mt-2 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 transition-colors">Zaloguj się</Link>
+            </>
+          )}
         </nav>
       </div>
     </header>

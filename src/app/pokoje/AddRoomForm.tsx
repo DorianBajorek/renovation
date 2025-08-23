@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { addRoom } from "../service";
 import { Room } from "../types";
 import { Home } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AddRoomFormProps {
   onAdd: (room: Room) => void;
@@ -10,15 +10,42 @@ interface AddRoomFormProps {
 }
 
 export const AddRoomForm = ({ onAdd, onClose }: AddRoomFormProps) => {
+  const { user } = useAuth();
   const [name, setName] = useState("");
   const [budget, setBudget] = useState<number>(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || budget <= 0) return;
-    const newRoom = await addRoom({ name, budget });
-    onAdd(newRoom);
-    onClose();
+    
+    try {
+      if (!user) {
+        throw new Error("Użytkownik nie jest zalogowany");
+      }
+
+      const response = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          budget,
+          userId: user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Błąd podczas dodawania pokoju');
+      }
+
+      // Don't call onAdd here since the parent component will refresh data from server
+      onClose();
+    } catch (error) {
+      console.error("Błąd podczas dodawania pokoju:", error);
+      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas dodawania pokoju');
+    }
   };
 
   return (

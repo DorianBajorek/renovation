@@ -58,14 +58,36 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     
-    // TODO: Implement actual registration logic here
-    console.log("Registration attempt:", formData);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Błąd podczas rejestracji');
+      }
+
+      // Rejestracja udana - przekierowanie do logowania
+      alert('Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.');
+      window.location.href = '/login';
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas rejestracji');
+    } finally {
       setIsLoading(false);
-      // TODO: Handle registration success/error
-    }, 1000);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

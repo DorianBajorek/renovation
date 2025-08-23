@@ -1,8 +1,8 @@
 "use client";
 import { X, Home, Building, Briefcase, Calendar } from "lucide-react";
 import { useState } from "react";
-import { addProject } from "../service";
 import { Project, FormErrors } from "../types";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AddProjectFormProps {
   onAdd: (project: Project) => void;
@@ -22,6 +22,7 @@ const statusOptions = [
 ];
 
 export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -55,21 +56,38 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
     }
 
     try {
-      const newProject = await addProject({
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        budget: Number(formData.budget),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        status: formData.status,
-        icon: formData.icon,
-        rooms: formData.rooms,
+      if (!user) {
+        throw new Error("Użytkownik nie jest zalogowany");
+      }
+
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          budget: Number(formData.budget),
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          status: formData.status,
+          icon: formData.icon,
+          rooms: formData.rooms,
+          userId: user.id,
+        }),
       });
-      
-      onAdd(newProject);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Błąd podczas dodawania projektu');
+      }
+
+      // Don't call onAdd here since the parent component will refresh data from server
       onClose();
     } catch (error) {
       console.error("Błąd podczas dodawania projektu:", error);
+      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas dodawania projektu');
     }
   };
 

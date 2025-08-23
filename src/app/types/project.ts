@@ -1,6 +1,7 @@
 // Project related interfaces
 export interface Project {
-  id: string;
+  id?: string;
+  user_id?: string;
   name: string;
   description: string;
   budget: number;
@@ -9,6 +10,8 @@ export interface Project {
   status: 'active' | 'planning' | 'completed';
   rooms: string[];
   icon: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Status types

@@ -1,9 +1,39 @@
 export interface Database {
   public: {
     Tables: {
+      users: {
+        Row: {
+          id: string;
+          email: string;
+          password_hash: string;
+          first_name: string;
+          last_name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          password_hash: string;
+          first_name: string;
+          last_name: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          password_hash?: string;
+          first_name?: string;
+          last_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       rooms: {
         Row: {
           id: string;
+          user_id: string;
           name: string;
           budget: number;
           icon: string;
@@ -12,6 +42,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          user_id: string;
           name: string;
           budget: number;
           icon?: string;
@@ -20,6 +51,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          user_id?: string;
           name?: string;
           budget?: number;
           icon?: string;
@@ -30,6 +62,7 @@ export interface Database {
       projects: {
         Row: {
           id: string;
+          user_id: string;
           name: string;
           description: string;
           budget: number;
@@ -43,6 +76,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          user_id: string;
           name: string;
           description: string;
           budget: number;
@@ -56,6 +90,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          user_id?: string;
           name?: string;
           description?: string;
           budget?: number;

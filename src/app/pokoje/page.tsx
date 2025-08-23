@@ -1,9 +1,10 @@
 "use client";
 import { Plus, Home, ChevronRight, PieChart, Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getRooms, addRoom } from "../service";
 import { Room } from "../types";
 import { AddRoomForm } from "./AddRoomForm";
+import { useAuth } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 interface AddRoomFormProps {
   onAdd: (room: Room) => void;
@@ -11,21 +12,79 @@ interface AddRoomFormProps {
 }
 
 export default function PokojePage() {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    getRooms().then(setRooms);
-  }, []);
+    if (user) {
+      fetch(`/api/rooms?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Map database fields to frontend format and deduplicate by ID
+            const mappedRooms = data.map(room => ({
+              ...room,
+              icon: room.icon || 'Sofa', // Ensure icon is always set
+            }));
+            
+            // Remove duplicates based on ID
+            const uniqueRooms = mappedRooms.filter((room, index, self) => 
+              index === self.findIndex(r => r.id === room.id)
+            );
+            
+            setRooms(uniqueRooms);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching rooms:', error);
+        });
+    }
+  }, [user]);
 
-  const handleAddRoom = (room: Room) => {
-    setRooms((prev) => [...prev, room]);
+  const handleAddRoom = async (room: Room) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...room,
+          userId: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh data from server after successful addition
+        const refreshResponse = await fetch(`/api/rooms?userId=${user.id}`);
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          if (Array.isArray(refreshedData)) {
+            const mappedRooms = refreshedData.map(room => ({
+              ...room,
+              icon: room.icon || 'Sofa', // Ensure icon is always set
+            }));
+            setRooms(mappedRooms);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error adding room:', error);
+    }
+  };
+
+  const handleRoomFormClose = () => {
+    setShowForm(false);
   };
 
   const totalBudget = rooms.reduce((sum, room) => sum + room.budget, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex flex-col">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex flex-col">
       <div className="flex justify-center py-10 px-6">
         <div className="flex items-center gap-3 bg-white/80 backdrop-blur-lg px-8 py-4 rounded-2xl shadow-lg border border-white/30">
           <Home size={32} className="text-black" />
@@ -129,9 +188,10 @@ export default function PokojePage() {
       {showForm && (
         <AddRoomForm
           onAdd={handleAddRoom}
-          onClose={() => setShowForm(false)}
+          onClose={handleRoomFormClose}
         />
       )}
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
