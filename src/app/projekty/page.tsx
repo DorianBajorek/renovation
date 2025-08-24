@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Project } from "../types";
 import { AddProjectForm } from "../projekty/AddProjectForm";
 import { EditProjectForm } from "../projekty/EditProjectForm";
+import { ExportModal } from "../components/ExportModal";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmationModal from "@/components/ConfirmationModal";
@@ -15,6 +16,7 @@ export default function ProjektyPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{
@@ -198,7 +200,16 @@ export default function ProjektyPage() {
                 <PieChart size={18} />
                 <span>Podgląd budżetu</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+              <button 
+                onClick={() => {
+                  if (!user?.id) {
+                    alert('Brak ID użytkownika');
+                    return;
+                  }
+                  setShowExportModal(true);
+                }}
+                className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+              >
                 <Download size={18} />
                 <span>Eksportuj</span>
               </button>
@@ -348,6 +359,19 @@ export default function ProjektyPage() {
         cancelText="Anuluj"
         type="danger"
       />
+
+      {showExportModal && (
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          roomId={"all"}
+          roomName="Wszystkie projekty"
+          userId={user?.id}
+          isProjectExport={true}
+          projectId={undefined}
+        />
+      )}
+
       </div>
     </ProtectedRoute>
   );

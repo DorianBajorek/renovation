@@ -8,6 +8,7 @@ export interface Product {
   quantity: number;
   category?: string;
   status: 'planned' | 'purchased' | 'installed';
+  room_name?: string; // Added for export functionality
   created_at?: string;
   updated_at?: string;
 }

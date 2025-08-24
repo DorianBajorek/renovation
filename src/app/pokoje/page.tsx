@@ -31,6 +31,7 @@ import { useEffect, useState } from "react";
 import { Room } from "../types";
 import { AddRoomForm } from "./AddRoomForm";
 import { EditRoomForm } from "./EditRoomForm";
+import { ExportModal } from "../components/ExportModal";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useRouter } from "next/navigation";
@@ -46,6 +47,7 @@ export default function PokojePage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -156,7 +158,16 @@ export default function PokojePage() {
                 <PieChart size={18} />
                 <span>Podgląd wydatków</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+              <button 
+                onClick={() => {
+                  if (!user?.id) {
+                    alert('Brak ID użytkownika');
+                    return;
+                  }
+                  setShowExportModal(true);
+                }}
+                className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+              >
                 <Download size={18} />
                 <span>Eksportuj</span>
               </button>
@@ -276,6 +287,19 @@ export default function PokojePage() {
            }}
          />
        )}
+
+       {showExportModal && (
+         <ExportModal
+           isOpen={showExportModal}
+           onClose={() => setShowExportModal(false)}
+           roomId={"all"}
+           roomName="Wszystkie pokoje"
+           userId={user?.id}
+           isProjectExport={false}
+         />
+       )}
+       
+       
       </div>
     </ProtectedRoute>
   );

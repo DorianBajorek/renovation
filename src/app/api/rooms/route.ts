@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const projectId = searchParams.get('projectId');
 
     if (!userId) {
       return NextResponse.json(
@@ -14,14 +15,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Get rooms with calculated expenses
-    const { data: rooms, error } = await supabase
+    let query = supabase
       .from('rooms')
       .select(`
         *,
         products:products(price, quantity)
       `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .eq('user_id', userId);
+    
+    // Add project filter if projectId is provided
+    if (projectId) {
+      query = query.eq('project_id', projectId);
+    }
+    
+    const { data: rooms, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Database error:', error);

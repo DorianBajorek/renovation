@@ -35,6 +35,7 @@ import {
 import { AddProductForm } from "../AddProductForm";
 import { EditProductForm } from "../EditProductForm";
 import { ProductList } from "../ProductList";
+import { ExportModal } from "../../components/ExportModal";
 
 interface RoomPageProps {
   params: Promise<{
@@ -51,6 +52,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [roomId, setRoomId] = useState<string>('');
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [showEditProductForm, setShowEditProductForm] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [addingProduct, setAddingProduct] = useState(false);
 
@@ -181,7 +183,10 @@ export default function RoomPage({ params }: RoomPageProps) {
                     <FileText size={18} />
                     <span>Podgląd wydatków</span>
                   </button>
-                  <button className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+                  <button 
+                    onClick={() => setShowExportModal(true)}
+                    className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                  >
                     <Download size={18} />
                     <span>Eksportuj</span>
                   </button>
@@ -308,6 +313,16 @@ export default function RoomPage({ params }: RoomPageProps) {
               setShowEditProductForm(false);
               setEditingProduct(null);
             }}
+          />
+        )}
+
+        {showExportModal && (
+          <ExportModal
+            isOpen={showExportModal}
+            onClose={() => setShowExportModal(false)}
+            roomId={roomId}
+            roomName={room.name}
+            userId={user?.id}
           />
         )}
       </div>
