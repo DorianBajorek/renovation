@@ -5,7 +5,33 @@ import { Product } from "../../types/product";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, FileText, Download, Package } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Plus, 
+  FileText, 
+  Download, 
+  Package,
+  Home, 
+  Sofa, 
+  Bed, 
+  Bath, 
+  Tv, 
+  Armchair, 
+  Utensils, 
+  Car, 
+  DoorOpen, 
+  TrendingUp, 
+  Monitor, 
+  Dumbbell,
+  Baby,
+  BookOpen,
+  Palette,
+  Music,
+  Gamepad2,
+  WashingMachine,
+  TreePine,
+  Sun
+} from "lucide-react";
 import { AddProductForm } from "../AddProductForm";
 import { EditProductForm } from "../EditProductForm";
 import { ProductList } from "../ProductList";
@@ -108,7 +134,15 @@ export default function RoomPage({ params }: RoomPageProps) {
         <div className="flex justify-center py-10 px-6">
           <div className="flex items-center gap-3 bg-white/80 backdrop-blur-lg px-8 py-4 rounded-2xl shadow-lg border border-white/30">
             <div className="p-2 rounded-xl bg-indigo-100">
-              <FileText size={32} className="text-indigo-600" />
+              {(() => {
+                const iconMap: Record<string, any> = { 
+                  Home, Sofa, Bed, Bath, Tv, Armchair, Utensils, Car, DoorOpen, 
+                  TrendingUp, Monitor, Dumbbell, Baby, BookOpen, Palette, Music, 
+                  Gamepad2, WashingMachine, TreePine, Sun 
+                };
+                const Icon = iconMap[room.icon] || Home;
+                return <Icon size={32} className="text-indigo-600" />;
+              })()}
             </div>
             <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
               {room.name}

@@ -1,5 +1,33 @@
 "use client";
-import { Plus, Home, ChevronRight, PieChart, Download, ArrowLeft, Sofa, Bed, Bath, Tv, Armchair, Edit, Trash2 } from "lucide-react";
+import { 
+  Plus, 
+  Home, 
+  ChevronRight, 
+  PieChart, 
+  Download, 
+  ArrowLeft, 
+  Sofa, 
+  Bed, 
+  Bath, 
+  Tv, 
+  Armchair, 
+  Edit, 
+  Trash2,
+  Utensils, 
+  Car, 
+  DoorOpen, 
+  TrendingUp, 
+  Monitor, 
+  Dumbbell,
+  Baby,
+  BookOpen,
+  Palette,
+  Music,
+  Gamepad2,
+  WashingMachine,
+  TreePine,
+  Sun
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Room } from "../../../types";
 import { AddRoomForm } from "../../../pokoje/AddRoomForm";
@@ -218,7 +246,11 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {rooms.map((room, idx) => {
-                  const iconMap: Record<string, any> = { Home, Sofa, Bed, Bath, Tv, Armchair };
+                  const iconMap: Record<string, any> = { 
+                    Home, Sofa, Bed, Bath, Tv, Armchair, Utensils, Car, DoorOpen, 
+                    TrendingUp, Monitor, Dumbbell, Baby, BookOpen, Palette, Music, 
+                    Gamepad2, WashingMachine, TreePine, Sun 
+                  };
                   const Icon = iconMap[room.icon] || Home;
                   return (
                     <div
