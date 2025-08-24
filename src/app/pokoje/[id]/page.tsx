@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, FileText, Download, Package } from "lucide-react";
 import { AddProductForm } from "../AddProductForm";
+import { EditProductForm } from "../EditProductForm";
 import { ProductList } from "../ProductList";
 
 interface RoomPageProps {
@@ -23,6 +24,8 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [loading, setLoading] = useState(true);
   const [roomId, setRoomId] = useState<string>('');
   const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [showEditProductForm, setShowEditProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [addingProduct, setAddingProduct] = useState(false);
 
   useEffect(() => {
@@ -170,12 +173,39 @@ export default function RoomPage({ params }: RoomPageProps) {
             <ProductList 
               products={products}
               onEdit={(product) => {
-                // TODO: Implement edit functionality
-                console.log('Edit product:', product);
+                setEditingProduct(product);
+                setShowEditProductForm(true);
               }}
-              onDelete={(productId) => {
-                // TODO: Implement delete functionality
-                console.log('Delete product:', productId);
+              onDelete={async (productId) => {
+                if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+                  try {
+                    const response = await fetch(`/api/products/${productId}`, {
+                      method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                      setProducts(prev => prev.filter(p => p.id !== productId));
+                      
+                      // Refresh room data to update expenses
+                      if (user && roomId) {
+                        try {
+                          const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                          if (roomResponse.ok) {
+                            const roomData = await roomResponse.json();
+                            setRoom(roomData);
+                          }
+                        } catch (error) {
+                          console.error('Error refreshing room data:', error);
+                        }
+                      }
+                    } else {
+                      alert('Błąd podczas usuwania produktu');
+                    }
+                  } catch (error) {
+                    console.error('Error deleting product:', error);
+                    alert('Błąd podczas usuwania produktu');
+                  }
+                }
               }}
             />
           </div>
@@ -216,6 +246,35 @@ export default function RoomPage({ params }: RoomPageProps) {
               </div>
             </div>
           </div>
+        )}
+
+        {showEditProductForm && editingProduct && (
+          <EditProductForm
+            product={editingProduct}
+            onUpdate={(updatedProduct) => {
+              setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+              setShowEditProductForm(false);
+              setEditingProduct(null);
+              
+              // Refresh room data to update expenses
+              if (user && roomId) {
+                fetch(`/api/rooms/${roomId}`)
+                  .then(res => res.json())
+                  .then(data => {
+                    if (!data.error) {
+                      setRoom(data);
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error refreshing room data:', error);
+                  });
+              }
+            }}
+            onClose={() => {
+              setShowEditProductForm(false);
+              setEditingProduct(null);
+            }}
+          />
         )}
       </div>
     </ProtectedRoute>

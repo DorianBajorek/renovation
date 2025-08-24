@@ -1,8 +1,9 @@
 "use client";
-import { Plus, Home, ChevronRight, PieChart, Download } from "lucide-react";
+import { Plus, Home, ChevronRight, PieChart, Download, Edit, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Room } from "../types";
 import { AddRoomForm } from "./AddRoomForm";
+import { EditRoomForm } from "./EditRoomForm";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,8 @@ export default function PokojePage() {
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -155,17 +158,53 @@ export default function PokojePage() {
                     {(room.expenses || 0).toLocaleString()} PLN
                   </span>
                 </div>
-                <button 
-                  onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
-                  className="mt-6 w-full px-6 py-3 rounded-xl bg-white text-slate-700 font-medium hover:bg-indigo-50 transition-all duration-300 border border-slate-200/60 flex items-center justify-center gap-2 group-hover:border-indigo-200 group-hover:text-indigo-700"
-                  disabled={!room.id}
-                >
-                  Otwórz{" "}
-                  <ChevronRight
-                    size={18}
-                    className="text-black group-hover:translate-x-1 transition-transform"
-                  />
-                </button>
+                                 <div className="mt-6 w-full flex gap-2">
+                   <button 
+                     onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
+                     className="flex-1 px-4 py-3 rounded-xl bg-white text-slate-700 font-medium hover:bg-indigo-50 transition-all duration-300 border border-slate-200/60 flex items-center justify-center gap-2 group-hover:border-indigo-200 group-hover:text-indigo-700"
+                     disabled={!room.id}
+                   >
+                     Otwórz
+                     <ChevronRight
+                       size={18}
+                       className="text-black group-hover:translate-x-1 transition-transform"
+                     />
+                   </button>
+                   <button
+                     onClick={() => {
+                       setEditingRoom(room);
+                       setShowEditForm(true);
+                     }}
+                     className="px-4 py-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                     title="Edytuj pokój"
+                   >
+                     <Edit size={18} />
+                   </button>
+                   <button
+                     onClick={async () => {
+                       if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
+                         try {
+                           const response = await fetch(`/api/rooms/${room.id}`, {
+                             method: 'DELETE',
+                           });
+                           
+                           if (response.ok) {
+                             setRooms(prev => prev.filter(r => r.id !== room.id));
+                           } else {
+                             alert('Błąd podczas usuwania pokoju');
+                           }
+                         } catch (error) {
+                           console.error('Error deleting room:', error);
+                           alert('Błąd podczas usuwania pokoju');
+                         }
+                       }
+                     }}
+                     className="px-4 py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                     title="Usuń pokój"
+                   >
+                     <Trash2 size={18} />
+                   </button>
+                 </div>
               </div>
             );
           })}
@@ -184,12 +223,27 @@ export default function PokojePage() {
         </div>
       </main>
 
-      {showForm && (
-        <AddRoomForm
-          onAdd={handleAddRoom}
-          onClose={handleRoomFormClose}
-        />
-      )}
+             {showForm && (
+         <AddRoomForm
+           onAdd={handleAddRoom}
+           onClose={handleRoomFormClose}
+         />
+       )}
+
+       {showEditForm && editingRoom && (
+         <EditRoomForm
+           room={editingRoom}
+           onUpdate={(updatedRoom) => {
+             setRooms(prev => prev.map(r => r.id === updatedRoom.id ? updatedRoom : r));
+             setShowEditForm(false);
+             setEditingRoom(null);
+           }}
+           onClose={() => {
+             setShowEditForm(false);
+             setEditingRoom(null);
+           }}
+         />
+       )}
       </div>
     </ProtectedRoute>
   );
