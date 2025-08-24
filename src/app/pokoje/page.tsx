@@ -188,66 +188,67 @@ export default function PokojePage() {
             return (
               <div
                 key={idx}
-                className="group p-8 rounded-3xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/60 flex flex-col items-center justify-between aspect-square hover:-translate-y-2"
+                className="group p-8 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col items-center justify-between aspect-square hover:-translate-y-1"
               >
                 <div className="flex flex-col items-center gap-5">
-                  <div className="p-5 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Icon size={48} strokeWidth={1.5} className="text-black" />
+                                     <div className="p-5 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                     <Icon size={48} strokeWidth={1.5} className="text-slate-700 transition-colors" />
+                   </div>
+                  
+                  <div className="text-center">
+                    <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-3">
+                      {room.name}
+                    </h2>
+                    <span className="px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 font-medium text-sm group-hover:bg-indigo-100 transition-colors">
+                      {(room.expenses || 0).toLocaleString()} PLN
+                    </span>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-semibold text-slate-900 text-center">
-                    {room.name}
-                  </h2>
-                  <span className="px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-semibold text-sm group-hover:bg-indigo-100 group-hover:text-indigo-700 transition-colors">
-                    {(room.expenses || 0).toLocaleString()} PLN
-                  </span>
                 </div>
-                                 <div className="mt-6 w-full flex gap-2">
-                   <button 
-                     onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
-                     className="flex-1 px-4 py-3 rounded-xl bg-white text-slate-700 font-medium hover:bg-indigo-50 transition-all duration-300 border border-slate-200/60 flex items-center justify-center gap-2 group-hover:border-indigo-200 group-hover:text-indigo-700"
-                     disabled={!room.id}
-                   >
-                     Otwórz
-                     <ChevronRight
-                       size={18}
-                       className="text-black group-hover:translate-x-1 transition-transform"
-                     />
-                   </button>
-                   <button
-                     onClick={() => {
-                       setEditingRoom(room);
-                       setShowEditForm(true);
-                     }}
-                     className="px-4 py-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-                     title="Edytuj pokój"
-                   >
-                     <Edit size={18} />
-                   </button>
-                   <button
-                     onClick={async () => {
-                       if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
-                         try {
-                           const response = await fetch(`/api/rooms/${room.id}`, {
-                             method: 'DELETE',
-                           });
-                           
-                           if (response.ok) {
-                             setRooms(prev => prev.filter(r => r.id !== room.id));
-                           } else {
-                             alert('Błąd podczas usuwania pokoju');
-                           }
-                         } catch (error) {
-                           console.error('Error deleting room:', error);
-                           alert('Błąd podczas usuwania pokoju');
-                         }
-                       }
-                     }}
-                     className="px-4 py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                     title="Usuń pokój"
-                   >
-                     <Trash2 size={18} />
-                   </button>
-                 </div>
+
+                <div className="w-full flex gap-2">
+                  <button 
+                    onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
+                    className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                    disabled={!room.id}
+                  >
+                    Otwórz
+                    <ChevronRight size={18} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingRoom(room);
+                      setShowEditForm(true);
+                    }}
+                    className="px-4 py-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    title="Edytuj pokój"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
+                        try {
+                          const response = await fetch(`/api/rooms/${room.id}`, {
+                            method: 'DELETE',
+                          });
+                          
+                          if (response.ok) {
+                            setRooms(prev => prev.filter(r => r.id !== room.id));
+                          } else {
+                            alert('Błąd podczas usuwania pokoju');
+                          }
+                        } catch (error) {
+                          console.error('Error deleting room:', error);
+                          alert('Błąd podczas usuwania pokoju');
+                        }
+                      }
+                    }}
+                    className="px-4 py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                    title="Usuń pokój"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             );
           })}

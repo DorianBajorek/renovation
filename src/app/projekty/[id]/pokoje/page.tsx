@@ -273,74 +273,74 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                     };
                     const Icon = iconMap[room.icon] || Home;
                     return (
-                      <div
-                        key={idx}
-                        className="group p-6 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col min-h-[280px] hover:-translate-y-1"
-                      >
-                        <div className="flex flex-col items-center gap-4 mb-4">
-                          <div className="p-4 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                            <Icon size={40} strokeWidth={1.5} className="text-slate-700" />
-                          </div>
-                          <div className="text-center">
-                            <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                              {room.name}
-                            </h2>
-                            <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-medium text-sm">
-                              {(room.expenses || 0).toLocaleString()} PLN
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-auto space-y-3">
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
-                              className="flex-1 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
-                              disabled={!room.id}
-                            >
-                              Otwórz
-                              <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingRoom(room);
-                                setShowEditForm(true);
-                              }}
-                              className="flex-1 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-sm"
-                              title="Edytuj pokój"
-                            >
-                              <Edit size={16} className="mx-auto" />
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
-                                  try {
-                                    const response = await fetch(`/api/rooms/${room.id}`, {
-                                      method: 'DELETE',
-                                    });
-                                    
-                                    if (response.ok) {
-                                      setRooms(prev => prev.filter(r => r.id !== room.id));
-                                    } else {
-                                      alert('Błąd podczas usuwania pokoju');
-                                    }
-                                  } catch (error) {
-                                    console.error('Error deleting room:', error);
-                                    alert('Błąd podczas usuwania pokoju');
-                                  }
-                                }
-                              }}
-                              className="flex-1 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-sm"
-                              title="Usuń pokój"
-                            >
-                              <Trash2 size={16} className="mx-auto" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                                             <div
+                         key={idx}
+                         className="group p-6 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col min-h-[280px] hover:-translate-y-1"
+                       >
+                         <div className="flex flex-col items-center gap-4 mb-4">
+                                                       <div className="p-4 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                              <Icon size={40} strokeWidth={1.5} className="text-slate-700 transition-colors" />
+                            </div>
+                           <div className="text-center">
+                             <h2 className="text-lg font-semibold text-slate-900 mb-2">
+                               {room.name}
+                             </h2>
+                             <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-medium text-sm group-hover:bg-indigo-100 transition-colors">
+                               {(room.expenses || 0).toLocaleString()} PLN
+                             </span>
+                           </div>
+                         </div>
+                         
+                         <div className="mt-auto space-y-3">
+                           <div className="flex gap-2">
+                             <button 
+                               onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
+                               className="flex-1 px-3 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                               disabled={!room.id}
+                             >
+                               Otwórz
+                               <ChevronRight size={16} />
+                             </button>
+                           </div>
+                           
+                           <div className="flex gap-2">
+                             <button
+                               onClick={() => {
+                                 setEditingRoom(room);
+                                 setShowEditForm(true);
+                               }}
+                               className="flex-1 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-sm"
+                               title="Edytuj pokój"
+                             >
+                               <Edit size={16} className="mx-auto" />
+                             </button>
+                             <button
+                               onClick={async () => {
+                                 if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
+                                   try {
+                                     const response = await fetch(`/api/rooms/${room.id}`, {
+                                       method: 'DELETE',
+                                     });
+                                     
+                                     if (response.ok) {
+                                       setRooms(prev => prev.filter(r => r.id !== room.id));
+                                     } else {
+                                       alert('Błąd podczas usuwania pokoju');
+                                     }
+                                   } catch (error) {
+                                     console.error('Error deleting room:', error);
+                                     alert('Błąd podczas usuwania pokoju');
+                                   }
+                                 }
+                               }}
+                               className="flex-1 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-sm"
+                               title="Usuń pokój"
+                             >
+                               <Trash2 size={16} className="mx-auto" />
+                             </button>
+                           </div>
+                         </div>
+                       </div>
                     );
                   })}
 
