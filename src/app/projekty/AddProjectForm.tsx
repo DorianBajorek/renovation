@@ -81,7 +81,8 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
         throw new Error(errorData.error || 'Błąd podczas dodawania projektu');
       }
 
-      // Don't call onAdd here since the parent component will refresh data from server
+      const newProject = await response.json();
+      onAdd(newProject);
       onClose();
     } catch (error) {
       console.error("Błąd podczas dodawania projektu:", error);

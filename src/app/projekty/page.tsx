@@ -13,6 +13,7 @@ export default function ProjektyPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     projectId: string | null;
@@ -25,6 +26,7 @@ export default function ProjektyPage() {
 
   useEffect(() => {
     if (user) {
+      setLoading(true);
       fetch(`/api/projects?userId=${user.id}`)
         .then(res => res.json())
         .then(data => {
@@ -46,6 +48,9 @@ export default function ProjektyPage() {
         })
         .catch(error => {
           console.error('Error fetching projects:', error);
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   }, [user]);
@@ -54,34 +59,24 @@ export default function ProjektyPage() {
     if (!user) return;
 
     try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...project,
-          userId: user.id,
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh data from server after successful addition
-        const refreshResponse = await fetch(`/api/projects?userId=${user.id}`);
-        if (refreshResponse.ok) {
-          const refreshedData = await refreshResponse.json();
-          if (Array.isArray(refreshedData)) {
-            const mappedProjects = refreshedData.map(project => ({
-              ...project,
-              startDate: project.start_date || project.startDate,
-              endDate: project.end_date || project.endDate,
-            }));
-            setProjects(mappedProjects);
-          }
+      setLoading(true);
+      // Refresh data from server after successful addition
+      const refreshResponse = await fetch(`/api/projects?userId=${user.id}`);
+      if (refreshResponse.ok) {
+        const refreshedData = await refreshResponse.json();
+        if (Array.isArray(refreshedData)) {
+          const mappedProjects = refreshedData.map(project => ({
+            ...project,
+            startDate: project.start_date || project.startDate,
+            endDate: project.end_date || project.endDate,
+          }));
+          setProjects(mappedProjects);
         }
       }
     } catch (error) {
       console.error('Error adding project:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,6 +134,19 @@ export default function ProjektyPage() {
       default: return status;
     }
   };
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Ładowanie projektów...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

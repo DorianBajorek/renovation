@@ -23,6 +23,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [loading, setLoading] = useState(true);
   const [roomId, setRoomId] = useState<string>('');
   const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [addingProduct, setAddingProduct] = useState(false);
 
   useEffect(() => {
     const getRoomId = async () => {
@@ -184,6 +185,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           <AddProductForm
             roomId={roomId}
             onAdd={async (newProduct) => {
+              setAddingProduct(true);
               setProducts(prev => [newProduct, ...prev]);
               setShowAddProductForm(false);
               
@@ -199,9 +201,21 @@ export default function RoomPage({ params }: RoomPageProps) {
                   console.error('Error refreshing room data:', error);
                 }
               }
+              setAddingProduct(false);
             }}
             onClose={() => setShowAddProductForm(false)}
           />
+        )}
+
+        {addingProduct && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white/40">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p className="text-slate-600">Dodawanie produktu...</p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </ProtectedRoute>

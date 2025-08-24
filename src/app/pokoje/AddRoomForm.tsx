@@ -40,7 +40,8 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
         throw new Error(errorData.error || 'Błąd podczas dodawania pokoju');
       }
 
-      // Don't call onAdd here since the parent component will refresh data from server
+      const newRoom = await response.json();
+      onAdd(newRoom);
       onClose();
     } catch (error) {
       console.error("Błąd podczas dodawania pokoju:", error);

@@ -70,38 +70,23 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
     if (!user || !project) return;
 
     try {
-      const response = await fetch('/api/rooms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...room,
-          userId: user.id,
-          projectId: projectId, // Add the project ID to the room
-        }),
-      });
-
-      if (response.ok) {
-        const newRoom = await response.json();
-        
-        // Refresh rooms list
-        const refreshResponse = await fetch(`/api/rooms?userId=${user.id}&projectId=${projectId}`);
-        if (refreshResponse.ok) {
-          const refreshedData = await refreshResponse.json();
-          if (Array.isArray(refreshedData)) {
-            const mappedRooms = refreshedData.map(room => ({
-              ...room,
-              icon: room.icon || 'Home',
-            }));
-            setRooms(mappedRooms);
-          }
+      setLoading(true);
+      // Refresh rooms list
+      const refreshResponse = await fetch(`/api/rooms?userId=${user.id}&projectId=${projectId}`);
+      if (refreshResponse.ok) {
+        const refreshedData = await refreshResponse.json();
+        if (Array.isArray(refreshedData)) {
+          const mappedRooms = refreshedData.map(room => ({
+            ...room,
+            icon: room.icon || 'Home',
+          }));
+          setRooms(mappedRooms);
         }
-      } else {
-        console.error('Failed to create room:', await response.text());
       }
     } catch (error) {
       console.error('Error adding room:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

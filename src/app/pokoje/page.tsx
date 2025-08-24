@@ -17,9 +17,11 @@ export default function PokojePage() {
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
+      setLoading(true);
       fetch(`/api/rooms?userId=${user.id}`)
         .then(res => res.json())
         .then(data => {
@@ -40,6 +42,9 @@ export default function PokojePage() {
         })
         .catch(error => {
           console.error('Error fetching rooms:', error);
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   }, [user]);
@@ -48,33 +53,23 @@ export default function PokojePage() {
     if (!user) return;
 
     try {
-      const response = await fetch('/api/rooms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...room,
-          userId: user.id,
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh data from server after successful addition
-        const refreshResponse = await fetch(`/api/rooms?userId=${user.id}`);
-        if (refreshResponse.ok) {
-          const refreshedData = await refreshResponse.json();
-          if (Array.isArray(refreshedData)) {
-            const mappedRooms = refreshedData.map(room => ({
-              ...room,
-              icon: room.icon || 'Sofa', // Ensure icon is always set
-            }));
-            setRooms(mappedRooms);
-          }
+      setLoading(true);
+      // Refresh data from server after successful addition
+      const refreshResponse = await fetch(`/api/rooms?userId=${user.id}`);
+      if (refreshResponse.ok) {
+        const refreshedData = await refreshResponse.json();
+        if (Array.isArray(refreshedData)) {
+          const mappedRooms = refreshedData.map(room => ({
+            ...room,
+            icon: room.icon || 'Sofa', // Ensure icon is always set
+          }));
+          setRooms(mappedRooms);
         }
       }
     } catch (error) {
       console.error('Error adding room:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,6 +78,19 @@ export default function PokojePage() {
   };
 
   const totalExpenses = rooms.reduce((sum, room) => sum + (room.expenses || 0), 0);
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Ładowanie pokoi...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
