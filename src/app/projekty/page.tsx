@@ -134,7 +134,6 @@ export default function ProjektyPage() {
     }
   };
 
-  const totalBudget = projects.reduce((sum, project) => sum + project.budget, 0);
   const activeProjects = projects.filter(project => project.status === 'active').length;
   const completedProjects = projects.filter(project => project.status === 'completed').length;
 
@@ -187,12 +186,6 @@ export default function ProjektyPage() {
                 Przegląd projektów
               </h2>
               <div className="flex items-baseline gap-4">
-                <div>
-                  <span className="text-3xl md:text-4xl font-bold text-slate-900">
-                    {totalBudget.toLocaleString()} PLN
-                  </span>
-                  <span className="text-sm text-slate-500 ml-2">całkowity budżet</span>
-                </div>
                 <div className="flex gap-4 text-sm">
                   <span className="text-green-600 font-medium">{activeProjects} aktywnych</span>
                   <span className="text-gray-600">{completedProjects} zakończonych</span>
