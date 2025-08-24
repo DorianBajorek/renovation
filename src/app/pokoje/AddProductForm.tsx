@@ -14,8 +14,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<'planned' | 'purchased' | 'installed'>('planned');
+  const [status, setStatus] = useState<'planned' | 'purchased'>('planned');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +31,6 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
           description: description || undefined,
           price,
           quantity,
-          category: category || undefined,
           status,
           roomId,
         }),
@@ -82,43 +80,47 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
           rows={3}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="number"
-            placeholder="Cena (PLN)"
-            value={price}
-            onChange={e => setPrice(Number(e.target.value))}
-            className="border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
-            required
-            min="0"
-            step="0.01"
-          />
-          <input
-            type="number"
-            placeholder="Ilość"
-            value={quantity}
-            onChange={e => setQuantity(Number(e.target.value))}
-            className="border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
-            min="1"
-          />
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cena (PLN) *
+            </label>
+                         <input
+               type="text"
+               placeholder="0.00"
+               value={price || ''}
+               onChange={e => {
+                 const value = e.target.value.replace(/[^0-9.]/g, '');
+                 const numValue = parseFloat(value) || 0;
+                 setPrice(numValue);
+               }}
+               className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
+               required
+             />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ilość *
+            </label>
+            <input
+              type="number"
+              placeholder="1"
+              value={quantity}
+              onChange={e => setQuantity(Number(e.target.value))}
+              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
+              min="1"
+            />
+          </div>
         </div>
-
-        <input
-          type="text"
-          placeholder="Kategoria (opcjonalnie)"
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-          className="border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
-        />
 
         <select
           value={status}
-          onChange={e => setStatus(e.target.value as 'planned' | 'purchased' | 'installed')}
+          onChange={e => setStatus(e.target.value as 'planned' | 'purchased')}
           className="border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
         >
           <option value="planned">Planowany</option>
           <option value="purchased">Zakupiony</option>
-          <option value="installed">Zainstalowany</option>
         </select>
 
         <div className="flex justify-end gap-4 mt-4">

@@ -346,8 +346,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200/50">
 
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
                      <h2 className="text-xl font-semibold text-gray-900">
@@ -392,39 +392,68 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                 </span>
               </div>
 
-              <div className="space-y-3">
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <button
-                      onClick={() => toggleProduct(product.id!)}
-                      className="flex-shrink-0"
-                    >
-                      {selectedProducts.has(product.id!) ? (
-                        <Check size={20} className="text-indigo-600" />
-                      ) : (
-                        <Square size={20} className="text-gray-400" />
-                      )}
-                    </button>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{product.name}</h3>
-                      {product.description && (
-                        <p className="text-sm text-gray-600 mt-1">{product.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                        <span>Cena: {product.price.toLocaleString()} PLN</span>
-                        <span>Ilość: {product.quantity}</span>
-                        <span>Wartość: {(product.price * product.quantity).toLocaleString()} PLN</span>
-                        <span>Status: {getStatusText(product.status)}</span>
-                        {product.category && <span>Kategoria: {product.category}</span>}
-                        {product.room_name && <span>Pokój: {product.room_name}</span>}
+              <div className="space-y-6">
+                {(() => {
+                  // Group products by room
+                  const productsByRoom = products.reduce((acc, product) => {
+                    const roomName = product.room_name || 'Nieznany pokój';
+                    if (!acc[roomName]) {
+                      acc[roomName] = [];
+                    }
+                    acc[roomName].push(product);
+                    return acc;
+                  }, {} as Record<string, typeof products>);
+
+                  return Object.entries(productsByRoom).map(([roomName, roomProducts]) => (
+                    <div key={roomName} className="space-y-3">
+                      {/* Room header */}
+                      <div className="flex items-center gap-3 pb-2 border-b-2 border-indigo-200">
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                        <h3 className="text-lg font-semibold text-indigo-900 bg-indigo-50 px-3 py-1 rounded-lg">
+                          {roomName}
+                        </h3>
+                        <span className="text-sm text-gray-500">
+                          ({roomProducts.length} produktów)
+                        </span>
+                      </div>
+                      
+                      {/* Products in this room */}
+                      <div className="space-y-3 pl-4">
+                        {roomProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white shadow-sm"
+                          >
+                            <button
+                              onClick={() => toggleProduct(product.id!)}
+                              className="flex-shrink-0"
+                            >
+                              {selectedProducts.has(product.id!) ? (
+                                <Check size={20} className="text-indigo-600" />
+                              ) : (
+                                <Square size={20} className="text-gray-400" />
+                              )}
+                            </button>
+                            
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900">{product.name}</h3>
+                              {product.description && (
+                                <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                              )}
+                              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                                <span className="bg-blue-50 px-2 py-1 rounded">Cena: {product.price.toLocaleString()} PLN</span>
+                                <span className="bg-green-50 px-2 py-1 rounded">Ilość: {product.quantity}</span>
+                                <span className="bg-purple-50 px-2 py-1 rounded">Wartość: {(product.price * product.quantity).toLocaleString()} PLN</span>
+                                <span className="bg-orange-50 px-2 py-1 rounded">Status: {getStatusText(product.status)}</span>
+                                {product.category && <span className="bg-gray-50 px-2 py-1 rounded">Kategoria: {product.category}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </>
           )}
