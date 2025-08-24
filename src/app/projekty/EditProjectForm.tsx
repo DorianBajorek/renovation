@@ -29,7 +29,7 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
     budget: "",
     startDate: "",
     endDate: "",
-    status: "active" as const,
+    status: "active" as 'active' | 'completed',
     icon: "Home",
   });
 
