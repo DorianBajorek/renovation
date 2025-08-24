@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+DROP FUNCTION IF EXISTS get_room_expenses() CASCADE;
+DROP FUNCTION IF EXISTS get_project_expenses() CASCADE;
 
 -- Create users table
 CREATE TABLE users (
@@ -31,13 +33,12 @@ CREATE TABLE projects (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create rooms table with user and project relationships
+-- Create rooms table with user and project relationships (removed budget field)
 CREATE TABLE rooms (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
-  budget DECIMAL(10,2) NOT NULL,
   icon VARCHAR(50) DEFAULT 'Sofa',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -65,6 +66,33 @@ BEGIN
   RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+-- Create function to calculate room expenses
+CREATE OR REPLACE FUNCTION get_room_expenses(room_uuid UUID)
+RETURNS DECIMAL(10,2) AS $$
+BEGIN
+  RETURN COALESCE(
+    (SELECT SUM(price * quantity) 
+     FROM products 
+     WHERE room_id = room_uuid), 
+    0
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to calculate project expenses
+CREATE OR REPLACE FUNCTION get_project_expenses(project_uuid UUID)
+RETURNS DECIMAL(10,2) AS $$
+BEGIN
+  RETURN COALESCE(
+    (SELECT SUM(p.price * p.quantity) 
+     FROM products p
+     JOIN rooms r ON p.room_id = r.id
+     WHERE r.project_id = project_uuid), 
+    0
+  );
+END;
+$$ LANGUAGE plpgsql;
 
 -- Create triggers for updated_at
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
@@ -102,13 +130,13 @@ INSERT INTO projects (user_id, name, description, budget, start_date, end_date, 
   ((SELECT id FROM users WHERE email = 'test@example.com'), 'Renowacja Domu', 'Renowacja starego domu jednorodzinnego', 45000, '2024-03-01', '2024-12-31', 'planning', 'Building'),
   ((SELECT id FROM users WHERE email = 'test@example.com'), 'Modernizacja Biura', 'Modernizacja przestrzeni biurowej', 25000, '2024-02-01', '2024-05-15', 'completed', 'Briefcase');
 
--- Insert sample rooms for the test user (some assigned to projects, some not)
-INSERT INTO rooms (user_id, project_id, name, budget, icon) VALUES
-  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Remont Mieszkania' LIMIT 1), 'Salon', 1250, 'Sofa'),
-  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Remont Mieszkania' LIMIT 1), 'Sypialnia', 870, 'Bed'),
-  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Remont Mieszkania' LIMIT 1), 'Łazienka', 430, 'Bath'),
-  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Renowacja Domu' LIMIT 1), 'Kuchnia', 650, 'Utensils'),
-  ((SELECT id FROM users WHERE email = 'test@example.com'), NULL, 'Garaż', 1200, 'Car');
+-- Insert sample rooms for the test user (some assigned to projects, some not) - removed budget field
+INSERT INTO rooms (user_id, project_id, name, icon) VALUES
+  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Remont Mieszkania' LIMIT 1), 'Salon', 'Sofa'),
+  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Remont Mieszkania' LIMIT 1), 'Sypialnia', 'Bed'),
+  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Remont Mieszkania' LIMIT 1), 'Łazienka', 'Bath'),
+  ((SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM projects WHERE name = 'Renowacja Domu' LIMIT 1), 'Kuchnia', 'Utensils'),
+  ((SELECT id FROM users WHERE email = 'test@example.com'), NULL, 'Garaż', 'Car');
 
 -- Insert sample products for the test rooms
 INSERT INTO products (room_id, name, description, price, quantity, category, status) VALUES

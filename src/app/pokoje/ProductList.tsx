@@ -65,31 +65,7 @@ export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) =>
   const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
   return (
-    <div className="space-y-6">
-      {/* Summary */}
-      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-6 border border-white/60">
-        <h3 className="text-lg font-medium text-slate-700 mb-4">Podsumowanie produktów</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{products.length}</div>
-            <div className="text-sm text-slate-500">Łącznie produktów</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">
-              {totalValue.toLocaleString()} PLN
-            </div>
-            <div className="text-sm text-slate-500">Wartość łączna</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">
-              {products.filter(p => p.status === 'installed').length}
-            </div>
-            <div className="text-sm text-slate-500">Zainstalowane</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Products List */}
+    <div className="space-y-4">
       <div className="space-y-4">
         {products.map((product) => (
           <div

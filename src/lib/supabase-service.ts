@@ -1,12 +1,14 @@
 import { supabase } from './supabase';
-import { Room } from '../app/types/room';
-import { Project } from '../app/types/project';
+import { Room, Project } from '@/app/types';
 
-// Room operations
-export const getRooms = async (): Promise<Room[]> => {
+export const getRooms = async (userId: string): Promise<Room[]> => {
   const { data, error } = await supabase
     .from('rooms')
-    .select('*')
+    .select(`
+      *,
+      products:products(price, quantity)
+    `)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -14,15 +16,23 @@ export const getRooms = async (): Promise<Room[]> => {
     throw error;
   }
 
-  // Transform database data to match our Room interface
-  return (data || []).map((room: any) => ({
-    name: room.name,
-    budget: room.budget,
-    icon: room.icon
-  }));
+  // Calculate expenses for each room
+  return data?.map(room => {
+    const expenses = room.products?.reduce((sum: number, product: any) => 
+      sum + (product.price * product.quantity), 0) || 0;
+    
+    return {
+      id: room.id,
+      user_id: room.user_id,
+      project_id: room.project_id,
+      name: room.name,
+      expenses: expenses,
+      icon: room.icon
+    };
+  }) || [];
 };
 
-export const addRoom = async (room: { name: string; budget: number }): Promise<Room> => {
+export const addRoom = async (room: { name: string }): Promise<Room> => {
   const { data, error } = await supabase
     .from('rooms')
     .insert([{ ...room, icon: 'Sofa' }])
@@ -36,16 +46,23 @@ export const addRoom = async (room: { name: string; budget: number }): Promise<R
 
   return {
     name: data.name,
-    budget: data.budget,
+    expenses: 0,
     icon: data.icon
   };
 };
 
 // Project operations
-export const getProjects = async (): Promise<Project[]> => {
+export const getProjects = async (userId: string): Promise<Project[]> => {
   const { data, error } = await supabase
     .from('projects')
-    .select('*')
+    .select(`
+      *,
+      rooms:rooms(
+        id,
+        products:products(price, quantity)
+      )
+    `)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -53,17 +70,27 @@ export const getProjects = async (): Promise<Project[]> => {
     throw error;
   }
 
-  // Transform database data to match our Project interface
-  return (data || []).map((project: any) => ({
-    id: project.id,
-    name: project.name,
-    description: project.description,
-    budget: project.budget,
-    startDate: project.start_date,
-    endDate: project.end_date,
-    status: project.status,
-    icon: project.icon
-  }));
+  // Calculate expenses for each project
+  return data?.map(project => {
+    const expenses = project.rooms?.reduce((projectSum: number, room: any) => {
+      const roomExpenses = room.products?.reduce((roomSum: number, product: any) => 
+        roomSum + (product.price * product.quantity), 0) || 0;
+      return projectSum + roomExpenses;
+    }, 0) || 0;
+    
+    return {
+      id: project.id,
+      user_id: project.user_id,
+      name: project.name,
+      description: project.description,
+      budget: project.budget,
+      expenses: expenses,
+      startDate: project.start_date,
+      endDate: project.end_date,
+      status: project.status,
+      icon: project.icon
+    };
+  }) || [];
 };
 
 export const addProject = async (project: Omit<Project, 'id'>): Promise<Project> => {

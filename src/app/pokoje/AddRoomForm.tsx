@@ -13,11 +13,10 @@ interface AddRoomFormProps {
 export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => {
   const { user } = useAuth();
   const [name, setName] = useState("");
-  const [budget, setBudget] = useState<number>(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || budget <= 0) return;
+    if (!name) return;
     
     try {
       if (!user) {
@@ -31,7 +30,6 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
         },
         body: JSON.stringify({
           name,
-          budget,
           userId: user.id,
           projectId: projectId || null, // Include projectId if provided
         }),
@@ -68,14 +66,6 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
           placeholder="Nazwa pokoju"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
-          required
-        />
-        <input
-          type="number"
-          placeholder="Budżet (PLN)"
-          value={budget}
-          onChange={e => setBudget(Number(e.target.value))}
           className="border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
           required
         />

@@ -8,10 +8,13 @@ export async function GET(
   try {
     const { id: roomId } = await params;
 
-    // Get the room from database
+    // Get the room with products to calculate expenses
     const { data: room, error } = await supabase
       .from('rooms')
-      .select('*')
+      .select(`
+        *,
+        products:products(price, quantity)
+      `)
       .eq('id', roomId)
       .single();
 
@@ -30,7 +33,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(room, {
+    // Calculate expenses for the room
+    const expenses = room.products?.reduce((sum: number, product: any) => 
+      sum + (product.price * product.quantity), 0) || 0;
+    
+    const roomWithExpenses = {
+      ...room,
+      expenses: expenses,
+      products: undefined // Remove products from response
+    };
+
+    return NextResponse.json(roomWithExpenses, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

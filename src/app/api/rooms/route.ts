@@ -3,10 +3,8 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID and project ID from query parameters
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const projectId = searchParams.get('projectId');
 
     if (!userId) {
       return NextResponse.json(
@@ -15,17 +13,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = supabase
+    // Get rooms with calculated expenses
+    const { data: rooms, error } = await supabase
       .from('rooms')
-      .select('*')
-      .eq('user_id', userId);
-
-    // If projectId is provided, filter rooms that belong to this project
-    if (projectId) {
-      query = query.eq('project_id', projectId);
-    }
-
-    const { data: rooms, error } = await query.order('created_at', { ascending: false });
+      .select(`
+        *,
+        products:products(price, quantity)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Database error:', error);
@@ -35,7 +31,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(rooms, {
+    // Calculate expenses for each room
+    const roomsWithExpenses = rooms?.map(room => {
+      const expenses = room.products?.reduce((sum: number, product: any) => 
+        sum + (product.price * product.quantity), 0) || 0;
+      
+      return {
+        ...room,
+        expenses: expenses,
+        products: undefined // Remove products from response
+      };
+    }) || [];
+
+    return NextResponse.json(roomsWithExpenses, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -59,9 +67,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.budget || !body.userId) {
+    if (!body.name || !body.userId) {
       return NextResponse.json(
-        { error: 'Name, budget, and userId are required' },
+        { error: 'Name and userId are required' },
         { status: 400 }
       );
     }
@@ -73,7 +81,6 @@ export async function POST(request: NextRequest) {
         user_id: body.userId,
         project_id: body.projectId || null,
         name: body.name,
-        budget: body.budget,
         icon: body.icon || 'Sofa'
       })
       .select()

@@ -126,14 +126,14 @@ export default function RoomPage({ params }: RoomPageProps) {
               <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex-1">
                   <h2 className="text-lg font-medium text-slate-700 mb-2">
-                    Budżet pokoju
+                    Wydatki pokoju
                   </h2>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl md:text-4xl font-bold text-slate-900">
-                      {room.budget.toLocaleString()} PLN
+                      {(room.expenses || 0).toLocaleString()} PLN
                     </span>
                     <span className="text-sm text-slate-500">
-                      zaplanowany budżet
+                      całkowite wydatki
                     </span>
                   </div>
                 </div>
@@ -147,22 +147,6 @@ export default function RoomPage({ params }: RoomPageProps) {
                     <Download size={18} />
                     <span>Eksportuj</span>
                   </button>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-slate-50 rounded-xl">
-                <h3 className="font-medium text-slate-700 mb-2">Informacje o pokoju</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-slate-500">Nazwa:</span>
-                    <span className="ml-2 font-medium text-slate-700">{room.name}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">Budżet:</span>
-                    <span className="ml-2 font-medium text-slate-700">
-                      {room.budget.toLocaleString()} PLN
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -199,9 +183,22 @@ export default function RoomPage({ params }: RoomPageProps) {
         {showAddProductForm && (
           <AddProductForm
             roomId={roomId}
-            onAdd={(newProduct) => {
+            onAdd={async (newProduct) => {
               setProducts(prev => [newProduct, ...prev]);
               setShowAddProductForm(false);
+              
+              // Refresh room data to update expenses
+              if (user && roomId) {
+                try {
+                  const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                  if (roomResponse.ok) {
+                    const roomData = await roomResponse.json();
+                    setRoom(roomData);
+                  }
+                } catch (error) {
+                  console.error('Error refreshing room data:', error);
+                }
+              }
             }}
             onClose={() => setShowAddProductForm(false)}
           />

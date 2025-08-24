@@ -247,6 +247,11 @@ export default function ProjektyPage() {
                   </div>
                   
                   <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500">Wydatki</span>
+                    <span className="font-semibold text-indigo-600">{(project.expenses || 0).toLocaleString()} PLN</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-500">Pokoje</span>
                     <span className="font-medium text-slate-700">Zobacz pokoje</span>
                   </div>

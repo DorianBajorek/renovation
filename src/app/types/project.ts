@@ -5,6 +5,7 @@ export interface Project {
   name: string;
   description: string;
   budget: number;
+  expenses?: number; // Suma wydatków (obliczana dynamicznie)
   startDate: string;
   endDate: string;
   status: 'active' | 'planning' | 'completed';

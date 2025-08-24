@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from query parameters (in a real app, you'd get this from session/token)
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -14,10 +13,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch projects for the specific user
+    // Get projects with calculated expenses
     const { data: projects, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(`
+        *,
+        rooms:rooms(
+          id,
+          products:products(price, quantity)
+        )
+      `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -29,7 +34,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(projects, {
+    // Calculate expenses for each project
+    const projectsWithExpenses = projects?.map(project => {
+      const expenses = project.rooms?.reduce((projectSum: number, room: any) => {
+        const roomExpenses = room.products?.reduce((roomSum: number, product: any) => 
+          roomSum + (product.price * product.quantity), 0) || 0;
+        return projectSum + roomExpenses;
+      }, 0) || 0;
+      
+      return {
+        ...project,
+        expenses: expenses,
+        rooms: undefined // Remove rooms from response
+      };
+    }) || [];
+
+    return NextResponse.json(projectsWithExpenses, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

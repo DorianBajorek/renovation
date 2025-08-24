@@ -109,7 +109,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
     setShowForm(false);
   };
 
-  const totalBudget = rooms.reduce((sum, room) => sum + room.budget, 0);
+  const totalExpenses = rooms.reduce((sum, room) => sum + (room.expenses || 0), 0);
 
   if (loading) {
     return (
@@ -150,11 +150,11 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
               <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex-1">
                   <h2 className="text-lg font-medium text-slate-700 mb-2">
-                    Budżet pokoi w projekcie
+                    Wydatki pokoi w projekcie
                   </h2>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl md:text-4xl font-bold text-slate-900">
-                      {totalBudget.toLocaleString()} PLN
+                      {totalExpenses.toLocaleString()} PLN
                     </span>
                     <span className="text-sm text-slate-500">
                       dla {rooms.length} pomieszczeń
@@ -246,7 +246,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                           {room.name}
                         </h2>
                         <span className="px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-semibold text-sm group-hover:bg-indigo-100 group-hover:text-indigo-700 transition-colors">
-                          {room.budget.toLocaleString()} PLN
+                          {(room.expenses || 0).toLocaleString()} PLN
                         </span>
                       </div>
                       <button 

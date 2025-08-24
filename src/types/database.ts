@@ -36,7 +36,6 @@ export interface Database {
           user_id: string;
           project_id: string | null;
           name: string;
-          budget: number;
           icon: string;
           created_at: string;
           updated_at: string;
@@ -46,7 +45,6 @@ export interface Database {
           user_id: string;
           project_id?: string | null;
           name: string;
-          budget: number;
           icon?: string;
           created_at?: string;
           updated_at?: string;
@@ -56,7 +54,6 @@ export interface Database {
           user_id?: string;
           project_id?: string | null;
           name?: string;
-          budget?: number;
           icon?: string;
           created_at?: string;
           updated_at?: string;

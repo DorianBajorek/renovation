@@ -82,7 +82,7 @@ export default function PokojePage() {
     setShowForm(false);
   };
 
-  const totalBudget = rooms.reduce((sum, room) => sum + room.budget, 0);
+  const totalExpenses = rooms.reduce((sum, room) => sum + (room.expenses || 0), 0);
 
   return (
     <ProtectedRoute>
@@ -101,11 +101,11 @@ export default function PokojePage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex-1">
               <h2 className="text-lg font-medium text-slate-700 mb-2">
-                Całkowity budżet remontu
+                Całkowite wydatki
               </h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl md:text-4xl font-bold text-slate-900">
-                  {totalBudget} PLN
+                  {totalExpenses.toLocaleString()} PLN
                 </span>
                 <span className="text-sm text-slate-500">
                   dla {rooms.length} pomieszczeń
@@ -116,27 +116,12 @@ export default function PokojePage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button className="flex items-center gap-2 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors">
                 <PieChart size={18} />
-                <span>Podgląd budżetu</span>
+                <span>Podgląd wydatków</span>
               </button>
               <button className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
                 <Download size={18} />
                 <span>Eksportuj</span>
               </button>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-600">Wydatki do tej pory</span>
-              <span className="text-sm font-medium text-slate-700">
-                1,240 PLN / {totalBudget} PLN
-              </span>
-            </div>
-            <div className="w-full bg-slate-200 rounded-full h-2.5">
-              <div
-                className="bg-indigo-600 h-2.5 rounded-full"
-                style={{ width: `${(1240 / totalBudget) * 100}%` }}
-              ></div>
             </div>
           </div>
         </div>
@@ -159,7 +144,7 @@ export default function PokojePage() {
                     {room.name}
                   </h2>
                   <span className="px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-semibold text-sm group-hover:bg-indigo-100 group-hover:text-indigo-700 transition-colors">
-                    {room.budget} PLN
+                    {(room.expenses || 0).toLocaleString()} PLN
                   </span>
                 </div>
                 <button 
