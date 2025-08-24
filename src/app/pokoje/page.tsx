@@ -5,6 +5,7 @@ import { Room } from "../types";
 import { AddRoomForm } from "./AddRoomForm";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useRouter } from "next/navigation";
 
 interface AddRoomFormProps {
   onAdd: (room: Room) => void;
@@ -13,6 +14,7 @@ interface AddRoomFormProps {
 
 export default function PokojePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showForm, setShowForm] = useState(false);
 
@@ -160,7 +162,11 @@ export default function PokojePage() {
                     {room.budget} PLN
                   </span>
                 </div>
-                <button className="mt-6 w-full px-6 py-3 rounded-xl bg-white text-slate-700 font-medium hover:bg-indigo-50 transition-all duration-300 border border-slate-200/60 flex items-center justify-center gap-2 group-hover:border-indigo-200 group-hover:text-indigo-700">
+                <button 
+                  onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
+                  className="mt-6 w-full px-6 py-3 rounded-xl bg-white text-slate-700 font-medium hover:bg-indigo-50 transition-all duration-300 border border-slate-200/60 flex items-center justify-center gap-2 group-hover:border-indigo-200 group-hover:text-indigo-700"
+                  disabled={!room.id}
+                >
                   Otwórz{" "}
                   <ChevronRight
                     size={18}

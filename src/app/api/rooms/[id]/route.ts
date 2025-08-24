@@ -6,31 +6,31 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: projectId } = await params;
+    const { id: roomId } = await params;
 
-    // Get the project from database
-    const { data: project, error } = await supabase
-      .from('projects')
+    // Get the room from database
+    const { data: room, error } = await supabase
+      .from('rooms')
       .select('*')
-      .eq('id', projectId)
+      .eq('id', roomId)
       .single();
 
     if (error) {
       console.error('Database error:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch project' },
+        { error: 'Failed to fetch room' },
         { status: 500 }
       );
     }
 
-    if (!project) {
+    if (!room) {
       return NextResponse.json(
-        { error: 'Project not found' },
+        { error: 'Room not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(project, {
+    return NextResponse.json(room, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -40,9 +40,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching project:', error);
+    console.error('Error fetching room:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch project' },
+      { error: 'Failed to fetch room' },
       { status: 500 }
     );
   }
@@ -54,32 +54,32 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { id: projectId } = await params;
+    const { id: roomId } = await params;
 
-    // Update the project in database
-    const { data: updatedProject, error } = await supabase
-      .from('projects')
+    // Update the room in database
+    const { data: updatedRoom, error } = await supabase
+      .from('rooms')
       .update(body)
-      .eq('id', projectId)
+      .eq('id', roomId)
       .select()
       .single();
 
     if (error) {
       console.error('Database error:', error);
       return NextResponse.json(
-        { error: 'Failed to update project' },
+        { error: 'Failed to update room' },
         { status: 500 }
       );
     }
 
-    if (!updatedProject) {
+    if (!updatedRoom) {
       return NextResponse.json(
-        { error: 'Project not found' },
+        { error: 'Room not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(updatedProject, {
+    return NextResponse.json(updatedRoom, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -89,9 +89,9 @@ export async function PUT(
       },
     });
   } catch (error) {
-    console.error('Error updating project:', error);
+    console.error('Error updating room:', error);
     return NextResponse.json(
-      { error: 'Failed to update project' },
+      { error: 'Failed to update room' },
       { status: 500 }
     );
   }
@@ -102,24 +102,24 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: projectId } = await params;
+    const { id: roomId } = await params;
 
-    // Delete the project from database
+    // Delete the room from database
     const { error } = await supabase
-      .from('projects')
+      .from('rooms')
       .delete()
-      .eq('id', projectId);
+      .eq('id', roomId);
 
     if (error) {
       console.error('Database error:', error);
       return NextResponse.json(
-        { error: 'Failed to delete project' },
+        { error: 'Failed to delete room' },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { message: 'Project deleted successfully' },
+      { message: 'Room deleted successfully' },
       {
         status: 200,
         headers: {
@@ -131,9 +131,9 @@ export async function DELETE(
       }
     );
   } catch (error) {
-    console.error('Error deleting project:', error);
+    console.error('Error deleting room:', error);
     return NextResponse.json(
-      { error: 'Failed to delete project' },
+      { error: 'Failed to delete room' },
       { status: 500 }
     );
   }

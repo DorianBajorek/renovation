@@ -2,6 +2,7 @@
 export interface Room {
   id?: string;
   user_id?: string;
+  project_id?: string | null;
   name: string;
   budget: number;
   icon: any;

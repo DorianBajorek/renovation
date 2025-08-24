@@ -34,6 +34,7 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
+          project_id: string | null;
           name: string;
           budget: number;
           icon: string;
@@ -43,6 +44,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
+          project_id?: string | null;
           name: string;
           budget: number;
           icon?: string;
@@ -52,6 +54,7 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
+          project_id?: string | null;
           name?: string;
           budget?: number;
           icon?: string;
@@ -69,7 +72,6 @@ export interface Database {
           start_date: string;
           end_date: string;
           status: 'active' | 'planning' | 'completed';
-          rooms: string[];
           icon: string;
           created_at: string;
           updated_at: string;
@@ -83,7 +85,6 @@ export interface Database {
           start_date: string;
           end_date: string;
           status?: 'active' | 'planning' | 'completed';
-          rooms?: string[];
           icon?: string;
           created_at?: string;
           updated_at?: string;
@@ -97,7 +98,6 @@ export interface Database {
           start_date?: string;
           end_date?: string;
           status?: 'active' | 'planning' | 'completed';
-          rooms?: string[];
           icon?: string;
           created_at?: string;
           updated_at?: string;

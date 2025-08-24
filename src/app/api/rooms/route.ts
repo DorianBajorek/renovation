@@ -3,9 +3,10 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from query parameters (in a real app, you'd get this from session/token)
+    // Get user ID and project ID from query parameters
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const projectId = searchParams.get('projectId');
 
     if (!userId) {
       return NextResponse.json(
@@ -14,12 +15,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch rooms for the specific user
-    const { data: rooms, error } = await supabase
+    let query = supabase
       .from('rooms')
       .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .eq('user_id', userId);
+
+    // If projectId is provided, filter rooms that belong to this project
+    if (projectId) {
+      query = query.eq('project_id', projectId);
+    }
+
+    const { data: rooms, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Database error:', error);
@@ -65,6 +71,7 @@ export async function POST(request: NextRequest) {
       .from('rooms')
       .insert({
         user_id: body.userId,
+        project_id: body.projectId || null,
         name: body.name,
         budget: body.budget,
         icon: body.icon || 'Sofa'

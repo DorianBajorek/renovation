@@ -2,3 +2,4 @@
 export * from './room';
 export * from './project';
 export * from './common';
+export * from './product';

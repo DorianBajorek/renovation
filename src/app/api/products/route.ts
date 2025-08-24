@@ -3,33 +3,32 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from query parameters (in a real app, you'd get this from session/token)
+    // Get room ID from query parameters
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const roomId = searchParams.get('roomId');
 
-    if (!userId) {
+    if (!roomId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Room ID is required' },
         { status: 400 }
       );
     }
 
-    // Fetch projects for the specific user
-    const { data: projects, error } = await supabase
-      .from('projects')
+    const { data: products, error } = await supabase
+      .from('products')
       .select('*')
-      .eq('user_id', userId)
+      .eq('room_id', roomId)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Database error:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch projects' },
+        { error: 'Failed to fetch products' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json(projects, {
+    return NextResponse.json(products, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -40,9 +39,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching projects:', error);
+    console.error('Error fetching products:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch projects' },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
@@ -53,40 +52,37 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.description || !body.budget || !body.userId) {
+    if (!body.name || !body.price || !body.roomId) {
       return NextResponse.json(
-        { error: 'Name, description, budget, and userId are required' },
+        { error: 'Name, price, and roomId are required' },
         { status: 400 }
       );
     }
 
-    // Create new project in database
-    const projectData = {
-      user_id: body.userId,
-      name: body.name,
-      description: body.description,
-      budget: body.budget,
-      start_date: body.startDate || body.start_date || new Date().toISOString().split('T')[0],
-      end_date: body.endDate || body.end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: body.status || 'planning',
-      icon: body.icon || 'Home'
-    };
-    
-    const { data: newProject, error } = await supabase
-      .from('projects')
-      .insert(projectData)
+    // Create new product in database
+    const { data: newProduct, error } = await supabase
+      .from('products')
+      .insert({
+        room_id: body.roomId,
+        name: body.name,
+        description: body.description || null,
+        price: body.price,
+        quantity: body.quantity || 1,
+        category: body.category || null,
+        status: body.status || 'planned'
+      })
       .select()
       .single();
 
     if (error) {
       console.error('Database error:', error);
       return NextResponse.json(
-        { error: 'Failed to create project' },
+        { error: 'Failed to create product' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json(newProject, {
+    return NextResponse.json(newProduct, {
       status: 201,
       headers: {
         'Content-Type': 'application/json',
@@ -96,9 +92,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating project:', error);
+    console.error('Error creating product:', error);
     return NextResponse.json(
-      { error: 'Failed to create project' },
+      { error: 'Failed to create product' },
       { status: 500 }
     );
   }

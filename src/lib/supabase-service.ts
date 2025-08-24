@@ -62,7 +62,6 @@ export const getProjects = async (): Promise<Project[]> => {
     startDate: project.start_date,
     endDate: project.end_date,
     status: project.status,
-    rooms: project.rooms || [],
     icon: project.icon
   }));
 };
@@ -76,7 +75,6 @@ export const addProject = async (project: Omit<Project, 'id'>): Promise<Project>
     start_date: project.startDate,
     end_date: project.endDate,
     status: project.status,
-    rooms: project.rooms || [],
     icon: project.icon || 'Home'
   };
 
@@ -99,7 +97,6 @@ export const addProject = async (project: Omit<Project, 'id'>): Promise<Project>
     startDate: data.start_date,
     endDate: data.end_date,
     status: data.status,
-    rooms: data.rooms || [],
     icon: data.icon
   };
 };
@@ -113,7 +110,6 @@ export const updateProject = async (id: string, updates: Partial<Project>): Prom
   if (updates.startDate) dbUpdates.start_date = updates.startDate;
   if (updates.endDate) dbUpdates.end_date = updates.endDate;
   if (updates.status) dbUpdates.status = updates.status;
-  if (updates.rooms) dbUpdates.rooms = updates.rooms;
   if (updates.icon) dbUpdates.icon = updates.icon;
 
   const { data, error } = await supabase
@@ -138,7 +134,6 @@ export const updateProject = async (id: string, updates: Partial<Project>): Prom
     startDate: data.start_date,
     endDate: data.end_date,
     status: data.status,
-    rooms: data.rooms || [],
     icon: data.icon
   };
 };

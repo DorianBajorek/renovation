@@ -6,9 +6,11 @@ import { AddProjectForm } from "../projekty/AddProjectForm";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { useRouter } from "next/navigation";
 
 export default function ProjektyPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{
@@ -246,7 +248,7 @@ export default function ProjektyPage() {
                   
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-500">Pokoje</span>
-                    <span className="font-medium text-slate-700">{project.rooms.length}</span>
+                    <span className="font-medium text-slate-700">Zobacz pokoje</span>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -260,7 +262,11 @@ export default function ProjektyPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="flex-1 px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => project.id && router.push(`/projekty/${project.id}/pokoje`)}
+                    className="flex-1 px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                    disabled={!project.id}
+                  >
                     Otwórz
                     <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </button>

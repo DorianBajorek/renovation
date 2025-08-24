@@ -8,7 +8,6 @@ export interface Project {
   startDate: string;
   endDate: string;
   status: 'active' | 'planning' | 'completed';
-  rooms: string[];
   icon: string;
   created_at?: string;
   updated_at?: string;

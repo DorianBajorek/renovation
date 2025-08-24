@@ -31,7 +31,6 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
     endDate: "",
     status: "planning" as const,
     icon: "Home",
-    rooms: [] as string[],
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -73,7 +72,6 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
           endDate: formData.endDate,
           status: formData.status,
           icon: formData.icon,
-          rooms: formData.rooms,
           userId: user.id,
         }),
       });

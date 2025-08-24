@@ -7,9 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 interface AddRoomFormProps {
   onAdd: (room: Room) => void;
   onClose: () => void;
+  projectId?: string; // Add optional projectId prop
 }
 
-export const AddRoomForm = ({ onAdd, onClose }: AddRoomFormProps) => {
+export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => {
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [budget, setBudget] = useState<number>(0);
@@ -32,6 +33,7 @@ export const AddRoomForm = ({ onAdd, onClose }: AddRoomFormProps) => {
           name,
           budget,
           userId: user.id,
+          projectId: projectId || null, // Include projectId if provided
         }),
       });
 
