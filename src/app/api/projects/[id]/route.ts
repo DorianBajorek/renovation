@@ -56,10 +56,21 @@ export async function PUT(
     const body = await request.json();
     const { id: projectId } = await params;
 
+    // Map frontend fields to database fields
+    const updateData = {
+      name: body.name,
+      description: body.description,
+      budget: body.budget,
+      start_date: body.startDate,
+      end_date: body.endDate,
+      status: body.status,
+      icon: body.icon,
+    };
+
     // Update the project in database
     const { data: updatedProject, error } = await supabase
       .from('projects')
-      .update(body)
+      .update(updateData)
       .eq('id', projectId)
       .select()
       .single();
@@ -79,7 +90,14 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(updatedProject, {
+    // Map database fields to frontend format
+    const mappedProject = {
+      ...updatedProject,
+      startDate: updatedProject.start_date,
+      endDate: updatedProject.end_date,
+    };
+
+    return NextResponse.json(mappedProject, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

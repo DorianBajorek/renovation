@@ -27,7 +27,7 @@ CREATE TABLE projects (
   budget DECIMAL(10,2) NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  status VARCHAR(20) DEFAULT 'planning' CHECK (status IN ('active', 'planning', 'completed')),
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'completed')),
   icon VARCHAR(50) DEFAULT 'Home',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -127,7 +127,7 @@ INSERT INTO users (email, password_hash, first_name, last_name) VALUES
 -- Insert sample projects for the test user
 INSERT INTO projects (user_id, name, description, budget, start_date, end_date, status, icon) VALUES
   ((SELECT id FROM users WHERE email = 'test@example.com'), 'Remont Mieszkania', 'Kompleksowy remont 3-pokojowego mieszkania', 15000, '2024-01-15', '2024-06-30', 'active', 'Home'),
-  ((SELECT id FROM users WHERE email = 'test@example.com'), 'Renowacja Domu', 'Renowacja starego domu jednorodzinnego', 45000, '2024-03-01', '2024-12-31', 'planning', 'Building'),
+  ((SELECT id FROM users WHERE email = 'test@example.com'), 'Renowacja Domu', 'Renowacja starego domu jednorodzinnego', 45000, '2024-03-01', '2024-12-31', 'active', 'Building'),
   ((SELECT id FROM users WHERE email = 'test@example.com'), 'Modernizacja Biura', 'Modernizacja przestrzeni biurowej', 25000, '2024-02-01', '2024-05-15', 'completed', 'Briefcase');
 
 -- Insert sample rooms for the test user (some assigned to projects, some not) - removed budget field

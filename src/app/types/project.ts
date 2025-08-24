@@ -8,11 +8,11 @@ export interface Project {
   expenses?: number; // Suma wydatków (obliczana dynamicznie)
   startDate: string;
   endDate: string;
-  status: 'active' | 'planning' | 'completed';
+  status: 'active' | 'completed';
   icon: string;
   created_at?: string;
   updated_at?: string;
 }
 
 // Status types
-export type ProjectStatus = 'active' | 'planning' | 'completed';
+export type ProjectStatus = 'active' | 'completed';

@@ -170,7 +170,6 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                       <span className="text-slate-500">Status:</span>
                       <span className="ml-2 font-medium text-slate-700">
                         {project.status === 'active' ? 'Aktywny' : 
-                         project.status === 'planning' ? 'Planowanie' : 
                          project.status === 'completed' ? 'Zakończony' : project.status}
                       </span>
                     </div>

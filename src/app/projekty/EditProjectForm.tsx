@@ -1,11 +1,12 @@
 "use client";
 import { X, Home, Building, Briefcase, Calendar } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Project, FormErrors } from "../types";
 import { useAuth } from "@/hooks/useAuth";
 
-interface AddProjectFormProps {
-  onAdd: (project: Project) => void;
+interface EditProjectFormProps {
+  project: Project;
+  onUpdate: (project: Project) => void;
   onClose: () => void;
 }
 
@@ -20,7 +21,7 @@ const statusOptions = [
   { value: "completed", label: "Zakończony" },
 ];
 
-export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
+export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormProps) {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
@@ -33,6 +34,21 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        name: project.name,
+        description: project.description,
+        budget: project.budget.toString(),
+        startDate: project.startDate,
+        endDate: project.endDate,
+        status: project.status,
+        icon: project.icon,
+      });
+    }
+  }, [project]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +70,13 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
     }
 
     try {
-      if (!user) {
-        throw new Error("Użytkownik nie jest zalogowany");
+      setLoading(true);
+      if (!user || !project.id) {
+        throw new Error("Użytkownik nie jest zalogowany lub brak ID projektu");
       }
 
-      const response = await fetch('/api/projects', {
-        method: 'POST',
+      const response = await fetch(`/api/projects/${project.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -71,21 +88,22 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
           endDate: formData.endDate,
           status: formData.status,
           icon: formData.icon,
-          userId: user.id,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Błąd podczas dodawania projektu');
+        throw new Error(errorData.error || 'Błąd podczas aktualizacji projektu');
       }
 
-      const newProject = await response.json();
-      onAdd(newProject);
+      const updatedProject = await response.json();
+      onUpdate(updatedProject);
       onClose();
     } catch (error) {
-      console.error("Błąd podczas dodawania projektu:", error);
-      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas dodawania projektu');
+      console.error("Błąd podczas aktualizacji projektu:", error);
+      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas aktualizacji projektu');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,7 +119,7 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
       <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-slate-900">Dodaj nowy projekt</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Edytuj projekt</h2>
             <button
               onClick={onClose}
               className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
@@ -261,14 +279,16 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
                 type="button"
                 onClick={onClose}
                 className="flex-1 px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                disabled={loading}
               >
                 Anuluj
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
+                className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
               >
-                Dodaj projekt
+                {loading ? "Zapisywanie..." : "Zapisz zmiany"}
               </button>
             </div>
           </form>
