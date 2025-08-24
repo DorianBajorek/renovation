@@ -47,7 +47,6 @@ export default function Nav() {
       <nav className="hidden md:flex gap-6 items-center text-sm font-medium">
         {isAuthenticated ? (
           <>
-            <Link href="/pokoje" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Pokoje</Link>
             <Link href="/projekty" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Projekty</Link>
             <div className="flex items-center gap-4">
               <span className="text-gray-600 text-sm">Witaj, {user?.firstName}!</span>
@@ -96,13 +95,6 @@ export default function Nav() {
         <nav className="flex flex-col p-4 gap-2">
           {isAuthenticated ? (
             <>
-              <Link 
-                href="/pokoje" 
-                className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors"
-                onClick={handleMenuOptionClick}
-              >
-                Pokoje
-              </Link>
               <Link 
                 href="/projekty" 
                 className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors"

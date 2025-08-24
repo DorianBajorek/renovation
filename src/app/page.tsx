@@ -25,20 +25,12 @@ export default function Home() {
           
           <div className="flex gap-4 flex-col sm:flex-row justify-center">
             {isAuthenticated ? (
-              <>
-                <Link
-                  href="/pokoje"
-                  className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  Zarządzaj pokojami
-                </Link>
-                <Link
-                  href="/projekty"
-                  className="px-8 py-4 rounded-xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  Zarządzaj projektami
-                </Link>
-              </>
+              <Link
+                href="/projekty"
+                className="px-8 py-4 rounded-xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Zarządzaj projektami
+              </Link>
             ) : (
               <>
                 <Link
@@ -211,20 +203,12 @@ export default function Home() {
           
           <div className="flex gap-4 flex-col sm:flex-row justify-center">
             {isAuthenticated ? (
-              <>
-                <Link
-                  href="/pokoje"
-                  className="px-8 py-4 rounded-xl bg-white text-blue-600 font-semibold shadow-lg hover:bg-blue-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  Zarządzaj pokojami
-                </Link>
-                <Link
-                  href="/projekty"
-                  className="px-8 py-4 rounded-xl bg-white text-green-600 font-semibold shadow-lg hover:bg-green-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  Zarządzaj projektami
-                </Link>
-              </>
+              <Link
+                href="/projekty"
+                className="px-8 py-4 rounded-xl bg-white text-green-600 font-semibold shadow-lg hover:bg-green-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Zarządzaj projektami
+              </Link>
             ) : (
               <>
                 <Link
