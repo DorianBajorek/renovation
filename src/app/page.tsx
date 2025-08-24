@@ -1,6 +1,10 @@
+"use client";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 text-gray-800 flex flex-col">
       {/* Hero Section */}
@@ -20,18 +24,37 @@ export default function Home() {
           </div>
           
           <div className="flex gap-4 flex-col sm:flex-row justify-center">
-            <Link
-              href="/pokoje"
-              className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
-            >
-              Zarządzaj pokojami
-            </Link>
-            <Link
-              href="/projekty"
-              className="px-8 py-4 rounded-xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
-            >
-              Zarządzaj projektami
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/pokoje"
+                  className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zarządzaj pokojami
+                </Link>
+                <Link
+                  href="/projekty"
+                  className="px-8 py-4 rounded-xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zarządzaj projektami
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zaloguj się
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-8 py-4 rounded-xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zarejestruj się
+                </Link>
+              </>
+            )}
             <a
               href="#"
               className="px-8 py-4 rounded-xl border border-gray-200 bg-white font-medium hover:bg-gray-50 transition-all shadow-sm hover:shadow-md"
@@ -187,18 +210,37 @@ export default function Home() {
           <p className="text-lg mb-10 opacity-90">Dołącz do tysięcy zadowolonych użytkowników i zakończ remont bez niespodzianek budżetowych.</p>
           
           <div className="flex gap-4 flex-col sm:flex-row justify-center">
-            <Link
-              href="/pokoje"
-              className="px-8 py-4 rounded-xl bg-white text-blue-600 font-semibold shadow-lg hover:bg-blue-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
-            >
-              Zarządzaj pokojami
-            </Link>
-            <Link
-              href="/projekty"
-              className="px-8 py-4 rounded-xl bg-white text-green-600 font-semibold shadow-lg hover:bg-green-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
-            >
-              Zarządzaj projektami
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/pokoje"
+                  className="px-8 py-4 rounded-xl bg-white text-blue-600 font-semibold shadow-lg hover:bg-blue-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zarządzaj pokojami
+                </Link>
+                <Link
+                  href="/projekty"
+                  className="px-8 py-4 rounded-xl bg-white text-green-600 font-semibold shadow-lg hover:bg-green-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zarządzaj projektami
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-8 py-4 rounded-xl bg-white text-blue-600 font-semibold shadow-lg hover:bg-blue-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zaloguj się
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-8 py-4 rounded-xl bg-white text-green-600 font-semibold shadow-lg hover:bg-green-50 transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Zarejestruj się
+                </Link>
+              </>
+            )}
             <a
               href="#"
               className="px-8 py-4 rounded-xl border border-white bg-transparent font-medium hover:bg-white hover:bg-opacity-10 transition-all"
