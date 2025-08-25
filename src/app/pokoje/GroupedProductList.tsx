@@ -184,12 +184,6 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
                      <div className="flex items-center justify-between mb-4">
              <h3 className="text-lg font-semibold text-slate-900">Scenariusze wydatków</h3>
-             <button
-               onClick={() => setShowSummary(false)}
-               className="text-slate-500 hover:text-slate-700"
-             >
-               ×
-             </button>
            </div>
            <div className="mb-4 p-3 bg-white rounded-lg border border-indigo-200">
              <div className="text-center">
