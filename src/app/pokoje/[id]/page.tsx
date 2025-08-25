@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { AddProductForm } from "../AddProductForm";
 import { EditProductForm } from "../EditProductForm";
+import { GroupedProductList } from "../GroupedProductList";
 import { ProductList } from "../ProductList";
 import { ExportModal } from "../../components/ExportModal";
 
@@ -55,6 +56,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [showExportModal, setShowExportModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [addingProduct, setAddingProduct] = useState(false);
+  const [useGroupedView, setUseGroupedView] = useState(true);
 
   useEffect(() => {
     const getRoomId = async () => {
@@ -200,53 +202,118 @@ export default function RoomPage({ params }: RoomPageProps) {
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-slate-900">Produkty w pokoju</h2>
-              <button
-                onClick={() => setShowAddProductForm(true)}
-                className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
-              >
-                <Plus size={20} />
-                <span>Dodaj produkt</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-white/30">
+                  <button
+                    onClick={() => setUseGroupedView(true)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      useGroupedView 
+                        ? 'bg-indigo-600 text-white' 
+                        : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                  >
+                    Grupowane
+                  </button>
+                  <button
+                    onClick={() => setUseGroupedView(false)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      !useGroupedView 
+                        ? 'bg-indigo-600 text-white' 
+                        : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                  >
+                    Lista
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowAddProductForm(true)}
+                  className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  <Plus size={20} />
+                  <span>Dodaj produkt</span>
+                </button>
+              </div>
             </div>
 
-            <ProductList 
-              products={products}
-              onEdit={(product) => {
-                setEditingProduct(product);
-                setShowEditProductForm(true);
-              }}
-              onDelete={async (productId) => {
-                if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
-                  try {
-                    const response = await fetch(`/api/products/${productId}`, {
-                      method: 'DELETE',
-                    });
+            {useGroupedView ? (
+              <GroupedProductList 
+                products={products}
+                onEdit={(product) => {
+                  setEditingProduct(product);
+                  setShowEditProductForm(true);
+                }}
+                onDelete={async (productId) => {
+                  if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+                    try {
+                      const response = await fetch(`/api/products/${productId}`, {
+                        method: 'DELETE',
+                      });
 
-                    if (response.ok) {
-                      setProducts(prev => prev.filter(p => p.id !== productId));
-                      
-                      // Refresh room data to update expenses
-                      if (user && roomId) {
-                        try {
-                          const roomResponse = await fetch(`/api/rooms/${roomId}`);
-                          if (roomResponse.ok) {
-                            const roomData = await roomResponse.json();
-                            setRoom(roomData);
+                      if (response.ok) {
+                        setProducts(prev => prev.filter(p => p.id !== productId));
+                        
+                        // Refresh room data to update expenses
+                        if (user && roomId) {
+                          try {
+                            const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                            if (roomResponse.ok) {
+                              const roomData = await roomResponse.json();
+                              setRoom(roomData);
+                            }
+                          } catch (error) {
+                            console.error('Error refreshing room data:', error);
                           }
-                        } catch (error) {
-                          console.error('Error refreshing room data:', error);
                         }
+                      } else {
+                        alert('Błąd podczas usuwania produktu');
                       }
-                    } else {
+                    } catch (error) {
+                      console.error('Error deleting product:', error);
                       alert('Błąd podczas usuwania produktu');
                     }
-                  } catch (error) {
-                    console.error('Error deleting product:', error);
-                    alert('Błąd podczas usuwania produktu');
                   }
-                }
-              }}
-            />
+                }}
+              />
+            ) : (
+              <ProductList 
+                products={products}
+                onEdit={(product) => {
+                  setEditingProduct(product);
+                  setShowEditProductForm(true);
+                }}
+                onDelete={async (productId) => {
+                  if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+                    try {
+                      const response = await fetch(`/api/products/${productId}`, {
+                        method: 'DELETE',
+                      });
+
+                      if (response.ok) {
+                        setProducts(prev => prev.filter(p => p.id !== productId));
+                        
+                        // Refresh room data to update expenses
+                        if (user && roomId) {
+                          try {
+                            const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                            if (roomResponse.ok) {
+                              const roomData = await roomResponse.json();
+                              setRoom(roomData);
+                            }
+                          } catch (error) {
+                            console.error('Error refreshing room data:', error);
+                          }
+                        }
+                      } else {
+                        alert('Błąd podczas usuwania produktu');
+                      }
+                    } catch (error) {
+                      console.error('Error deleting product:', error);
+                      alert('Błąd podczas usuwania produktu');
+                    }
+                  }
+                }}
+              />
+            )}
           </div>
         </main>
 

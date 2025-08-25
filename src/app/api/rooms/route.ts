@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       .from('rooms')
       .select(`
         *,
-        products:products(price, quantity)
+        products:products(price, quantity, status)
       `)
       .eq('user_id', userId);
     
@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate expenses for each room
+    // Calculate expenses for each room (only purchased products)
     const roomsWithExpenses = rooms?.map(room => {
       const expenses = room.products?.reduce((sum: number, product: any) => 
-        sum + (product.price * product.quantity), 0) || 0;
+        product.status === 'purchased' ? sum + (product.price * product.quantity) : sum, 0) || 0;
       
       return {
         ...room,

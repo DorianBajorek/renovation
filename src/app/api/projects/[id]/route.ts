@@ -8,10 +8,16 @@ export async function GET(
   try {
     const { id: projectId } = await params;
 
-    // Get the project from database
+    // Get the project from database with calculated expenses (only purchased products)
     const { data: project, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(`
+        *,
+        rooms:rooms(
+          id,
+          products:products(price, quantity, status)
+        )
+      `)
       .eq('id', projectId)
       .single();
 
@@ -30,7 +36,20 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(project, {
+    // Calculate expenses for the project (only purchased products)
+    const expenses = project.rooms?.reduce((projectSum: number, room: any) => {
+      const roomExpenses = room.products?.reduce((roomSum: number, product: any) => 
+        product.status === 'purchased' ? roomSum + (product.price * product.quantity) : roomSum, 0) || 0;
+      return projectSum + roomExpenses;
+    }, 0) || 0;
+
+    const projectWithExpenses = {
+      ...project,
+      expenses: expenses,
+      rooms: undefined // Remove rooms from response
+    };
+
+    return NextResponse.json(projectWithExpenses, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

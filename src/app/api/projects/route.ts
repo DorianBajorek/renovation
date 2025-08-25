@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         *,
         rooms:rooms(
           id,
-          products:products(price, quantity)
+          products:products(price, quantity, status)
         )
       `)
       .eq('user_id', userId)
@@ -34,11 +34,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate expenses for each project
+    // Calculate expenses for each project (only purchased products)
     const projectsWithExpenses = projects?.map(project => {
       const expenses = project.rooms?.reduce((projectSum: number, room: any) => {
         const roomExpenses = room.products?.reduce((roomSum: number, product: any) => 
-          roomSum + (product.price * product.quantity), 0) || 0;
+          product.status === 'purchased' ? roomSum + (product.price * product.quantity) : roomSum, 0) || 0;
         return projectSum + roomExpenses;
       }, 0) || 0;
       

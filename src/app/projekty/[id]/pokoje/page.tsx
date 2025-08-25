@@ -127,7 +127,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
     setShowForm(false);
   };
 
-  const totalExpenses = rooms.reduce((sum, room) => sum + (room.expenses || 0), 0);
+  // Use project expenses from API instead of summing room expenses
+  const totalExpenses = project?.expenses || 0;
 
   if (loading) {
     return (

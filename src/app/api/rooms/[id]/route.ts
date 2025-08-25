@@ -14,7 +14,7 @@ export async function GET(
       .from('rooms')
       .select(`
         *,
-        products:products(price, quantity)
+        products:products(price, quantity, status)
       `)
       .eq('id', roomId)
       .single();
@@ -27,9 +27,9 @@ export async function GET(
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    // Calculate expenses for the room
+    // Calculate expenses for the room (only purchased products)
     const expenses = room.products?.reduce((sum: number, product: any) =>
-      sum + (product.price * product.quantity), 0) || 0;
+      product.status === 'purchased' ? sum + (product.price * product.quantity) : sum, 0) || 0;
 
     const roomWithExpenses = {
       ...room,
