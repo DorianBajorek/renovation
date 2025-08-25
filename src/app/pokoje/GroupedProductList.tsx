@@ -247,7 +247,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
             >
               {/* Group Header */}
               <div 
-                className={`group relative p-6 transition-all duration-200 ${hasMultipleProducts ? 'cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50' : 'cursor-default'}`}
+                className={`group relative p-4 sm:p-6 transition-all duration-200 ${hasMultipleProducts ? 'cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50' : 'cursor-default'}`}
                 onClick={() => hasMultipleProducts && toggleGroup(group.name)}
               >
                 {/* Hover effect overlay */}
@@ -255,14 +255,14 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-2xl pointer-events-none"></div>
                 )}
                 
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 transition-colors">
-                      <Package size={20} className="text-indigo-600" />
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1 sm:p-2 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 transition-colors">
+                      <Package size={18} className="sm:w-5 sm:h-5 text-indigo-600" />
                     </div>
-                    <div>
-                      <h4 className="text-lg font-medium text-slate-900 group-hover:text-indigo-700 transition-colors">{group.name}</h4>
-                      <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base sm:text-lg font-medium text-slate-900 group-hover:text-indigo-700 transition-colors truncate">{group.name}</h4>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-slate-500 mt-1">
                         <span>{group.products.length} produkt{group.products.length === 1 ? '' : group.products.length < 5 ? 'y' : 'ów'}</span>
                         <span>Łącznie: {group.totalQuantity} szt.</span>
                         <span>Zakupione: {group.products.filter(p => p.status === 'purchased').reduce((sum, p) => sum + (p.price * p.quantity), 0).toLocaleString()} PLN</span>
@@ -270,9 +270,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
                     {hasMultipleProducts && (
-                      <div className="flex items-center gap-3 text-sm">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm">
                         <span className="text-red-600 font-medium">
                           Max: {group.maxPrice.toLocaleString()} PLN
                         </span>
@@ -285,19 +285,49 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                       </div>
                     )}
                     {hasMultipleProducts && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex items-center gap-2 self-center">
+                        <span className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden sm:block">
                           {isExpanded ? 'Zwiń' : 'Rozwiń'}
                         </span>
-                        <div className="p-2 rounded-lg bg-slate-100 group-hover:bg-indigo-100 transition-colors duration-200">
+                        <div className="p-1 sm:p-2 rounded-lg bg-slate-100 group-hover:bg-indigo-100 transition-colors duration-200">
                           {isExpanded ? (
-                            <ChevronDown size={16} className="text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                            <ChevronDown size={14} className="sm:w-4 sm:h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
                           ) : (
-                            <ChevronRight size={16} className="text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                            <ChevronRight size={14} className="sm:w-4 sm:h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
                           )}
                         </div>
                       </div>
                     )}
+                    
+                                         {/* Edit/Delete buttons for single products */}
+                     {!hasMultipleProducts && group.products.length === 1 && (
+                       <div className="flex items-center gap-1 sm:gap-2 self-center">
+                         {onEdit && (
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onEdit(group.products[0]);
+                             }}
+                             className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                             title="Edytuj produkt"
+                           >
+                             <Edit size={14} className="sm:w-4 sm:h-4" />
+                           </button>
+                         )}
+                         {onDelete && (
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onDelete(group.products[0].id!);
+                             }}
+                             className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                             title="Usuń produkt"
+                           >
+                             <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                           </button>
+                         )}
+                       </div>
+                     )}
                   </div>
                 </div>
               </div>
@@ -308,126 +338,97 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                   {group.products.map((product) => (
                     <div
                       key={product.id}
-                      className="p-4 border-b border-slate-200 last:border-b-0 hover:bg-white/50 transition-colors"
+                      className="p-3 sm:p-4 border-b border-slate-200 last:border-b-0 hover:bg-white/50 transition-colors"
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
                               {getStatusText(product.status)}
                             </span>
-                            <span className="text-sm text-slate-500">
+                            <span className="text-xs sm:text-sm text-slate-500">
                               Cena: {product.price.toLocaleString()} PLN
                             </span>
-                            <span className="text-sm text-slate-500">
+                            <span className="text-xs sm:text-sm text-slate-500">
                               Ilość: {product.quantity}
                             </span>
                           </div>
                           
                           {product.description && (
-                            <p className="text-slate-600 text-sm mb-2">{product.description}</p>
+                            <p className="text-slate-600 text-xs sm:text-sm mb-2">{product.description}</p>
                           )}
                           
-                          <div className="text-sm text-slate-500">
+                          <div className="text-xs sm:text-sm text-slate-500">
                             Wartość: {(product.price * product.quantity).toLocaleString()} PLN
                             {product.category && (
-                              <span className="ml-4">Kategoria: {product.category}</span>
+                              <span className="block sm:inline sm:ml-4">Kategoria: {product.category}</span>
                             )}
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2 ml-4">
-                          {onEdit && (
-                            <button
-                              onClick={() => onEdit(product)}
-                              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                              title="Edytuj produkt"
-                            >
-                              <Edit size={16} />
-                            </button>
-                          )}
-                          {onDelete && (
-                            <button
-                              onClick={() => onDelete(product.id!)}
-                              className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Usuń produkt"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
+                                                 <div className="flex items-center gap-1 sm:gap-2 sm:ml-4 self-start sm:self-center">
+                           {onEdit && (
+                             <button
+                               onClick={() => onEdit(product)}
+                               className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                               title="Edytuj produkt"
+                             >
+                               <Edit size={14} className="sm:w-4 sm:h-4" />
+                             </button>
+                           )}
+                           {onDelete && (
+                             <button
+                               onClick={() => onDelete(product.id!)}
+                               className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                               title="Usuń produkt"
+                             >
+                               <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                             </button>
+                           )}
+                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Single Product Display (when not expanded) */}
-              {!hasMultipleProducts && (
-                <div className="px-6 pb-6">
-                  {group.products.map((product) => (
-                    <div key={product.id} className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
-                            {getStatusText(product.status)}
-                          </span>
-                        </div>
-                        
-                        {product.description && (
-                          <p className="text-slate-600 mb-3">{product.description}</p>
-                        )}
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-slate-500">Cena:</span>
-                            <span className="ml-2 font-medium text-slate-700">
-                              {product.price.toLocaleString()} PLN
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500">Ilość:</span>
-                            <span className="ml-2 font-medium text-slate-700">{product.quantity}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500">Wartość:</span>
-                            <span className="ml-2 font-medium text-slate-700">
-                              {(product.price * product.quantity).toLocaleString()} PLN
-                            </span>
-                          </div>
-                          {product.category && (
-                            <div>
-                              <span className="text-slate-500">Kategoria:</span>
-                              <span className="ml-2 font-medium text-slate-700">{product.category}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 ml-4">
-                        {onEdit && (
-                          <button
-                            onClick={() => onEdit(product)}
-                            className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title="Edytuj produkt"
-                          >
-                            <Edit size={16} />
-                          </button>
-                        )}
-                        {onDelete && (
-                          <button
-                            onClick={() => onDelete(product.id!)}
-                            className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Usuń produkt"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                                                                                         {/* Single Product Display (when not expanded) */}
+                 {!hasMultipleProducts && (
+                   <div className="border-t border-slate-200 bg-slate-50/50">
+                     {group.products.map((product) => (
+                       <div key={product.id} className="p-3 sm:p-4 hover:bg-white/50 transition-colors">
+                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                           <div className="flex-1">
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
+                                 {getStatusText(product.status)}
+                               </span>
+                               <span className="text-xs sm:text-sm text-slate-500">
+                                 Cena: {product.price.toLocaleString()} PLN
+                               </span>
+                               <span className="text-xs sm:text-sm text-slate-500">
+                                 Ilość: {product.quantity}
+                               </span>
+                             </div>
+                             
+                             {product.description && (
+                               <p className="text-slate-600 text-xs sm:text-sm mb-2">{product.description}</p>
+                             )}
+                             
+                             <div className="text-xs sm:text-sm text-slate-500">
+                               Wartość: {(product.price * product.quantity).toLocaleString()} PLN
+                               {product.category && (
+                                 <span className="block sm:inline sm:ml-4">Kategoria: {product.category}</span>
+                               )}
+                             </div>
+                           </div>
+                           
+                           {/* Przyciski edycji/usuwania są teraz w nagłówku grupy dla pojedynczych produktów */}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
             </div>
           );
         })}

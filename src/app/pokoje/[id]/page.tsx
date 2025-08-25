@@ -135,9 +135,9 @@ export default function RoomPage({ params }: RoomPageProps) {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-800 font-inter flex flex-col">
-        <div className="flex justify-center py-10 px-6">
-          <div className="flex items-center gap-3 bg-white/80 backdrop-blur-lg px-8 py-4 rounded-2xl shadow-lg border border-white/30">
-            <div className="p-2 rounded-xl bg-indigo-100">
+        <div className="flex justify-center py-6 sm:py-10 px-4 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3 bg-white/80 backdrop-blur-lg px-4 sm:px-8 py-3 sm:py-4 rounded-2xl shadow-lg border border-white/30">
+            <div className="p-1 sm:p-2 rounded-xl bg-indigo-100">
               {(() => {
                 const iconMap: Record<string, any> = { 
                   Home, Sofa, Bed, Bath, Tv, Armchair, Utensils, Car, DoorOpen, 
@@ -145,16 +145,16 @@ export default function RoomPage({ params }: RoomPageProps) {
                   Gamepad2, WashingMachine, TreePine, Sun 
                 };
                 const Icon = iconMap[room.icon] || Home;
-                return <Icon size={32} className="text-indigo-600" />;
+                return <Icon size={24} className="sm:w-8 sm:h-8 text-indigo-600" />;
               })()}
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
               {room.name}
             </h1>
           </div>
         </div>
 
-        <div className="px-6 md:px-12 mb-8">
+        <div className="px-4 sm:px-6 md:px-12 mb-8">
           <div className="max-w-7xl mx-auto">
             <button
               onClick={() => router.back()}
@@ -164,14 +164,14 @@ export default function RoomPage({ params }: RoomPageProps) {
               <span>Powrót</span>
             </button>
 
-            <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-6 border border-white/60">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex-1">
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+                <div className="flex-1 text-center md:text-left">
                   <h2 className="text-lg font-medium text-slate-700 mb-2">
                     Wydatki pokoju
                   </h2>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl md:text-4xl font-bold text-slate-900">
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                    <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
                       {(room.expenses || 0).toLocaleString()} PLN
                     </span>
                     <span className="text-sm text-slate-500">
@@ -180,14 +180,14 @@ export default function RoomPage({ params }: RoomPageProps) {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button className="flex items-center gap-2 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <button className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors w-full sm:w-auto">
                     <FileText size={18} />
                     <span>Podgląd wydatków</span>
                   </button>
                   <button 
                     onClick={() => setShowExportModal(true)}
-                    className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors w-full sm:w-auto"
                   >
                     <Download size={18} />
                     <span>Eksportuj</span>
@@ -198,12 +198,12 @@ export default function RoomPage({ params }: RoomPageProps) {
           </div>
         </div>
 
-        <main className="flex-1 px-6 md:px-12 pb-16">
+        <main className="flex-1 px-4 sm:px-6 md:px-12 pb-16">
           <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-slate-900">Produkty w pokoju</h2>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-white/30">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Produkty w pokoju</h2>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-white/30 self-center">
                   <button
                     onClick={() => setUseGroupedView(true)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -227,7 +227,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                 </div>
                 <button
                   onClick={() => setShowAddProductForm(true)}
-                  className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors w-full sm:w-auto"
                 >
                   <Plus size={20} />
                   <span>Dodaj produkt</span>
