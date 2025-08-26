@@ -351,98 +351,119 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                 </div>
               </div>
 
-              {/* Expanded Products */}
-              {isExpanded && hasMultipleProducts && (
-                <div className="border-t border-slate-200 bg-slate-50/50">
-                  {group.products.map((product) => (
-                    <div
-                      key={product.id}
-                      className="p-3 sm:p-4 border-b border-slate-200 last:border-b-0 hover:bg-white/50 transition-colors"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
-                              {getStatusText(product.status)}
-                            </span>
-                            <span className="text-xs sm:text-sm text-slate-500">
-                              Cena: {product.price.toLocaleString()} PLN
-                            </span>
-                            <span className="text-xs sm:text-sm text-slate-500">
-                              Ilość: {product.quantity}
-                            </span>
-                          </div>
-                          
-                          {product.description && (
-                            <p className="text-slate-600 text-xs sm:text-sm mb-2">{product.description}</p>
-                          )}
-                          
-                          <div className="text-xs sm:text-sm text-slate-500">
-                            Wartość: {(product.price * product.quantity).toLocaleString()} PLN
-                            {product.category && (
-                              <span className="block sm:inline sm:ml-4">Kategoria: {product.category}</span>
-                            )}
-                          </div>
-                        </div>
-                        
-                                                 <div className="flex items-center gap-1 sm:gap-2 sm:ml-4 self-start sm:self-center">
+                             {/* Expanded Products */}
+               {isExpanded && hasMultipleProducts && (
+                 <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+                   {group.products.map((product, index) => (
+                     <div
+                       key={product.id}
+                       className={`p-4 sm:p-6 border-b border-slate-200 last:border-b-0 hover:bg-white/80 transition-all duration-200 ${
+                         index % 2 === 0 ? 'bg-white/30' : 'bg-slate-50/30'
+                       }`}
+                     >
+                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                         <div className="flex-1">
+                           {/* Product Header */}
+                           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                             <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                             <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
+                               {getStatusText(product.status)}
+                             </span>
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                               <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                 Cena: {product.price.toLocaleString()} PLN
+                               </span>
+                               <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                 Ilość: {product.quantity}
+                               </span>
+                             </div>
+                           </div>
+                           
+                           {/* Product Description */}
+                           {product.description && (
+                             <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                               <p className="text-slate-700 text-sm leading-relaxed">{product.description}</p>
+                             </div>
+                           )}
+                           
+                           {/* Product Footer */}
+                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                             {product.category && (
+                               <span className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-300">
+                                 Kategoria: {product.category}
+                               </span>
+                             )}
+                           </div>
+                         </div>
+                         
+                         {/* Action Buttons */}
+                         <div className="flex items-center gap-2 sm:ml-4 self-start sm:self-center">
                            {onEdit && (
                              <button
                                onClick={() => onEdit(product)}
-                               className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                               className="p-2 sm:p-3 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                                title="Edytuj produkt"
                              >
-                               <Edit size={14} className="sm:w-4 sm:h-4" />
+                               <Edit size={16} className="sm:w-5 sm:h-5" />
                              </button>
                            )}
                            {onDelete && (
                              <button
                                onClick={() => onDelete(product.id!)}
-                               className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                               className="p-2 sm:p-3 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                                title="Usuń produkt"
                              >
-                               <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                               <Trash2 size={16} className="sm:w-5 sm:h-5" />
                              </button>
                            )}
                          </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
 
-                                                                                         {/* Single Product Display (when not expanded) */}
+                                                                                                                                                                                   {/* Single Product Display (when not expanded) */}
                  {!hasMultipleProducts && (
-                   <div className="border-t border-slate-200 bg-slate-50/50">
+                   <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
                      {group.products.map((product) => (
-                       <div key={product.id} className="p-3 sm:p-4 hover:bg-white/50 transition-colors">
-                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                       <div key={product.id} className="p-4 sm:p-6 hover:bg-white/80 transition-all duration-200">
+                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                            <div className="flex-1">
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
+                             {/* Product Header */}
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                               <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                               <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
                                  {getStatusText(product.status)}
                                </span>
-                               <span className="text-xs sm:text-sm text-slate-500">
-                                 Cena: {product.price.toLocaleString()} PLN
-                               </span>
-                               <span className="text-xs sm:text-sm text-slate-500">
-                                 Ilość: {product.quantity}
-                               </span>
+                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                 <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                   Cena: {product.price.toLocaleString()} PLN
+                                 </span>
+                                 <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                   Ilość: {product.quantity}
+                                 </span>
+                               </div>
                              </div>
                              
+                             {/* Product Description */}
                              {product.description && (
-                               <p className="text-slate-600 text-xs sm:text-sm mb-2">{product.description}</p>
+                               <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                 <p className="text-slate-700 text-sm leading-relaxed">{product.description}</p>
+                               </div>
                              )}
                              
-                             <div className="text-xs sm:text-sm text-slate-500">
-                               Wartość: {(product.price * product.quantity).toLocaleString()} PLN
+                             {/* Product Footer */}
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                {product.category && (
-                                 <span className="block sm:inline sm:ml-4">Kategoria: {product.category}</span>
+                                 <span className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-300">
+                                   Kategoria: {product.category}
+                                 </span>
                                )}
                              </div>
                            </div>
                            
-                           {/* Przyciski edycji/usuwania są teraz w nagłówku grupy dla pojedynczych produktów */}
+                           {/* Przyciski edycji/usuwania są w nagłówku grupy dla pojedynczych produktów */}
                          </div>
                        </div>
                      ))}
