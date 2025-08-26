@@ -9,18 +9,31 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 text-gray-800 flex flex-col">
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 md:py-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-10">
-            <div className="inline-block bg-blue-100 px-4 py-2 rounded-full mb-6">
-              <span className="text-blue-600 font-medium text-sm">Nowość • Dostępne teraz</span>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-12 mb-10">
+            <div className="lg:w-1/2">
+              <div className="inline-block bg-blue-100 px-4 py-2 rounded-full mb-6">
+                <span className="text-blue-600 font-medium text-sm">Nowość • Dostępne teraz</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                Kontroluj koszty swojego remontu 
+                <span className="text-blue-600 block">w prosty sposób</span>
+              </h2>
+              <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
+                Dodawaj pokoje, zapisuj wydatki, dołączaj zdjęcia paragonów i miej pełną kontrolę nad budżetem swojego domu lub mieszkania.
+              </p>
             </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Kontroluj koszty swojego remontu 
-              <span className="text-blue-600 block">w prosty sposób</span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-              Dodawaj pokoje, zapisuj wydatki, dołączaj zdjęcia paragonów i miej pełną kontrolę nad budżetem swojego domu lub mieszkania.
-            </p>
+                         <div className="lg:w-1/2 flex justify-center">
+               <div className="relative">
+                 <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl opacity-20 blur-xl"></div>
+                 <img 
+                   src="/main-photo.png" 
+                   alt="Kontrola kosztów remontu" 
+                   className="relative rounded-2xl shadow-2xl max-w-full h-auto"
+                   style={{ maxHeight: '500px' }}
+                 />
+               </div>
+             </div>
           </div>
           
           <div className="flex gap-4 flex-col sm:flex-row justify-center">
@@ -62,7 +75,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <h3 className="text-3xl font-bold text-center mb-12">Jak to działa?</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div className="flex flex-col items-center text-center p-6 rounded-lg hover:shadow-md transition-all">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -93,6 +106,8 @@ export default function Home() {
               <p className="text-gray-600">Otrzymuj szczegółowe raporty i analizy wydatków na każdym etapie remontu.</p>
             </div>
           </div>
+          
+          
         </div>
       </section>
 
@@ -127,73 +142,51 @@ export default function Home() {
                 </li>
               </ul>
             </div>
-            <div className="md:w-1/2 flex justify-center">
-              <div className="relative w-full max-w-md">
-                <div className="bg-white rounded-xl shadow-lg p-6 transform rotate-3 absolute -inset-1 border border-blue-100 opacity-20"></div>
-                <div className="bg-white rounded-xl shadow-lg p-6 transform -rotate-2 absolute -inset-1 border border-blue-100 opacity-20"></div>
-                <div className="bg-white rounded-xl shadow-lg p-6 relative">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="text-sm font-medium">Salon</div>
-                    <div className="text-sm text-blue-600 font-bold">4,250 zł / 5,000 zł</div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{width: '85%'}}></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500">Farba</div>
-                      <div className="font-medium">850 zł</div>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500">Panele</div>
-                      <div className="font-medium">2,100 zł</div>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500">Oświetlenie</div>
-                      <div className="font-medium">1,100 zł</div>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500">Inne</div>
-                      <div className="font-medium">200 zł</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                         <div className="md:w-1/2 flex justify-center">
+               <div className="relative max-w-md">
+                 <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl opacity-20 blur-xl"></div>
+                 <img 
+                   src="/reno2.png" 
+                   alt="Zespół remontowy podczas pracy" 
+                   className="relative rounded-2xl shadow-2xl max-w-full h-auto"
+                   style={{ maxHeight: '350px' }}
+                 />
+               </div>
+             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 px-6 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-3xl font-bold mb-12">Co mówią nasi użytkownicy?</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-blue-50 p-6 rounded-xl">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">AK</div>
-                <div>
-                  <div className="font-medium">Anna Kowalska</div>
-                  <div className="text-sm text-gray-500">Remont kawalerki</div>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">"Dzięki tej aplikacji zaoszczędziłam ponad 3000 zł na nieplanowanych wydatkach. Świetne narzędzie do kontroli budżetu!"</p>
-            </div>
-            
-            <div className="bg-blue-50 p-6 rounded-xl">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">TP</div>
-                <div>
-                  <div className="font-medium">Tomasz Nowak</div>
-                  <div className="text-sm text-gray-500">Remont domu</div>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">"Przydatne zwłaszcza przy większych remontach, gdzie łatwo stracić kontrolę nad wydatkami. Polecam!"</p>
-            </div>
-          </div>
-        </div>
-      </section>
+             {/* Testimonials Section */}
+       <section className="py-16 px-6 bg-white">
+         <div className="max-w-4xl mx-auto text-center">
+           <h3 className="text-3xl font-bold mb-12">Co mówią nasi użytkownicy?</h3>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="bg-blue-50 p-6 rounded-xl">
+               <div className="flex items-center mb-4">
+                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">AK</div>
+                 <div>
+                   <div className="font-medium">Anna Kowalska</div>
+                   <div className="text-sm text-gray-500">Remont kawalerki</div>
+                 </div>
+               </div>
+               <p className="text-gray-600 italic">"Dzięki tej aplikacji zaoszczędziłam ponad 3000 zł na nieplanowanych wydatkach. Świetne narzędzie do kontroli budżetu!"</p>
+             </div>
+             
+             <div className="bg-blue-50 p-6 rounded-xl">
+               <div className="flex items-center mb-4">
+                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">TP</div>
+                 <div>
+                   <div className="font-medium">Tomasz Nowak</div>
+                   <div className="text-sm text-gray-500">Remont domu</div>
+                 </div>
+               </div>
+               <p className="text-gray-600 italic">"Przydatne zwłaszcza przy większych remontach, gdzie łatwo stracić kontrolę nad wydatkami. Polecam!"</p>
+             </div>
+           </div>
+         </div>
+       </section>
 
       {/* CTA Section */}
       <section className="py-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
