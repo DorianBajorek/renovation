@@ -12,7 +12,7 @@ interface EditProjectFormProps {
 
 const iconOptions = [
   { value: "Home", label: "Dom", icon: Home },
-  { value: "Building", label: "Budynek", icon: Building },
+  { value: "Building", label: "Mieszkanie", icon: Building },
   { value: "Briefcase", label: "Biuro", icon: Briefcase },
 ];
 
