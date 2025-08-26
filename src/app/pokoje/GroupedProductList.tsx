@@ -129,6 +129,17 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
 export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showSummary, setShowSummary] = useState(true);
+  const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
+
+  const toggleCard = (cardId: string) => {
+    const newFlipped = new Set(flippedCards);
+    if (newFlipped.has(cardId)) {
+      newFlipped.delete(cardId);
+    } else {
+      newFlipped.add(cardId);
+    }
+    setFlippedCards(newFlipped);
+  };
 
   if (products.length === 0) {
     return (
@@ -240,44 +251,124 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                </span>
              </div>
            </div>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             <div className="bg-white rounded-xl p-4 border border-indigo-200">
-               <div className="flex items-center gap-2 mb-2">
-                 <TrendingUp size={20} className="text-red-500" />
-                 <span className="text-sm font-medium text-slate-600">Scenariusz najdroższy</span>
-               </div>
-               <div className="text-2xl font-bold text-red-600">
-                 {scenarioCosts.expensiveScenario.toLocaleString()} PLN
-               </div>
-               <p className="text-xs text-slate-500 mt-1">
-                 Zakupione produkty lub najdroższe z planowanych
-               </p>
-             </div>
-             <div className="bg-white rounded-xl p-4 border border-indigo-200">
-               <div className="flex items-center gap-2 mb-2">
-                 <Minus size={20} className="text-blue-500" />
-                 <span className="text-sm font-medium text-slate-600">Scenariusz średni</span>
-               </div>
-               <div className="text-2xl font-bold text-blue-600">
-                 {scenarioCosts.averageScenario.toLocaleString()} PLN
-               </div>
-                               <p className="text-xs text-slate-500 mt-1">
-                  Zakupione produkty lub mediany z planowanych
-                </p>
-             </div>
-             <div className="bg-white rounded-xl p-4 border border-indigo-200">
-               <div className="flex items-center gap-2 mb-2">
-                 <TrendingDown size={20} className="text-green-500" />
-                 <span className="text-sm font-medium text-slate-600">Scenariusz najtańszy</span>
-               </div>
-               <div className="text-2xl font-bold text-green-600">
-                 {scenarioCosts.cheapScenario.toLocaleString()} PLN
-               </div>
-               <p className="text-xs text-slate-500 mt-1">
-                 Zakupione produkty lub najtańsze z planowanych
-               </p>
-             </div>
-           </div>
+                                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Scenariusz najdroższy */}
+              <div 
+                className="relative h-48 cursor-pointer perspective-1000"
+                onClick={() => toggleCard('expensive')}
+              >
+                <div className={`absolute inset-0 transition-transform duration-500 transform-style-preserve-3d ${
+                  flippedCards.has('expensive') ? 'rotate-y-180' : ''
+                }`}>
+                  {/* Front */}
+                  <div className="absolute inset-0 bg-white rounded-xl p-4 border border-indigo-200 backface-hidden">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp size={20} className="text-red-500" />
+                      <span className="text-sm font-medium text-slate-600">Scenariusz najdroższy</span>
+                    </div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {scenarioCosts.expensiveScenario.toLocaleString()} PLN
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Kliknij aby zobaczyć wyjaśnienie
+                    </p>
+                  </div>
+                  {/* Back */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200 backface-hidden rotate-y-180">
+                    <div className="h-full flex flex-col justify-center">
+                      <h4 className="text-sm font-semibold text-red-800 mb-2">Jak obliczany jest scenariusz najdroższy?</h4>
+                      <ul className="text-xs text-red-700 space-y-1">
+                        <li>• Dla każdej grupy produktów:</li>
+                        <li>• Jeśli produkt został zakupiony → używa jego ceny</li>
+                        <li>• Jeśli nie zakupiono → bierze najdroższy z planowanych</li>
+                        <li>• Sumuje wszystkie wartości</li>
+                      </ul>
+                      <p className="text-xs text-red-600 mt-2 font-medium">
+                        Kliknij ponownie aby wrócić
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Scenariusz średni */}
+              <div 
+                className="relative h-48 cursor-pointer perspective-1000"
+                onClick={() => toggleCard('average')}
+              >
+                <div className={`absolute inset-0 transition-transform duration-500 transform-style-preserve-3d ${
+                  flippedCards.has('average') ? 'rotate-y-180' : ''
+                }`}>
+                  {/* Front */}
+                  <div className="absolute inset-0 bg-white rounded-xl p-4 border border-indigo-200 backface-hidden">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Minus size={20} className="text-blue-500" />
+                      <span className="text-sm font-medium text-slate-600">Scenariusz średni</span>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {scenarioCosts.averageScenario.toLocaleString()} PLN
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Kliknij aby zobaczyć wyjaśnienie
+                    </p>
+                  </div>
+                  {/* Back */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 backface-hidden rotate-y-180">
+                    <div className="h-full flex flex-col justify-center">
+                      <h4 className="text-sm font-semibold text-blue-800 mb-2">Jak obliczany jest scenariusz średni?</h4>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        <li>• Dla każdej grupy produktów:</li>
+                        <li>• Jeśli produkt został zakupiony → używa jego ceny</li>
+                        <li>• Jeśli nie zakupiono → bierze medianę z planowanych</li>
+                        <li>• Sumuje wszystkie wartości</li>
+                      </ul>
+                      <p className="text-xs text-blue-600 mt-2 font-medium">
+                        Kliknij ponownie aby wrócić
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Scenariusz najtańszy */}
+              <div 
+                className="relative h-48 cursor-pointer perspective-1000"
+                onClick={() => toggleCard('cheap')}
+              >
+                <div className={`absolute inset-0 transition-transform duration-500 transform-style-preserve-3d ${
+                  flippedCards.has('cheap') ? 'rotate-y-180' : ''
+                }`}>
+                  {/* Front */}
+                  <div className="absolute inset-0 bg-white rounded-xl p-4 border border-indigo-200 backface-hidden">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingDown size={20} className="text-green-500" />
+                      <span className="text-sm font-medium text-slate-600">Scenariusz najtańszy</span>
+                    </div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {scenarioCosts.cheapScenario.toLocaleString()} PLN
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Kliknij aby zobaczyć wyjaśnienie
+                    </p>
+                  </div>
+                  {/* Back */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200 backface-hidden rotate-y-180">
+                    <div className="h-full flex flex-col justify-center">
+                      <h4 className="text-sm font-semibold text-green-800 mb-2">Jak obliczany jest scenariusz najtańszy?</h4>
+                      <ul className="text-xs text-green-700 space-y-1">
+                        <li>• Dla każdej grupy produktów:</li>
+                        <li>• Jeśli produkt został zakupiony → używa jego ceny</li>
+                        <li>• Jeśli nie zakupiono → bierze najtańszy z planowanych</li>
+                        <li>• Sumuje wszystkie wartości</li>
+                      </ul>
+                      <p className="text-xs text-green-600 mt-2 font-medium">
+                        Kliknij ponownie aby wrócić
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
       )}
 
