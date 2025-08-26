@@ -59,7 +59,8 @@ export async function GET(
       .from('rooms')
       .select(`
         *,
-        products:products(price, quantity, status)
+        products:products(price, quantity, status),
+        projects!rooms_project_id_fkey(budget)
       `)
       .eq('id', roomId)
       .single();
@@ -76,10 +77,15 @@ export async function GET(
     const expenses = room.products?.reduce((sum: number, product: any) =>
       product.status === 'purchased' ? sum + (product.price * product.quantity) : sum, 0) || 0;
 
+    // Get project budget
+    const projectBudget = room.projects?.budget || null;
+
     const roomWithExpenses = {
       ...room,
       expenses: expenses,
-      products: undefined // Remove products from response
+      project_budget: projectBudget,
+      products: undefined, // Remove products from response
+      projects: undefined // Remove projects from response
     };
 
     return NextResponse.json({

@@ -174,7 +174,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                   <h2 className="text-base sm:text-lg font-medium text-slate-700 mb-2">
                     Wydatki pokoi w projekcie
                   </h2>
-                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mb-3">
                     <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
                       {totalExpenses.toLocaleString()} PLN
                     </span>
@@ -182,6 +182,34 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                       dla {rooms.length} pomieszczeń
                     </span>
                   </div>
+                  
+                  {/* Pasek postępu budżetu projektu */}
+                  {project?.budget && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-slate-600">
+                        <span>Wykorzystanie budżetu projektu</span>
+                        <span>{Math.round((totalExpenses / project.budget) * 100)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className={`h-3 rounded-full transition-all duration-300 ${
+                            totalExpenses / project.budget > 0.9 
+                              ? 'bg-red-500' 
+                              : totalExpenses / project.budget > 0.7 
+                                ? 'bg-yellow-500' 
+                                : 'bg-green-500'
+                          }`}
+                          style={{ 
+                            width: `${Math.min((totalExpenses / project.budget) * 100, 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>Budżet projektu: {project.budget?.toLocaleString()} PLN</span>
+                        <span>Pozostało: {(project.budget - totalExpenses).toLocaleString()} PLN</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">

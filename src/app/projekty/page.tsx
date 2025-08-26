@@ -315,31 +315,53 @@ export default function ProjektyPage() {
                    {project.description}
                  </p>
 
-                 <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs sm:text-sm text-slate-500">Budżet</span>
-                     <span className="font-semibold text-slate-900 text-xs sm:text-sm">{project.budget.toLocaleString()} PLN</span>
-                   </div>
-                   
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs sm:text-sm text-slate-500">Wydatki</span>
-                     <span className="font-semibold text-indigo-600 text-xs sm:text-sm">{(project.expenses || 0).toLocaleString()} PLN</span>
-                   </div>
-                   
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs sm:text-sm text-slate-500">Pokoje</span>
-                     <span className="font-medium text-slate-700 text-xs sm:text-sm">Zobacz pokoje</span>
-                   </div>
+                                   <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm text-slate-500">Budżet</span>
+                      <span className="font-semibold text-slate-900 text-xs sm:text-sm">{project.budget.toLocaleString()} PLN</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm text-slate-500">Wydatki</span>
+                      <span className="font-semibold text-indigo-600 text-xs sm:text-sm">{(project.expenses || 0).toLocaleString()} PLN</span>
+                    </div>
+                    
+                    {/* Pasek postępu budżetu */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>Wykorzystanie budżetu</span>
+                        <span>{Math.round(((project.expenses || 0) / project.budget) * 100)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            (project.expenses || 0) / project.budget > 0.9 
+                              ? 'bg-red-500' 
+                              : (project.expenses || 0) / project.budget > 0.7 
+                                ? 'bg-yellow-500' 
+                                : 'bg-green-500'
+                          }`}
+                          style={{ 
+                            width: `${Math.min(((project.expenses || 0) / project.budget) * 100, 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm text-slate-500">Pokoje</span>
+                      <span className="font-medium text-slate-700 text-xs sm:text-sm">Zobacz pokoje</span>
+                    </div>
 
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs sm:text-sm text-slate-500">Okres</span>
-                     <div className="text-right">
-                       <div className="text-xs text-slate-500">
-                         {new Date(project.startDate).toLocaleDateString('pl-PL')} - {new Date(project.endDate).toLocaleDateString('pl-PL')}
-                       </div>
-                     </div>
-                   </div>
-                 </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm text-slate-500">Okres</span>
+                      <div className="text-right">
+                        <div className="text-xs text-slate-500">
+                          {new Date(project.startDate).toLocaleDateString('pl-PL')} - {new Date(project.endDate).toLocaleDateString('pl-PL')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                  <div className="flex gap-2">
                    <button 
