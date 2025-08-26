@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Product } from "../types/product";
 import { Package } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface EditProductFormProps {
   product: Product;
@@ -16,6 +17,7 @@ const statusOptions = [
 ];
 
 export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormProps) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: product.name,
     description: product.description || "",
@@ -39,7 +41,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || formData.price <= 0 || !product.id) return;
+    if (!formData.name || formData.price <= 0 || !product.id || !user) return;
     
     try {
       setLoading(true);
@@ -55,6 +57,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
           quantity: formData.quantity,
           category: formData.category || undefined,
           status: formData.status,
+          userId: user.id,
         }),
       });
 

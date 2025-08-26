@@ -54,6 +54,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [projectId, setProjectId] = useState<string>('');
+  const [userPermission, setUserPermission] = useState<'read' | 'edit'>('read');
 
   useEffect(() => {
     const getProjectId = async () => {
@@ -83,12 +84,14 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
       fetch(`/api/rooms?userId=${user.id}&projectId=${projectId}`)
         .then(res => res.json())
         .then(data => {
-          if (Array.isArray(data)) {
-            const mappedRooms = data.map(room => ({
+          if (data.rooms && Array.isArray(data.rooms)) {
+            const mappedRooms = data.rooms.map((room: any) => ({
               ...room,
               icon: room.icon || 'Home',
             }));
             setRooms(mappedRooms);
+            // Store user permission for conditional rendering
+            setUserPermission(data.userPermission);
           }
           setLoading(false);
         })
@@ -108,8 +111,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
       const refreshResponse = await fetch(`/api/rooms?userId=${user.id}&projectId=${projectId}`);
       if (refreshResponse.ok) {
         const refreshedData = await refreshResponse.json();
-        if (Array.isArray(refreshedData)) {
-          const mappedRooms = refreshedData.map(room => ({
+        if (refreshedData.rooms && Array.isArray(refreshedData.rooms)) {
+          const mappedRooms = refreshedData.rooms.map((room: any) => ({
             ...room,
             icon: room.icon || 'Home',
           }));
@@ -295,7 +298,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                          <div className="mt-auto space-y-2 sm:space-y-3">
                            <div className="flex gap-2">
                              <button 
-                               onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
+                               onClick={() => room.id && router.push(`/pokoje/${room.id}?projectId=${projectId}`)}
                                className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                disabled={!room.id}
                              >
@@ -304,63 +307,69 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                              </button>
                            </div>
                            
-                           <div className="flex gap-2">
-                             <button
-                               onClick={() => {
-                                 setEditingRoom(room);
-                                 setShowEditForm(true);
-                               }}
-                               className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xs sm:text-sm"
-                               title="Edytuj pokój"
-                             >
-                               <Edit size={14} className="sm:w-4 sm:h-4 mx-auto" />
-                             </button>
-                             <button
-                               onClick={async () => {
-                                 if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
-                                   try {
-                                     const response = await fetch(`/api/rooms/${room.id}`, {
-                                       method: 'DELETE',
-                                     });
-                                     
-                                     if (response.ok) {
-                                       setRooms(prev => prev.filter(r => r.id !== room.id));
-                                     } else {
-                                       alert('Błąd podczas usuwania pokoju');
+                                                       {userPermission === 'edit' && (
+                             <>
+                               <div className="flex gap-2">
+                                 <button
+                                   onClick={() => {
+                                     setEditingRoom(room);
+                                     setShowEditForm(true);
+                                   }}
+                                   className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xs sm:text-sm"
+                                   title="Edytuj pokój"
+                                 >
+                                   <Edit size={14} className="sm:w-4 sm:h-4 mx-auto" />
+                                 </button>
+                                 <button
+                                   onClick={async () => {
+                                     if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
+                                       try {
+                                         const response = await fetch(`/api/rooms/${room.id}`, {
+                                           method: 'DELETE',
+                                         });
+                                         
+                                         if (response.ok) {
+                                           setRooms(prev => prev.filter(r => r.id !== room.id));
+                                         } else {
+                                           alert('Błąd podczas usuwania pokoju');
+                                         }
+                                       } catch (error) {
+                                         console.error('Error deleting room:', error);
+                                         alert('Błąd podczas usuwania pokoju');
+                                       }
                                      }
-                                   } catch (error) {
-                                     console.error('Error deleting room:', error);
-                                     alert('Błąd podczas usuwania pokoju');
-                                   }
-                                 }
-                               }}
-                               className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-xs sm:text-sm"
-                               title="Usuń pokój"
-                             >
-                               <Trash2 size={14} className="sm:w-4 sm:h-4 mx-auto" />
-                             </button>
-                           </div>
+                                   }}
+                                   className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-xs sm:text-sm"
+                                   title="Usuń pokój"
+                                 >
+                                   <Trash2 size={14} className="sm:w-4 sm:h-4 mx-auto" />
+                                 </button>
+                               </div>
+                             </>
+                           )}
                          </div>
                        </div>
                     );
                   })}
 
-                  <div
-                    className="group p-4 sm:p-6 rounded-2xl border-2 border-dashed border-slate-300/70 hover:border-indigo-300 transition-all duration-300 flex flex-col items-center justify-center gap-3 sm:gap-4 min-h-[240px] sm:min-h-[280px] bg-white/50 backdrop-blur-md hover:bg-white/70 cursor-pointer"
-                    onClick={() => setShowForm(true)}
-                  >
-                    <div className="p-3 sm:p-4 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-all duration-300">
-                      <Plus size={32} className="sm:w-10 sm:h-10 strokeWidth={1.5} text-slate-500" />
-                    </div>
-                    <div className="text-center">
-                      <h2 className="text-base sm:text-lg font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">
-                        Dodaj pokój
-                      </h2>
-                      <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                        Nowy pokój do projektu
-                      </p>
-                    </div>
-                  </div>
+                                     {userPermission === 'edit' && (
+                     <div
+                       className="group p-4 sm:p-6 rounded-2xl border-2 border-dashed border-slate-300/70 hover:border-indigo-300 transition-all duration-300 flex flex-col items-center justify-center gap-3 sm:gap-4 min-h-[240px] sm:min-h-[280px] bg-white/50 backdrop-blur-md hover:bg-white/70 cursor-pointer"
+                       onClick={() => setShowForm(true)}
+                     >
+                       <div className="p-3 sm:p-4 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-all duration-300">
+                         <Plus size={32} className="sm:w-10 sm:h-10 strokeWidth={1.5} text-slate-500" />
+                       </div>
+                       <div className="text-center">
+                         <h2 className="text-base sm:text-lg font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">
+                           Dodaj pokój
+                         </h2>
+                         <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                           Nowy pokój do projektu
+                         </p>
+                       </div>
+                     </div>
+                   )}
                 </div>
               </div>
             )}

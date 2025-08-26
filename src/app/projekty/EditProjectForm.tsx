@@ -88,6 +88,7 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
           endDate: formData.endDate,
           status: formData.status,
           icon: formData.icon,
+          userId: user.id,
         }),
       });
 

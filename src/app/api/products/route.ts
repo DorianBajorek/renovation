@@ -6,12 +6,65 @@ export async function GET(request: NextRequest) {
     // Get room ID from query parameters
     const { searchParams } = new URL(request.url);
     const roomId = searchParams.get('roomId');
+    const userId = searchParams.get('userId');
+    const projectId = searchParams.get('projectId');
 
     if (!roomId) {
       return NextResponse.json(
         { error: 'Room ID is required' },
         { status: 400 }
       );
+    }
+
+    let userPermission = 'edit'; // Domyślnie właściciel ma pełne uprawnienia
+
+    // Sprawdź uprawnienia do pokoju przez projekt
+    if (userId) {
+      const { data: room, error: roomError } = await supabase
+        .from('rooms')
+        .select(`
+          user_id,
+          project_id,
+          projects!rooms_project_id_fkey(user_id)
+        `)
+        .eq('id', roomId)
+        .single();
+
+      if (roomError || !room) {
+        return NextResponse.json(
+          { error: 'Room not found' },
+          { status: 404 }
+        );
+      }
+
+      // Sprawdź czy użytkownik jest właścicielem pokoju lub projektu
+      const project = room.projects as any;
+      if (room.user_id !== userId && project?.user_id !== userId) {
+        // Sprawdź udostępnienia projektu
+        if (room.project_id) {
+          const { data: share, error: shareError } = await supabase
+            .from('project_shares')
+            .select('permission_type')
+            .eq('project_id', room.project_id)
+            .eq('shared_with_id', userId)
+            .single();
+
+          if (shareError || !share) {
+            return NextResponse.json(
+              { error: 'Access denied to this room' },
+              { status: 403 }
+            );
+          }
+          
+          // Ustaw uprawnienia na podstawie udostępnienia
+          userPermission = share.permission_type;
+        } else {
+          return NextResponse.json(
+            { error: 'Access denied to this room' },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const { data: products, error } = await supabase
@@ -28,7 +81,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(products, {
+    return NextResponse.json({
+      products: products,
+      userPermission: userPermission
+    }, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -52,11 +108,55 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.price || !body.roomId) {
+    if (!body.name || !body.price || !body.roomId || !body.userId) {
       return NextResponse.json(
-        { error: 'Name, price, and roomId are required' },
+        { error: 'Name, price, roomId, and userId are required' },
         { status: 400 }
       );
+    }
+
+    // Sprawdź uprawnienia do edycji pokoju przez projekt
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select(`
+        user_id,
+        project_id,
+        projects!rooms_project_id_fkey(user_id)
+      `)
+      .eq('id', body.roomId)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json(
+        { error: 'Room not found' },
+        { status: 404 }
+      );
+    }
+
+    // Sprawdź czy użytkownik jest właścicielem pokoju lub projektu
+    const project = room.projects as any;
+    if (room.user_id !== body.userId && project?.user_id !== body.userId) {
+      // Sprawdź udostępnienia projektu
+      if (room.project_id) {
+        const { data: share, error: shareError } = await supabase
+          .from('project_shares')
+          .select('permission_type')
+          .eq('project_id', room.project_id)
+          .eq('shared_with_id', body.userId)
+          .single();
+
+        if (shareError || !share || share.permission_type !== 'edit') {
+          return NextResponse.json(
+            { error: 'Insufficient permissions to add products to this room' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'Insufficient permissions to add products to this room' },
+          { status: 403 }
+        );
+      }
     }
 
     // Create new product in database

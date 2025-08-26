@@ -7,6 +7,7 @@ interface ProductListProps {
   products: Product[];
   onEdit?: (product: Product) => void;
   onDelete?: (productId: string) => void;
+  userPermission?: 'read' | 'edit';
 }
 
 interface ProductGroup {
@@ -126,7 +127,7 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
   }).sort((a, b) => b.totalValue - a.totalValue); // Sort by total value descending
 };
 
-export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListProps) => {
+export const GroupedProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showSummary, setShowSummary] = useState(true);
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
@@ -438,7 +439,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                     )}
                     
                                          {/* Edit/Delete buttons for single products */}
-                     {!hasMultipleProducts && group.products.length === 1 && (
+                     {!hasMultipleProducts && group.products.length === 1 && userPermission === 'edit' && (
                        <div className="flex items-center gap-1 sm:gap-2 self-center">
                          {onEdit && (
                            <button
@@ -518,26 +519,28 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                          </div>
                          
                          {/* Action Buttons */}
-                         <div className="flex items-center gap-2 sm:ml-4 self-start sm:self-center">
-                           {onEdit && (
-                             <button
-                               onClick={() => onEdit(product)}
-                               className="p-2 sm:p-3 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                               title="Edytuj produkt"
-                             >
-                               <Edit size={16} className="sm:w-5 sm:h-5" />
-                             </button>
-                           )}
-                           {onDelete && (
-                             <button
-                               onClick={() => onDelete(product.id!)}
-                               className="p-2 sm:p-3 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                               title="Usuń produkt"
-                             >
-                               <Trash2 size={16} className="sm:w-5 sm:h-5" />
-                             </button>
-                           )}
-                         </div>
+                         {userPermission === 'edit' && (
+                           <div className="flex items-center gap-2 sm:ml-4 self-start sm:self-center">
+                             {onEdit && (
+                               <button
+                                 onClick={() => onEdit(product)}
+                                 className="p-2 sm:p-3 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                                 title="Edytuj produkt"
+                               >
+                                 <Edit size={16} className="sm:w-5 sm:h-5" />
+                               </button>
+                             )}
+                             {onDelete && (
+                               <button
+                                 onClick={() => onDelete(product.id!)}
+                                 className="p-2 sm:p-3 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                                 title="Usuń produkt"
+                               >
+                                 <Trash2 size={16} className="sm:w-5 sm:h-5" />
+                               </button>
+                             )}
+                           </div>
+                         )}
                        </div>
                      </div>
                    ))}

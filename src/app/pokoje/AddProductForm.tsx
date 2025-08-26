@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Product } from "../types/product";
 import { Package } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AddProductFormProps {
   onAdd: (product: Product) => void;
@@ -10,6 +11,7 @@ interface AddProductFormProps {
 }
 
 export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) => {
+  const { user } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
@@ -18,7 +20,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || price <= 0) return;
+    if (!name || price <= 0 || !user) return;
     
     try {
       const response = await fetch('/api/products', {
@@ -33,6 +35,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
           quantity,
           status,
           roomId,
+          userId: user.id,
         }),
       });
 

@@ -7,8 +7,53 @@ export async function GET(
 ) {
   const { id } = await params;
   const roomId = id;
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+  const projectId = searchParams.get('projectId');
 
   try {
+    let userPermission = 'edit'; // Domyślnie właściciel ma pełne uprawnienia
+
+    // Sprawdź uprawnienia do pokoju przez projekt
+    if (userId) {
+      const { data: roomCheck, error: roomError } = await supabase
+        .from('rooms')
+        .select(`
+          user_id,
+          project_id,
+          projects!rooms_project_id_fkey(user_id)
+        `)
+        .eq('id', roomId)
+        .single();
+
+      if (roomError || !roomCheck) {
+        return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      }
+
+      // Sprawdź czy użytkownik jest właścicielem pokoju lub projektu
+      const project = roomCheck.projects as any;
+      if (roomCheck.user_id !== userId && project?.user_id !== userId) {
+        // Sprawdź udostępnienia projektu
+        if (roomCheck.project_id) {
+          const { data: share, error: shareError } = await supabase
+            .from('project_shares')
+            .select('permission_type')
+            .eq('project_id', roomCheck.project_id)
+            .eq('shared_with_id', userId)
+            .single();
+
+          if (shareError || !share) {
+            return NextResponse.json({ error: 'Access denied to this room' }, { status: 403 });
+          }
+          
+          // Ustaw uprawnienia na podstawie udostępnienia
+          userPermission = share.permission_type;
+        } else {
+          return NextResponse.json({ error: 'Access denied to this room' }, { status: 403 });
+        }
+      }
+    }
+
     // Get the room with products to calculate expenses
     const { data: room, error } = await supabase
       .from('rooms')
@@ -37,7 +82,10 @@ export async function GET(
       products: undefined // Remove products from response
     };
 
-    return NextResponse.json(roomWithExpenses, { status: 200 });
+    return NextResponse.json({
+      room: roomWithExpenses,
+      userPermission: userPermission
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

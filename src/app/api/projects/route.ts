@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const includeShared = searchParams.get('includeShared') === 'true';
 
     if (!userId) {
       return NextResponse.json(
@@ -13,7 +14,73 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get projects with calculated expenses
+    // Jeśli żądamy udostępnionych projektów, pobierz tylko te udostępnione przez innych
+    if (includeShared) {
+      // Pobierz projekty udostępnione użytkownikowi przez innych (nie własne)
+      const { data: sharedProjects, error: sharedError } = await supabase
+        .from('project_shares')
+        .select(`
+          permission_type,
+          projects!project_shares_project_id_fkey(
+            *,
+            rooms:rooms(
+              id,
+              products:products(price, quantity, status)
+            )
+          ),
+          owner:users!project_shares_owner_id_fkey(first_name, last_name)
+        `)
+        .eq('shared_with_id', userId)
+        .neq('owner_id', userId); // Wyklucz projekty, gdzie użytkownik jest właścicielem
+
+      if (sharedError) {
+        console.error('Error fetching shared projects:', sharedError);
+        return NextResponse.json(
+          { error: 'Failed to fetch shared projects' },
+          { status: 500 }
+        );
+      }
+
+      // Przekształć udostępnione projekty
+      const sharedProjectsList = sharedProjects?.map(share => {
+        const project = share.projects as any;
+        const owner = share.owner as any;
+        return {
+          ...project,
+          permission_type: share.permission_type,
+          owner_name: `${owner?.first_name || ''} ${owner?.last_name || ''}`,
+          is_shared: true
+        };
+      }) || [];
+
+      // Oblicz wydatki dla udostępnionych projektów
+      const projectsWithExpenses = sharedProjectsList.map(project => {
+        const expenses = project.rooms?.reduce((projectSum: number, room: any) => {
+          const roomExpenses = room.products?.reduce((roomSum: number, product: any) => 
+            product.status === 'purchased' ? roomSum + (product.price * product.quantity) : roomSum, 0) || 0;
+          return projectSum + roomExpenses;
+        }, 0) || 0;
+        
+        return {
+          ...project,
+          expenses: expenses,
+          rooms: undefined // Remove rooms from response
+        };
+      });
+
+      return NextResponse.json(projectsWithExpenses, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
+    // Standardowe pobieranie tylko własnych projektów
     const { data: projects, error } = await supabase
       .from('projects')
       .select(`
@@ -45,7 +112,8 @@ export async function GET(request: NextRequest) {
       return {
         ...project,
         expenses: expenses,
-        rooms: undefined // Remove rooms from response
+        rooms: undefined, // Remove rooms from response
+        is_shared: false
       };
     }) || [];
 

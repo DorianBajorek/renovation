@@ -14,21 +14,67 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get rooms with calculated expenses
-    let query = supabase
-      .from('rooms')
-      .select(`
-        *,
-        products:products(price, quantity, status)
-      `)
-      .eq('user_id', userId);
-    
-    // Add project filter if projectId is provided
+    let roomsQuery;
+    let userPermission = 'edit'; // Domyślnie właściciel ma pełne uprawnienia
+
+    // Jeśli podano projectId, sprawdź uprawnienia do projektu
     if (projectId) {
-      query = query.eq('project_id', projectId);
+      // Sprawdź czy użytkownik jest właścicielem projektu
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError || !project) {
+        return NextResponse.json(
+          { error: 'Project not found' },
+          { status: 404 }
+        );
+      }
+
+      // Jeśli użytkownik nie jest właścicielem, sprawdź udostępnienia
+      if (project.user_id !== userId) {
+        const { data: share, error: shareError } = await supabase
+          .from('project_shares')
+          .select('permission_type')
+          .eq('project_id', projectId)
+          .eq('shared_with_id', userId)
+          .single();
+
+        if (shareError || !share) {
+          return NextResponse.json(
+            { error: 'Access denied to this project' },
+            { status: 403 }
+          );
+        }
+        
+        // Ustaw uprawnienia na podstawie udostępnienia
+        userPermission = share.permission_type;
+      }
+
+      // Pobierz pokoje dla projektu - zarówno dla właściciela jak i udostępnionych użytkowników
+      roomsQuery = supabase
+        .from('rooms')
+        .select(`
+          *,
+          products:products(price, quantity, status)
+        `)
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+    } else {
+      // Jeśli nie podano projectId, pobierz tylko pokoje użytkownika
+      roomsQuery = supabase
+        .from('rooms')
+        .select(`
+          *,
+          products:products(price, quantity, status)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
     }
     
-    const { data: rooms, error } = await query.order('created_at', { ascending: false });
+    const { data: rooms, error } = await roomsQuery;
 
     if (error) {
       console.error('Database error:', error);
@@ -50,7 +96,10 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    return NextResponse.json(roomsWithExpenses, {
+    return NextResponse.json({
+      rooms: roomsWithExpenses,
+      userPermission: userPermission
+    }, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -79,6 +128,39 @@ export async function POST(request: NextRequest) {
         { error: 'Name and userId are required' },
         { status: 400 }
       );
+    }
+
+    // Jeśli podano projectId, sprawdź uprawnienia do edycji projektu
+    if (body.projectId) {
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', body.projectId)
+        .single();
+
+      if (projectError || !project) {
+        return NextResponse.json(
+          { error: 'Project not found' },
+          { status: 404 }
+        );
+      }
+
+      // Sprawdź czy użytkownik jest właścicielem lub ma uprawnienia do edycji
+      if (project.user_id !== body.userId) {
+        const { data: share, error: shareError } = await supabase
+          .from('project_shares')
+          .select('permission_type')
+          .eq('project_id', body.projectId)
+          .eq('shared_with_id', body.userId)
+          .single();
+
+        if (shareError || !share || share.permission_type !== 'edit') {
+          return NextResponse.json(
+            { error: 'Insufficient permissions to add rooms to this project' },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // Create new room in database

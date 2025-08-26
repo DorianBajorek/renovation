@@ -74,6 +74,48 @@ export async function PUT(
   try {
     const body = await request.json();
     const { id: projectId } = await params;
+    const userId = body.userId; // ID użytkownika wykonującego akcję
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Sprawdź uprawnienia do edycji projektu
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('user_id')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError || !project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
+    // Sprawdź czy użytkownik jest właścicielem
+    if (project.user_id === userId) {
+      // Użytkownik jest właścicielem - może edytować
+    } else {
+      // Sprawdź czy użytkownik ma uprawnienia do edycji
+      const { data: share, error: shareError } = await supabase
+        .from('project_shares')
+        .select('permission_type')
+        .eq('project_id', projectId)
+        .eq('shared_with_id', userId)
+        .single();
+
+      if (shareError || !share || share.permission_type !== 'edit') {
+        return NextResponse.json(
+          { error: 'Insufficient permissions to edit this project' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Map frontend fields to database fields
     const updateData = {
@@ -140,6 +182,37 @@ export async function DELETE(
 ) {
   try {
     const { id: projectId } = await params;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Sprawdź czy użytkownik jest właścicielem projektu
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('user_id')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError || !project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
+    // Tylko właściciel może usunąć projekt
+    if (project.user_id !== userId) {
+      return NextResponse.json(
+        { error: 'Only project owner can delete the project' },
+        { status: 403 }
+      );
+    }
 
     // Delete the project from database
     const { error } = await supabase

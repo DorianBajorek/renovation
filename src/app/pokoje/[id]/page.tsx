@@ -4,7 +4,7 @@ import { Room } from "../../types";
 import { Product } from "../../types/product";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   ArrowLeft, 
   Plus, 
@@ -47,10 +47,13 @@ interface RoomPageProps {
 export default function RoomPage({ params }: RoomPageProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [room, setRoom] = useState<Room | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [roomId, setRoomId] = useState<string>('');
+  const [projectId, setProjectId] = useState<string>('');
+  const [userPermission, setUserPermission] = useState<'read' | 'edit'>('read');
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [showEditProductForm, setShowEditProductForm] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -64,33 +67,48 @@ export default function RoomPage({ params }: RoomPageProps) {
       setRoomId(id);
     };
     getRoomId();
-  }, [params]);
+    
+    // Get projectId from URL parameters
+    const projectIdFromUrl = searchParams.get('projectId');
+    if (projectIdFromUrl) {
+      setProjectId(projectIdFromUrl);
+    }
+  }, [params, searchParams]);
 
   useEffect(() => {
     if (user && roomId) {
       // Fetch room details
-      fetch(`/api/rooms/${roomId}`)
+      const roomUrl = projectId 
+        ? `/api/rooms/${roomId}?userId=${user.id}&projectId=${projectId}`
+        : `/api/rooms/${roomId}?userId=${user.id}`;
+      
+      fetch(roomUrl)
         .then(res => res.json())
         .then(data => {
           if (data.error) {
             console.error('Error fetching room:', data.error);
             return;
           }
-          setRoom(data);
+          setRoom(data.room);
+          setUserPermission(data.userPermission);
         })
         .catch(error => {
           console.error('Error fetching room:', error);
         });
 
       // Fetch products for this room
-      fetch(`/api/products?roomId=${roomId}`)
+      const productsUrl = projectId 
+        ? `/api/products?roomId=${roomId}&userId=${user.id}&projectId=${projectId}`
+        : `/api/products?roomId=${roomId}&userId=${user.id}`;
+      
+      fetch(productsUrl)
         .then(res => res.json())
         .then(data => {
           if (data.error) {
             console.error('Error fetching products:', data.error);
             return;
           }
-          setProducts(data);
+          setProducts(data.products);
         })
         .catch(error => {
           console.error('Error fetching products:', error);
@@ -99,7 +117,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           setLoading(false);
         });
     }
-  }, [user, roomId]);
+  }, [user, roomId, projectId]);
 
   if (loading) {
     return (
@@ -225,27 +243,31 @@ export default function RoomPage({ params }: RoomPageProps) {
                     Lista
                   </button>
                 </div>
-                <button
-                  onClick={() => setShowAddProductForm(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors w-full sm:w-auto"
-                >
-                  <Plus size={20} />
-                  <span>Dodaj produkt</span>
-                </button>
+                                 {userPermission === 'edit' && (
+                   <button
+                     onClick={() => setShowAddProductForm(true)}
+                     className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors w-full sm:w-auto"
+                   >
+                     <Plus size={20} />
+                     <span>Dodaj produkt</span>
+                   </button>
+                 )}
               </div>
             </div>
 
             {useGroupedView ? (
               <GroupedProductList 
                 products={products}
+                userPermission={userPermission}
                 onEdit={(product) => {
                   setEditingProduct(product);
                   setShowEditProductForm(true);
                 }}
                 onDelete={async (productId) => {
                   if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+                    if (!user) return;
                     try {
-                      const response = await fetch(`/api/products/${productId}`, {
+                      const response = await fetch(`/api/products/${productId}?userId=${user.id}`, {
                         method: 'DELETE',
                       });
 
@@ -255,10 +277,13 @@ export default function RoomPage({ params }: RoomPageProps) {
                         // Refresh room data to update expenses
                         if (user && roomId) {
                           try {
-                            const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                            const roomUrl = projectId 
+                              ? `/api/rooms/${roomId}?userId=${user.id}&projectId=${projectId}`
+                              : `/api/rooms/${roomId}?userId=${user.id}`;
+                            const roomResponse = await fetch(roomUrl);
                             if (roomResponse.ok) {
                               const roomData = await roomResponse.json();
-                              setRoom(roomData);
+                              setRoom(roomData.room);
                             }
                           } catch (error) {
                             console.error('Error refreshing room data:', error);
@@ -277,14 +302,16 @@ export default function RoomPage({ params }: RoomPageProps) {
             ) : (
               <ProductList 
                 products={products}
+                userPermission={userPermission}
                 onEdit={(product) => {
                   setEditingProduct(product);
                   setShowEditProductForm(true);
                 }}
                 onDelete={async (productId) => {
                   if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+                    if (!user) return;
                     try {
-                      const response = await fetch(`/api/products/${productId}`, {
+                      const response = await fetch(`/api/products/${productId}?userId=${user.id}`, {
                         method: 'DELETE',
                       });
 
@@ -294,10 +321,13 @@ export default function RoomPage({ params }: RoomPageProps) {
                         // Refresh room data to update expenses
                         if (user && roomId) {
                           try {
-                            const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                            const roomUrl = projectId 
+                              ? `/api/rooms/${roomId}?userId=${user.id}&projectId=${projectId}`
+                              : `/api/rooms/${roomId}?userId=${user.id}`;
+                            const roomResponse = await fetch(roomUrl);
                             if (roomResponse.ok) {
                               const roomData = await roomResponse.json();
-                              setRoom(roomData);
+                              setRoom(roomData.room);
                             }
                           } catch (error) {
                             console.error('Error refreshing room data:', error);
@@ -328,10 +358,13 @@ export default function RoomPage({ params }: RoomPageProps) {
               // Refresh room data to update expenses
               if (user && roomId) {
                 try {
-                  const roomResponse = await fetch(`/api/rooms/${roomId}`);
+                  const roomUrl = projectId 
+                    ? `/api/rooms/${roomId}?userId=${user.id}&projectId=${projectId}`
+                    : `/api/rooms/${roomId}?userId=${user.id}`;
+                  const roomResponse = await fetch(roomUrl);
                   if (roomResponse.ok) {
                     const roomData = await roomResponse.json();
-                    setRoom(roomData);
+                    setRoom(roomData.room);
                   }
                 } catch (error) {
                   console.error('Error refreshing room data:', error);
@@ -364,11 +397,14 @@ export default function RoomPage({ params }: RoomPageProps) {
               
               // Refresh room data to update expenses
               if (user && roomId) {
-                fetch(`/api/rooms/${roomId}`)
+                const roomUrl = projectId 
+                  ? `/api/rooms/${roomId}?userId=${user.id}&projectId=${projectId}`
+                  : `/api/rooms/${roomId}?userId=${user.id}`;
+                fetch(roomUrl)
                   .then(res => res.json())
                   .then(data => {
                     if (!data.error) {
-                      setRoom(data);
+                      setRoom(data.room);
                     }
                   })
                   .catch(error => {

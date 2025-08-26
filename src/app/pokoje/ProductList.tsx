@@ -6,6 +6,7 @@ interface ProductListProps {
   products: Product[];
   onEdit?: (product: Product) => void;
   onDelete?: (productId: string) => void;
+  userPermission?: 'read' | 'edit';
 }
 
 const getStatusIcon = (status: string) => {
@@ -47,7 +48,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) => {
+export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   if (products.length === 0) {
     return (
       <div className="text-center py-8">
@@ -112,26 +113,28 @@ export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) =>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 ml-4">
-                {onEdit && (
-                  <button
-                    onClick={() => onEdit(product)}
-                    className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                    title="Edytuj produkt"
-                  >
-                    <Edit size={16} />
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    onClick={() => onDelete(product.id!)}
-                    className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Usuń produkt"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
+              {userPermission === 'edit' && (
+                <div className="flex items-center gap-2 ml-4">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(product)}
+                      className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                      title="Edytuj produkt"
+                    >
+                      <Edit size={16} />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(product.id!)}
+                      className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Usuń produkt"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}

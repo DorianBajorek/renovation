@@ -1,10 +1,11 @@
 "use client";
-import { Plus, FolderOpen, ChevronRight, PieChart, Download, Calendar, Users, Home, Building, Briefcase, Trash2, Edit } from "lucide-react";
+import { Plus, FolderOpen, ChevronRight, PieChart, Download, Calendar, Users, Home, Building, Briefcase, Trash2, Edit, Share2, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Project } from "../types";
 import { AddProjectForm } from "../projekty/AddProjectForm";
 import { EditProjectForm } from "../projekty/EditProjectForm";
 import { ExportModal } from "../components/ExportModal";
+import { ShareProjectModal } from "../projekty/ShareProjectModal";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmationModal from "@/components/ConfirmationModal";
@@ -17,8 +18,11 @@ export default function ProjektyPage() {
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [sharingProject, setSharingProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'own' | 'shared'>('own');
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     projectId: string | null;
@@ -32,23 +36,19 @@ export default function ProjektyPage() {
   useEffect(() => {
     if (user) {
       setLoading(true);
-      fetch(`/api/projects?userId=${user.id}`)
+      const includeShared = activeTab === 'shared';
+      fetch(`/api/projects?userId=${user.id}&includeShared=${includeShared}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            // Map database fields to frontend format and deduplicate by ID
+            // Map database fields to frontend format
             const mappedProjects = data.map(project => ({
               ...project,
               startDate: project.start_date || project.startDate,
               endDate: project.end_date || project.endDate,
             }));
             
-            // Remove duplicates based on ID
-            const uniqueProjects = mappedProjects.filter((project, index, self) => 
-              index === self.findIndex(p => p.id === project.id)
-            );
-            
-            setProjects(uniqueProjects);
+            setProjects(mappedProjects);
           }
         })
         .catch(error => {
@@ -58,7 +58,7 @@ export default function ProjektyPage() {
           setLoading(false);
         });
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   const handleAddProject = async (project: Project) => {
     if (!user) return;
@@ -107,6 +107,16 @@ export default function ProjektyPage() {
     setEditingProject(null);
   };
 
+  const handleShareProject = (project: Project) => {
+    setSharingProject(project);
+    setShowShareModal(true);
+  };
+
+  const handleShareModalClose = () => {
+    setShowShareModal(false);
+    setSharingProject(null);
+  };
+
   const handleDeleteProject = (projectId: string, projectName: string) => {
     setDeleteModal({
       isOpen: true,
@@ -119,7 +129,7 @@ export default function ProjektyPage() {
     if (!deleteModal.projectId || !user) return;
 
     try {
-      const response = await fetch(`/api/projects/${deleteModal.projectId}`, {
+      const response = await fetch(`/api/projects/${deleteModal.projectId}?userId=${user.id}`, {
         method: 'DELETE',
       });
 
@@ -136,8 +146,10 @@ export default function ProjektyPage() {
     }
   };
 
-  const activeProjects = projects.filter(project => project.status === 'active').length;
-  const completedProjects = projects.filter(project => project.status === 'completed').length;
+  const ownProjects = projects.filter(project => !project.is_shared);
+  const sharedProjects = projects.filter(project => project.is_shared);
+  const activeProjects = ownProjects.filter(project => project.status === 'active').length;
+  const completedProjects = ownProjects.filter(project => project.status === 'completed').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -182,38 +194,71 @@ export default function ProjektyPage() {
 
       <div className="px-4 sm:px-6 md:px-12 mb-8">
         <div className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
+          {/* Zakładki */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab('own')}
+              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                activeTab === 'own'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Moje projekty
+            </button>
+            <button
+              onClick={() => setActiveTab('shared')}
+              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                activeTab === 'shared'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Udostępnione mi
+            </button>
+          </div>
+
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-base sm:text-lg font-medium text-slate-700 mb-2">
-                Przegląd projektów
+                {activeTab === 'own' ? 'Przegląd projektów' : 'Projekty udostępnione'}
               </h2>
-              <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm">
-                  <span className="text-green-600 font-medium">{activeProjects} aktywnych</span>
-                  <span className="text-gray-600">{completedProjects} zakończonych</span>
+              {activeTab === 'own' && (
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm">
+                    <span className="text-green-600 font-medium">{activeProjects} aktywnych</span>
+                    <span className="text-gray-600">{completedProjects} zakończonych</span>
+                  </div>
                 </div>
-              </div>
+              )}
+              {activeTab === 'shared' && (
+                <div className="text-xs sm:text-sm text-gray-600">
+                  {sharedProjects.length} projektów udostępnionych
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-              <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors text-sm sm:text-base">
-                <PieChart size={16} className="sm:w-[18px] sm:h-[18px]" />
-                <span>Podgląd budżetu</span>
-              </button>
-              <button 
-                onClick={() => {
-                  if (!user?.id) {
-                    alert('Brak ID użytkownika');
-                    return;
-                  }
-                  setShowExportModal(true);
-                }}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors text-sm sm:text-base"
-              >
-                <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
-                <span>Eksportuj</span>
-              </button>
-            </div>
+            {activeTab === 'own' && (
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors text-sm sm:text-base">
+                  <PieChart size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <span>Podgląd budżetu</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    if (!user?.id) {
+                      alert('Brak ID użytkownika');
+                      return;
+                    }
+                    setShowExportModal(true);
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors text-sm sm:text-base"
+                >
+                  <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <span>Eksportuj</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -237,100 +282,134 @@ export default function ProjektyPage() {
 
       <main className="flex-1 px-4 sm:px-6 md:px-12 pb-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {projects.map((project) => {
-            const iconMap: Record<string, any> = { Home, Building, Briefcase };
-            const Icon = iconMap[project.icon] || FolderOpen;
-            return (
-              <div
-                key={project.id}
-                className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/60 hover:-translate-y-1 sm:hover:-translate-y-2"
-              >
-                <div className="flex items-start justify-between mb-3 sm:mb-4">
-                  <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Icon size={24} className="sm:w-8 sm:h-8 strokeWidth={1.5} text-black" />
-                  </div>
-                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
-                    {getStatusText(project.status)}
-                  </span>
-                </div>
+                     {projects.map((project) => {
+             const iconMap: Record<string, any> = { Home, Building, Briefcase };
+             const Icon = iconMap[project.icon] || FolderOpen;
+             return (
+               <div
+                 key={project.id}
+                 className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/60 hover:-translate-y-1 sm:hover:-translate-y-2"
+               >
+                 <div className="flex items-start justify-between mb-3 sm:mb-4">
+                   <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                     <Icon size={24} className="sm:w-8 sm:h-8 strokeWidth={1.5} text-black" />
+                   </div>
+                   <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                     {getStatusText(project.status)}
+                   </span>
+                 </div>
 
-                <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">
-                  {project.name}
-                </h2>
-                
-                <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4 line-clamp-2">
-                  {project.description}
-                </p>
+                 <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">
+                   {project.name}
+                 </h2>
+                 
+                 {project.is_shared && project.owner_name && (
+                   <div className="mb-2">
+                     <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+                       Właściciel: {project.owner_name}
+                     </span>
+                   </div>
+                 )}
+                 
+                 <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4 line-clamp-2">
+                   {project.description}
+                 </p>
 
-                <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-slate-500">Budżet</span>
-                    <span className="font-semibold text-slate-900 text-xs sm:text-sm">{project.budget.toLocaleString()} PLN</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-slate-500">Wydatki</span>
-                    <span className="font-semibold text-indigo-600 text-xs sm:text-sm">{(project.expenses || 0).toLocaleString()} PLN</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-slate-500">Pokoje</span>
-                    <span className="font-medium text-slate-700 text-xs sm:text-sm">Zobacz pokoje</span>
-                  </div>
+                 <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs sm:text-sm text-slate-500">Budżet</span>
+                     <span className="font-semibold text-slate-900 text-xs sm:text-sm">{project.budget.toLocaleString()} PLN</span>
+                   </div>
+                   
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs sm:text-sm text-slate-500">Wydatki</span>
+                     <span className="font-semibold text-indigo-600 text-xs sm:text-sm">{(project.expenses || 0).toLocaleString()} PLN</span>
+                   </div>
+                   
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs sm:text-sm text-slate-500">Pokoje</span>
+                     <span className="font-medium text-slate-700 text-xs sm:text-sm">Zobacz pokoje</span>
+                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-slate-500">Okres</span>
-                    <div className="text-right">
-                      <div className="text-xs text-slate-500">
-                        {new Date(project.startDate).toLocaleDateString('pl-PL')} - {new Date(project.endDate).toLocaleDateString('pl-PL')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs sm:text-sm text-slate-500">Okres</span>
+                     <div className="text-right">
+                       <div className="text-xs text-slate-500">
+                         {new Date(project.startDate).toLocaleDateString('pl-PL')} - {new Date(project.endDate).toLocaleDateString('pl-PL')}
+                       </div>
+                     </div>
+                   </div>
+                 </div>
 
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => project.id && router.push(`/projekty/${project.id}/pokoje`)}
-                    className="flex-1 px-3 sm:px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                    disabled={!project.id}
-                  >
-                    Otwórz
-                    <ChevronRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <button 
-                    onClick={() => handleEditProject(project)}
-                    className="px-3 sm:px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-                    title="Edytuj projekt"
-                  >
-                    <Edit size={14} className="sm:w-4 sm:h-4" />
-                  </button>
-                  <button 
-                    onClick={() => project.id && handleDeleteProject(project.id, project.name)}
-                    className="px-3 sm:px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                    title="Usuń projekt"
-                    disabled={!project.id}
-                  >
-                    <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                 <div className="flex gap-2">
+                   <button 
+                     onClick={() => project.id && router.push(`/projekty/${project.id}/pokoje`)}
+                     className="flex-1 px-3 sm:px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                     disabled={!project.id}
+                   >
+                     Otwórz
+                     <ChevronRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                   </button>
+                   {!project.is_shared && (
+                     <>
+                       <button 
+                         onClick={() => handleEditProject(project)}
+                         className="px-3 sm:px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                         title="Edytuj projekt"
+                       >
+                         <Edit size={14} className="sm:w-4 sm:h-4" />
+                       </button>
+                       <button 
+                         onClick={() => handleShareProject(project)}
+                         className="px-3 sm:px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                         title="Udostępnij projekt"
+                       >
+                         <Share2 size={14} className="sm:w-4 sm:h-4" />
+                       </button>
+                       <button 
+                         onClick={() => project.id && handleDeleteProject(project.id, project.name)}
+                         className="px-3 sm:px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                         title="Usuń projekt"
+                         disabled={!project.id}
+                       >
+                         <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                       </button>
+                     </>
+                   )}
+                   {project.is_shared && (
+                     <div className="px-3 sm:px-4 py-2 rounded-xl bg-purple-50 text-purple-600 flex items-center gap-1">
+                       {project.permission_type === 'read' ? (
+                         <Eye size={14} className="sm:w-4 sm:h-4" />
+                       ) : (
+                         <Edit size={14} className="sm:w-4 sm:h-4" />
+                       )}
+                       <span className="text-xs sm:text-sm">
+                         {project.permission_type === 'read' ? 'Odczyt' : 'Edycja'}
+                       </span>
+                     </div>
+                   )}
+                 </div>
+               </div>
+             );
+           })}
 
-          <div
-            className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-300/70 hover:border-indigo-300 transition-all duration-300 flex flex-col items-center justify-center gap-3 sm:gap-4 bg-white/50 backdrop-blur-md hover:bg-white/70 cursor-pointer min-h-[250px] sm:min-h-[300px]"
-            onClick={() => setShowForm(true)}
-          >
-            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-              <Plus size={24} className="sm:w-8 sm:h-8 strokeWidth={1.5} text-black" />
-            </div>
-            <h2 className="text-lg sm:text-xl font-medium text-slate-500 group-hover:text-indigo-600 text-center transition-colors">
-              Dodaj nowy projekt
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 text-center">
-              Utwórz nowy projekt remontowy
-            </p>
-          </div>
+           {/* Przycisk "Dodaj nowy projekt" tylko w sekcji "Moje projekty" */}
+           {activeTab === 'own' && (
+             <div
+               className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-300/70 hover:border-indigo-300 transition-all duration-300 flex flex-col items-center justify-center gap-3 sm:gap-4 bg-white/50 backdrop-blur-md hover:bg-white/70 cursor-pointer min-h-[250px] sm:min-h-[300px]"
+               onClick={() => setShowForm(true)}
+             >
+               <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                 <Plus size={24} className="sm:w-8 sm:h-8 strokeWidth={1.5} text-black" />
+               </div>
+               <h2 className="text-lg sm:text-xl font-medium text-slate-500 group-hover:text-indigo-600 text-center transition-colors">
+                 Dodaj nowy projekt
+               </h2>
+               <p className="text-xs sm:text-sm text-slate-400 text-center">
+                 Utwórz nowy projekt remontowy
+               </p>
+             </div>
+           )}
         </div>
       </main>
 
@@ -369,6 +448,15 @@ export default function ProjektyPage() {
           userId={user?.id}
           isProjectExport={true}
           projectId={undefined}
+        />
+      )}
+
+      {showShareModal && sharingProject && (
+        <ShareProjectModal
+          isOpen={showShareModal}
+          onClose={handleShareModalClose}
+          projectId={sharingProject.id!}
+          projectName={sharingProject.name}
         />
       )}
 

@@ -3,6 +3,8 @@ DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS project_shares CASCADE;
+DROP TABLE IF EXISTS project_permissions CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS get_room_expenses() CASCADE;
 DROP FUNCTION IF EXISTS get_project_expenses() CASCADE;
@@ -31,6 +33,18 @@ CREATE TABLE projects (
   icon VARCHAR(50) DEFAULT 'Home',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create project_shares table for sharing projects
+CREATE TABLE project_shares (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  shared_with_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  permission_type VARCHAR(20) NOT NULL CHECK (permission_type IN ('read', 'edit')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(project_id, shared_with_id)
 );
 
 -- Create rooms table with user and project relationships (removed budget field)
@@ -107,6 +121,9 @@ CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_project_shares_updated_at BEFORE UPDATE ON project_shares
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Create indexes for better performance
 CREATE INDEX idx_rooms_user_id ON rooms(user_id);
 CREATE INDEX idx_rooms_project_id ON rooms(project_id);
@@ -115,6 +132,9 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_products_room_id ON products(room_id);
 CREATE INDEX idx_products_category ON products(category);
 CREATE INDEX idx_products_status ON products(status);
+CREATE INDEX idx_project_shares_project_id ON project_shares(project_id);
+CREATE INDEX idx_project_shares_shared_with_id ON project_shares(shared_with_id);
+CREATE INDEX idx_project_shares_owner_id ON project_shares(owner_id);
 
 -- Create unique constraints to prevent duplicates (commented out for now)
 -- CREATE UNIQUE INDEX idx_rooms_user_name ON rooms(user_id, name);
