@@ -62,13 +62,15 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
   const groups: Record<string, Product[]> = {};
   
   products.forEach(product => {
-    if (!groups[product.name]) {
-      groups[product.name] = [];
+    // Normalize product name to lowercase for grouping
+    const normalizedName = product.name.toLowerCase().trim();
+    if (!groups[normalizedName]) {
+      groups[normalizedName] = [];
     }
-    groups[product.name].push(product);
+    groups[normalizedName].push(product);
   });
 
-  return Object.entries(groups).map(([name, products]) => {
+  return Object.entries(groups).map(([normalizedName, products]) => {
     const prices = products.map(p => p.price).sort((a, b) => a - b);
     const maxPrice = Math.max(...prices);
     const minPrice = Math.min(...prices);
@@ -81,8 +83,11 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
     const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
     const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
 
+    // Use the first product's name as the display name (preserves original casing)
+    const displayName = products[0].name;
+
     return {
-      name,
+      name: displayName,
       products,
       totalValue,
       maxPrice,
@@ -130,13 +135,14 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
       };
     }
 
-    // Group products by name
+    // Group products by name (case-insensitive)
     const groups: Record<string, Product[]> = {};
     plannedAndPurchasedProducts.forEach(product => {
-      if (!groups[product.name]) {
-        groups[product.name] = [];
+      const normalizedName = product.name.toLowerCase().trim();
+      if (!groups[normalizedName]) {
+        groups[normalizedName] = [];
       }
-      groups[product.name].push(product);
+      groups[normalizedName].push(product);
     });
 
     let expensiveScenario = 0;
@@ -144,18 +150,31 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
     let cheapScenario = 0;
 
     Object.values(groups).forEach(groupProducts => {
-      const prices = groupProducts.map(p => p.price).sort((a, b) => a - b);
-      const maxPrice = Math.max(...prices);
-      const minPrice = Math.min(...prices);
+      // Check if any product in this group has been purchased
+      const purchasedProducts = groupProducts.filter(p => p.status === 'purchased');
+      const plannedProducts = groupProducts.filter(p => p.status === 'planned');
       
-      // Calculate median
-      const medianPrice = prices.length % 2 === 0 
-        ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
-        : prices[Math.floor(prices.length / 2)];
+      if (purchasedProducts.length > 0) {
+        // If any product is purchased, use the purchased product's price for all scenarios
+        const purchasedPrice = purchasedProducts[0].price; // Use first purchased product
+        expensiveScenario += purchasedPrice;
+        averageScenario += purchasedPrice;
+        cheapScenario += purchasedPrice;
+      } else {
+        // If no product is purchased, use the original logic with planned products only
+        const prices = plannedProducts.map(p => p.price).sort((a, b) => a - b);
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        
+        // Calculate median
+        const medianPrice = prices.length % 2 === 0 
+          ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+          : prices[Math.floor(prices.length / 2)];
 
-      expensiveScenario += maxPrice;
-      averageScenario += medianPrice;
-      cheapScenario += minPrice;
+        expensiveScenario += maxPrice;
+        averageScenario += medianPrice;
+        cheapScenario += minPrice;
+      }
     });
 
     return {
@@ -203,7 +222,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                  {scenarioCosts.expensiveScenario.toLocaleString()} PLN
                </div>
                <p className="text-xs text-slate-500 mt-1">
-                 Najdroższe produkty z każdej grupy
+                 Zakupione produkty lub najdroższe z planowanych
                </p>
              </div>
              <div className="bg-white rounded-xl p-4 border border-indigo-200">
@@ -215,7 +234,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                  {scenarioCosts.averageScenario.toLocaleString()} PLN
                </div>
                                <p className="text-xs text-slate-500 mt-1">
-                  Mediany cen z każdej grupy
+                  Zakupione produkty lub mediany z planowanych
                 </p>
              </div>
              <div className="bg-white rounded-xl p-4 border border-indigo-200">
@@ -227,7 +246,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                  {scenarioCosts.cheapScenario.toLocaleString()} PLN
                </div>
                <p className="text-xs text-slate-500 mt-1">
-                 Najtańsze produkty z każdej grupy
+                 Zakupione produkty lub najtańsze z planowanych
                </p>
              </div>
            </div>
