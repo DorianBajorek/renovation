@@ -52,17 +52,16 @@ export const addRoom = async (room: { name: string }): Promise<Room> => {
 };
 
 // Project operations
-export const getProjects = async (userId: string): Promise<Project[]> => {
-  const { data, error } = await supabase
+export const getProjects = async (): Promise<Project[]> => {
+  const { data: projects, error } = await supabase
     .from('projects')
     .select(`
       *,
       rooms:rooms(
         id,
-        products:products(price, quantity)
+        products:products(price, quantity, status)
       )
     `)
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -70,11 +69,11 @@ export const getProjects = async (userId: string): Promise<Project[]> => {
     throw error;
   }
 
-  // Calculate expenses for each project
-  return data?.map(project => {
+  return projects?.map(project => {
+    // Calculate expenses for each project (only purchased products)
     const expenses = project.rooms?.reduce((projectSum: number, room: any) => {
       const roomExpenses = room.products?.reduce((roomSum: number, product: any) => 
-        roomSum + (product.price * product.quantity), 0) || 0;
+        product.status === 'purchased' ? roomSum + (product.price * product.quantity) : roomSum, 0) || 0;
       return projectSum + roomExpenses;
     }, 0) || 0;
     
@@ -85,8 +84,6 @@ export const getProjects = async (userId: string): Promise<Project[]> => {
       description: project.description,
       budget: project.budget,
       expenses: expenses,
-      startDate: project.start_date,
-      endDate: project.end_date,
       status: project.status,
       icon: project.icon
     };
@@ -99,8 +96,6 @@ export const addProject = async (project: Omit<Project, 'id'>): Promise<Project>
     name: project.name,
     description: project.description,
     budget: project.budget,
-    start_date: project.startDate,
-    end_date: project.endDate,
     status: project.status,
     icon: project.icon || 'Home'
   };
@@ -121,8 +116,6 @@ export const addProject = async (project: Omit<Project, 'id'>): Promise<Project>
     name: data.name,
     description: data.description,
     budget: data.budget,
-    startDate: data.start_date,
-    endDate: data.end_date,
     status: data.status,
     icon: data.icon
   };
@@ -134,8 +127,6 @@ export const updateProject = async (id: string, updates: Partial<Project>): Prom
   if (updates.name) dbUpdates.name = updates.name;
   if (updates.description) dbUpdates.description = updates.description;
   if (updates.budget) dbUpdates.budget = updates.budget;
-  if (updates.startDate) dbUpdates.start_date = updates.startDate;
-  if (updates.endDate) dbUpdates.end_date = updates.endDate;
   if (updates.status) dbUpdates.status = updates.status;
   if (updates.icon) dbUpdates.icon = updates.icon;
 
@@ -158,8 +149,6 @@ export const updateProject = async (id: string, updates: Partial<Project>): Prom
     name: data.name,
     description: data.description,
     budget: data.budget,
-    startDate: data.start_date,
-    endDate: data.end_date,
     status: data.status,
     icon: data.icon
   };

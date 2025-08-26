@@ -141,9 +141,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.description || !body.budget || !body.userId) {
+    if (!body.name || !body.budget || !body.userId) {
       return NextResponse.json(
-        { error: 'Name, description, budget, and userId are required' },
+        { error: 'Name, budget, and userId are required' },
         { status: 400 }
       );
     }
@@ -154,8 +154,6 @@ export async function POST(request: NextRequest) {
       name: body.name,
       description: body.description,
       budget: body.budget,
-      start_date: body.startDate || body.start_date || new Date().toISOString().split('T')[0],
-      end_date: body.endDate || body.end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: body.status || 'planning',
       icon: body.icon || 'Home'
     };

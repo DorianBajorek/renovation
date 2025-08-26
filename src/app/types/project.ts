@@ -3,11 +3,9 @@ export interface Project {
   id?: string;
   user_id?: string;
   name: string;
-  description: string;
+  description?: string;
   budget: number;
   expenses?: number; // Suma wydatków (obliczana dynamicznie)
-  startDate: string;
-  endDate: string;
   status: 'active' | 'completed';
   icon: string;
   created_at?: string;

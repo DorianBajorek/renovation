@@ -27,8 +27,6 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
     name: "",
     description: "",
     budget: "",
-    startDate: "",
-    endDate: "",
     status: "active" as 'active' | 'completed',
     icon: "Home",
   });
@@ -40,10 +38,8 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
     if (project) {
       setFormData({
         name: project.name,
-        description: project.description,
+        description: project.description || "",
         budget: project.budget.toString(),
-        startDate: project.startDate,
-        endDate: project.endDate,
         status: project.status,
         icon: project.icon,
       });
@@ -56,13 +52,7 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
     // Validation
     const newErrors: FormErrors = {};
     if (!formData.name.trim()) newErrors.name = "Nazwa projektu jest wymagana";
-    if (!formData.description.trim()) newErrors.description = "Opis jest wymagany";
     if (!formData.budget || Number(formData.budget) <= 0) newErrors.budget = "Budżet musi być większy od 0";
-    if (!formData.startDate) newErrors.startDate = "Data rozpoczęcia jest wymagana";
-    if (!formData.endDate) newErrors.endDate = "Data zakończenia jest wymagana";
-    if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-      newErrors.endDate = "Data zakończenia musi być późniejsza niż data rozpoczęcia";
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -82,10 +72,8 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
         },
         body: JSON.stringify({
           name: formData.name.trim(),
-          description: formData.description.trim(),
+          description: formData.description,
           budget: Number(formData.budget),
-          startDate: formData.startDate,
-          endDate: formData.endDate,
           status: formData.status,
           icon: formData.icon,
           userId: user.id,
@@ -152,7 +140,7 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
             {/* Opis */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Opis projektu *
+                Opis projektu
               </label>
               <textarea
                 value={formData.description}
@@ -186,43 +174,6 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
               {errors.budget && (
                 <p className="mt-1 text-sm text-red-600">{errors.budget}</p>
               )}
-            </div>
-
-            {/* Daty */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Data rozpoczęcia *
-                </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange("startDate", e.target.value)}
-                  className={`w-full px-4 py-3 rounded-xl border ${
-                    errors.startDate ? "border-red-300" : "border-slate-300"
-                  } focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
-                />
-                {errors.startDate && (
-                  <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Data zakończenia *
-                </label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => handleInputChange("endDate", e.target.value)}
-                  className={`w-full px-4 py-3 rounded-xl border ${
-                    errors.endDate ? "border-red-300" : "border-slate-300"
-                  } focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
-                />
-                {errors.endDate && (
-                  <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>
-                )}
-              </div>
             </div>
 
             {/* Status */}

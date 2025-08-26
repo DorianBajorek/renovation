@@ -27,8 +27,6 @@ CREATE TABLE projects (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   budget DECIMAL(10,2) NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
   status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'completed')),
   icon VARCHAR(50) DEFAULT 'Home',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

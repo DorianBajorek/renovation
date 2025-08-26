@@ -4,8 +4,6 @@
     "name": "Remont Mieszkania",
     "description": "Kompleksowy remont 3-pokojowego mieszkania",
     "budget": 15000,
-    "startDate": "2024-01-15",
-    "endDate": "2024-06-30",
     "status": "active",
     "rooms": ["Salon", "Sypialnia", "Łazienka", "Kuchnia"],
     "icon": "Home"
@@ -15,8 +13,6 @@
     "name": "Renowacja Domu",
     "description": "Renowacja starego domu jednorodzinnego",
     "budget": 45000,
-    "startDate": "2024-03-01",
-    "endDate": "2024-12-31",
     "status": "planning",
     "rooms": ["Salon", "Sypialnia", "Łazienka"],
     "icon": "Building"
@@ -26,8 +22,6 @@
     "name": "Modernizacja Biura",
     "description": "Modernizacja przestrzeni biurowej",
     "budget": 25000,
-    "startDate": "2024-02-01",
-    "endDate": "2024-05-15",
     "status": "completed",
     "rooms": ["Salon", "Kuchnia"],
     "icon": "Briefcase"

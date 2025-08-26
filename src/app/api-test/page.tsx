@@ -57,7 +57,7 @@ export default function ApiTestPage() {
                 {projects.map((project) => (
                   <div key={project.id} className="border rounded p-4">
                     <h3 className="font-semibold">{project.name}</h3>
-                    <p className="text-gray-600">{project.description}</p>
+                    <p className="text-gray-600">{project.description || "Brak opisu"}</p>
                     <div className="text-sm text-gray-500 mt-2">
                       Budget: {project.budget} PLN | Status: {project.status}
                     </div>

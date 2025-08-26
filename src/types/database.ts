@@ -64,10 +64,8 @@ export interface Database {
           id: string;
           user_id: string;
           name: string;
-          description: string;
+          description: string | null;
           budget: number;
-          start_date: string;
-          end_date: string;
           status: 'active' | 'planning' | 'completed';
           icon: string;
           created_at: string;
@@ -77,10 +75,8 @@ export interface Database {
           id?: string;
           user_id: string;
           name: string;
-          description: string;
+          description?: string | null;
           budget: number;
-          start_date: string;
-          end_date: string;
           status?: 'active' | 'planning' | 'completed';
           icon?: string;
           created_at?: string;
@@ -90,10 +86,8 @@ export interface Database {
           id?: string;
           user_id?: string;
           name?: string;
-          description?: string;
+          description?: string | null;
           budget?: number;
-          start_date?: string;
-          end_date?: string;
           status?: 'active' | 'planning' | 'completed';
           icon?: string;
           created_at?: string;

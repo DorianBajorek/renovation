@@ -122,8 +122,6 @@ export async function PUT(
       name: body.name,
       description: body.description,
       budget: body.budget,
-      start_date: body.startDate,
-      end_date: body.endDate,
       status: body.status,
       icon: body.icon,
     };
@@ -154,8 +152,6 @@ export async function PUT(
     // Map database fields to frontend format
     const mappedProject = {
       ...updatedProject,
-      startDate: updatedProject.start_date,
-      endDate: updatedProject.end_date,
     };
 
     return NextResponse.json(mappedProject, {

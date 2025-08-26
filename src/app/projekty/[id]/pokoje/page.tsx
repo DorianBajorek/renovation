@@ -245,17 +245,9 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Budżet projektu:</span>
+                      <span className="text-slate-500">Budżet:</span>
                       <span className="ml-2 font-medium text-slate-700">
                         {project.budget?.toLocaleString()} PLN
-                      </span>
-                    </div>
-                    <div className="sm:col-span-2 md:col-span-1">
-                      <span className="text-slate-500">Okres:</span>
-                      <span className="ml-2 font-medium text-slate-700">
-                        {project.start_date && project.end_date ? 
-                          `${new Date(project.start_date).toLocaleDateString('pl-PL')} - ${new Date(project.end_date).toLocaleDateString('pl-PL')}` : 
-                          'Nie określono'}
                       </span>
                     </div>
                   </div>

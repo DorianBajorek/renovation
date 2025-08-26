@@ -38,11 +38,8 @@ System autoryzacji został zaimplementowany z następującymi funkcjonalnościam
 - `name` - VARCHAR(255)
 - `description` - TEXT
 - `budget` - DECIMAL(10,2)
-- `start_date` - DATE
-- `end_date` - DATE
-- `status` - VARCHAR(20)
-- `rooms` - TEXT[]
-- `icon` - VARCHAR(50)
+- `status` - VARCHAR(20) DEFAULT 'active'
+- `icon` - VARCHAR(50) DEFAULT 'Home'
 - `created_at` - TIMESTAMP
 - `updated_at` - TIMESTAMP
 
@@ -112,8 +109,6 @@ Tworzenie nowego projektu
   "name": "Nazwa projektu",
   "description": "Opis projektu",
   "budget": 15000,
-  "startDate": "2024-01-01",
-  "endDate": "2024-06-30",
   "status": "planning",
   "rooms": ["Salon", "Kuchnia"],
   "icon": "Home"
