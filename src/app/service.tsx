@@ -37,7 +37,7 @@ export const addRoom = async (room: { name: string }) => {
 
 export const getProjects = async (userId: string): Promise<Project[]> => {
   try {
-    const projects = await getProjectsFromSupabase(userId);
+    const projects = await getProjectsFromSupabase();
     return projects.map(project => ({
       ...project,
       icon: iconMap[project.icon] || Home,

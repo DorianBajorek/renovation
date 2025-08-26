@@ -30,6 +30,16 @@ export interface ProjectShare {
   project_name?: string;
   owner_name?: string;
   shared_with_name?: string;
+  // Relacje z API
+  shared_with?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  owner?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export interface ShareProjectRequest {
