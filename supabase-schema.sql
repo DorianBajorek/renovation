@@ -65,7 +65,7 @@ CREATE TABLE products (
   price DECIMAL(10,2) NOT NULL,
   quantity INTEGER DEFAULT 1,
   category VARCHAR(100),
-  status VARCHAR(20) DEFAULT 'planned' CHECK (status IN ('planned', 'purchased', 'installed')),
+  status VARCHAR(20) DEFAULT 'planned' CHECK (status IN ('planned', 'purchased')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -1,13 +1,13 @@
 // Product related interfaces
 export interface Product {
   id?: string;
-  room_id: string;
+  room_id?: string;
   name: string;
   description?: string;
   price: number;
   quantity: number;
   category?: string;
-  status: 'planned' | 'purchased' | 'installed';
+  status: 'planned' | 'purchased';
   room_name?: string; // Added for export functionality
   created_at?: string;
   updated_at?: string;
@@ -19,5 +19,5 @@ export interface ProductFormData {
   price: number;
   quantity: number;
   category?: string;
-  status: 'planned' | 'purchased' | 'installed';
+  status: 'planned' | 'purchased';
 }

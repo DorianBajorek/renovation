@@ -313,7 +313,6 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     switch (status) {
       case 'planned': return 'Planowany';
       case 'purchased': return 'Zakupiony';
-      case 'installed': return 'Zainstalowany';
       default: return 'Planowany';
     }
   };

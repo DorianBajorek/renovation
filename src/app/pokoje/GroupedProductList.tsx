@@ -26,8 +26,6 @@ const getStatusIcon = (status: string) => {
       return <Clock size={16} className="text-slate-500" />;
     case 'purchased':
       return <ShoppingCart size={16} className="text-blue-500" />;
-    case 'installed':
-      return <CheckCircle size={16} className="text-green-500" />;
     default:
       return <Clock size={16} className="text-slate-500" />;
   }
@@ -39,8 +37,6 @@ const getStatusText = (status: string) => {
       return 'Planowany';
     case 'purchased':
       return 'Zakupiony';
-    case 'installed':
-      return 'Zainstalowany';
     default:
       return 'Planowany';
   }
@@ -52,8 +48,6 @@ const getStatusColor = (status: string) => {
       return 'bg-slate-100 text-slate-700';
     case 'purchased':
       return 'bg-blue-100 text-blue-700';
-    case 'installed':
-      return 'bg-green-100 text-green-700';
     default:
       return 'bg-slate-100 text-slate-700';
   }
