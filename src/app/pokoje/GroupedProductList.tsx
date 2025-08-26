@@ -58,6 +58,34 @@ const getStatusColor = (status: string) => {
   }
 };
 
+// Function to parse text and convert URLs to clickable links
+const parseTextWithLinks = (text: string) => {
+  // Regex to match URLs (http, https, www)
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      // Ensure URL has protocol
+      const url = part.startsWith('www.') ? `https://${part}` : part;
+      return (
+        <a
+          key={index}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 hover:text-indigo-800 underline break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 const groupProductsByName = (products: Product[]): ProductGroup[] => {
   const groups: Record<string, Product[]> = {};
   
@@ -382,7 +410,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                            {/* Product Description */}
                            {product.description && (
                              <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                               <p className="text-slate-700 text-sm leading-relaxed">{product.description}</p>
+                               <p className="text-slate-700 text-sm leading-relaxed">
+                                 {parseTextWithLinks(product.description)}
+                               </p>
                              </div>
                            )}
                            
@@ -449,7 +479,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete }: ProductListPr
                              {/* Product Description */}
                              {product.description && (
                                <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                 <p className="text-slate-700 text-sm leading-relaxed">{product.description}</p>
+                                 <p className="text-slate-700 text-sm leading-relaxed">
+                                   {parseTextWithLinks(product.description)}
+                                 </p>
                                </div>
                              )}
                              
