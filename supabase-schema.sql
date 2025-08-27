@@ -9,13 +9,16 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS get_room_expenses() CASCADE;
 DROP FUNCTION IF EXISTS get_project_expenses() CASCADE;
 
--- Create users table
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create users table (compatible with Supabase Auth)
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -137,4 +140,98 @@ CREATE INDEX idx_project_shares_owner_id ON project_shares(owner_id);
 -- Create unique constraints to prevent duplicates (commented out for now)
 -- CREATE UNIQUE INDEX idx_rooms_user_name ON rooms(user_id, name);
 -- CREATE UNIQUE INDEX idx_projects_user_name ON projects(user_id, name);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_shares ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies
+-- Users can only see their own data
+CREATE POLICY "Users can view own profile" ON users
+  FOR SELECT USING (auth.uid()::text = id::text);
+
+CREATE POLICY "Users can update own profile" ON users
+  FOR UPDATE USING (auth.uid()::text = id::text);
+
+-- Projects policies
+CREATE POLICY "Users can view own projects" ON projects
+  FOR SELECT USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can insert own projects" ON projects
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can update own projects" ON projects
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can delete own projects" ON projects
+  FOR DELETE USING (auth.uid()::text = user_id::text);
+
+-- Rooms policies
+CREATE POLICY "Users can view own rooms" ON rooms
+  FOR SELECT USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can insert own rooms" ON rooms
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can update own rooms" ON rooms
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Users can delete own rooms" ON rooms
+  FOR DELETE USING (auth.uid()::text = user_id::text);
+
+-- Products policies
+CREATE POLICY "Users can view products in own rooms" ON products
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM rooms 
+      WHERE rooms.id = products.room_id 
+      AND rooms.user_id::text = auth.uid()::text
+    )
+  );
+
+CREATE POLICY "Users can insert products in own rooms" ON products
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM rooms 
+      WHERE rooms.id = products.room_id 
+      AND rooms.user_id::text = auth.uid()::text
+    )
+  );
+
+CREATE POLICY "Users can update products in own rooms" ON products
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM rooms 
+      WHERE rooms.id = products.room_id 
+      AND rooms.user_id::text = auth.uid()::text
+    )
+  );
+
+CREATE POLICY "Users can delete products in own rooms" ON products
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM rooms 
+      WHERE rooms.id = products.room_id 
+      AND rooms.user_id::text = auth.uid()::text
+    )
+  );
+
+-- Project shares policies
+CREATE POLICY "Users can view shared projects" ON project_shares
+  FOR SELECT USING (
+    auth.uid()::text = owner_id::text OR 
+    auth.uid()::text = shared_with_id::text
+  );
+
+CREATE POLICY "Users can share own projects" ON project_shares
+  FOR INSERT WITH CHECK (auth.uid()::text = owner_id::text);
+
+CREATE POLICY "Users can update own shares" ON project_shares
+  FOR UPDATE USING (auth.uid()::text = owner_id::text);
+
+CREATE POLICY "Users can delete own shares" ON project_shares
+  FOR DELETE USING (auth.uid()::text = owner_id::text);
 

@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Remonto - Aplikacja do Planowania Remontów
 
-## Getting Started
+Aplikacja webowa do planowania i zarządzania projektami remontowymi, z możliwością dodawania pokoi, produktów i śledzenia budżetu.
 
-First, run the development server:
+## Funkcje
+
+- 🔐 **Autentykacja** - Logowanie i rejestracja z hasłem lub Google OAuth
+- 📋 **Projekty** - Tworzenie i zarządzanie projektami remontowymi
+- 🏠 **Pokoje** - Dodawanie pokoi do projektów
+- 🛒 **Produkty** - Dodawanie produktów do pokoi z cenami i kategoriami
+- 💰 **Budżet** - Śledzenie wydatków na pokoje i projekty
+- 👥 **Udostępnianie** - Udostępnianie projektów innym użytkownikom
+- 📱 **Responsywny design** - Działa na wszystkich urządzeniach
+
+## Technologie
+
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
+- **Autentykacja**: Supabase Auth z Google OAuth
+- **Styling**: Tailwind CSS z custom design system
+
+## Instalacja
+
+1. Sklonuj repozytorium:
+
+```bash
+git clone <repository-url>
+cd renovation
+```
+
+2. Zainstaluj zależności:
+
+```bash
+npm install
+```
+
+3. Skonfiguruj zmienne środowiskowe:
+
+```bash
+cp env.example .env.local
+```
+
+4. Wypełnij zmienne w `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+5. Skonfiguruj bazę danych:
+
+   - Przejdź do [Supabase Dashboard](https://supabase.com/dashboard)
+   - Utwórz nowy projekt
+   - W SQL Editor wykonaj zawartość pliku `supabase-schema.sql`
+
+6. Skonfiguruj Google OAuth (opcjonalnie):
+
+   - Postępuj zgodnie z instrukcjami w `GOOGLE_OAUTH_SETUP.md`
+
+7. Uruchom aplikację:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Autentykacja
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Aplikacja obsługuje dwa sposoby autentykacji:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Email i hasło
 
-## Learn More
+- Rejestracja z email i hasłem
+- Logowanie z email i hasłem
+- Potwierdzenie email po rejestracji
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Google OAuth
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Logowanie i rejestracja przez Google
+- Automatyczne pobieranie danych profilu
+- Bezpieczne przekierowania OAuth
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Struktura bazy danych
 
-## Deploy on Vercel
+### Tabele główne:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **users** - Dane użytkowników
+- **projects** - Projekty remontowe
+- **rooms** - Pokoje w projektach
+- **products** - Produkty w pokojach
+- **project_shares** - Udostępnianie projektów
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Funkcje:
+
+- **get_room_expenses()** - Oblicza wydatki na pokój
+- **get_project_expenses()** - Oblicza wydatki na projekt
+
+## Bezpieczeństwo
+
+- Row Level Security (RLS) włączone dla wszystkich tabel
+- Polityki dostępu oparte na ID użytkownika
+- Bezpieczne przekierowania OAuth
+- Walidacja danych po stronie klienta i serwera
+
+## Rozwój
+
+### Struktura katalogów:
+
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── api/            # API routes
+│   ├── auth/           # Auth callback
+│   ├── login/          # Login page
+│   ├── register/       # Register page
+│   └── ...
+├── components/         # Reusable components
+├── hooks/             # Custom hooks
+├── lib/               # Utilities and services
+└── types/             # TypeScript types
+```
+
+### Dodawanie nowych funkcji:
+
+1. Utwórz komponenty w `src/components/`
+2. Dodaj strony w `src/app/`
+3. Zaktualizuj typy w `src/types/`
+4. Dodaj polityki RLS jeśli potrzebne
+
+## Deployment
+
+Aplikacja może być wdrożona na:
+
+- Vercel (zalecane)
+- Netlify
+- Dowolny hosting z obsługą Next.js
+
+## Licencja
+
+MIT License - zobacz plik LICENSE dla szczegółów.
