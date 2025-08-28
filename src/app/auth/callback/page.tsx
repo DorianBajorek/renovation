@@ -58,7 +58,7 @@ export default function AuthCallback() {
             }
 
             // Zaloguj nowego użytkownika
-            login({
+            await login({
               id: newUser.id,
               email: newUser.email,
               firstName: newUser.first_name,
@@ -67,7 +67,7 @@ export default function AuthCallback() {
             });
           } else {
             // Użytkownik istnieje - zaloguj go
-            login({
+            await login({
               id: dbUser.id,
               email: dbUser.email,
               firstName: dbUser.first_name,

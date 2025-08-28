@@ -9,82 +9,205 @@ interface User {
   createdAt: string;
 }
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+// Singleton state dla autoryzacji - jeden stan dla całej aplikacji
+let globalUser: User | null = null;
+let globalLoading = true;
+let globalListeners: Array<() => void> = [];
 
-  useEffect(() => {
-    // Sprawdź czy użytkownik jest zalogowany przy ładowaniu
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
+const notifyListeners = () => {
+  console.log('notifyListeners called, listeners count:', globalListeners.length);
+  globalListeners.forEach(listener => listener());
+};
+
+const setGlobalUser = (user: User | null) => {
+  globalUser = user;
+  notifyListeners();
+};
+
+const setGlobalLoading = (loading: boolean) => {
+  console.log('setGlobalLoading called with:', loading, 'previous value:', globalLoading);
+  globalLoading = loading;
+  notifyListeners();
+};
+
+// Inicjalizacja stanu - wykonana tylko raz
+let isInitialized = false;
+const initializeGlobalAuth = async () => {
+  if (isInitialized) return;
+  isInitialized = true;
+
+  console.log('useAuth: Global initialization - sprawdzanie stanu zalogowania');
+  
+  try {
+    // Sprawdź czy localStorage jest dostępny
+    if (typeof window !== 'undefined' && window.localStorage) {
+      // Sprawdź czy użytkownik jest zalogowany przy ładowaniu
+      const storedUser = localStorage.getItem('user');
+      console.log('useAuth: storedUser z localStorage:', storedUser);
+      if (storedUser) {
+                 try {
+           const parsedUser = JSON.parse(storedUser);
+           console.log('useAuth: Parsed user:', parsedUser);
+           setGlobalUser(parsedUser);
+           // Ustaw loading na false po ustawieniu użytkownika z małym opóźnieniem
+           setTimeout(() => {
+             setGlobalLoading(false);
+           }, 100);
+         } catch (error) {
+           console.error('useAuth: Błąd podczas parsowania użytkownika:', error);
+           if (typeof window !== 'undefined' && window.localStorage) {
+             localStorage.removeItem('user');
+           }
+                        // Ustaw loading na false nawet w przypadku błędu z małym opóźnieniem
+             setTimeout(() => {
+               setGlobalLoading(false);
+             }, 100);
+                  }
+                } else {
+           // Brak użytkownika w localStorage - ustaw loading na false z małym opóźnieniem
+           setTimeout(() => {
+             setGlobalLoading(false);
+           }, 100);
+         }
+     }
       } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
+     console.error('useAuth: Błąd podczas inicjalizacji:', error);
+     // Ustaw loading na false w przypadku błędu inicjalizacji z małym opóźnieniem
+     setTimeout(() => {
+       setGlobalLoading(false);
+     }, 100);
+   }
+
+  // Nasłuchuj zmian stanu autoryzacji Supabase (tylko dla Google OAuth)
+  const { data: { subscription } } = onAuthStateChange((supabaseUser) => {
+    if (supabaseUser) {
+      // Użytkownik zalogowany przez Supabase - pobierz dane z naszej bazy
+      fetchUserData(supabaseUser.email);
+    } else {
+      // Użytkownik wylogowany przez Supabase - ale sprawdź czy nie ma lokalnej sesji
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
+          // Tylko jeśli nie ma lokalnej sesji, resetuj użytkownika
+          setGlobalUser(null);
+          setTimeout(() => {
+            setGlobalLoading(false);
+          }, 100);
+        } else {
+          // Jeśli jest użytkownik w localStorage, ustaw loading na false
+          setTimeout(() => {
+            setGlobalLoading(false);
+          }, 100);
+        }
+      } else {
+        // Jeśli localStorage nie jest dostępny, ustaw loading na false
+        setTimeout(() => {
+          setGlobalLoading(false);
+        }, 100);
       }
     }
-    setLoading(false);
+  });
+};
 
-    // Nasłuchuj zmian stanu autoryzacji Supabase
-    const { data: { subscription } } = onAuthStateChange((supabaseUser) => {
-      if (supabaseUser) {
-        // Użytkownik zalogowany przez Supabase - pobierz dane z naszej bazy
-        fetchUserData(supabaseUser.email);
-      } else {
-        // Użytkownik wylogowany
-        setUser(null);
-        localStorage.removeItem('user');
-      }
+const fetchUserData = async (email: string) => {
+  try {
+    const response = await fetch('/api/auth/user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
     });
 
-    return () => subscription.unsubscribe();
+    if (response.ok) {
+      const data = await response.json();
+      await login(data.user);
+    } else {
+      // Jeśli nie udało się pobrać danych użytkownika, ustaw loading na false
+      setTimeout(() => {
+        setGlobalLoading(false);
+      }, 100);
+    }
+  } catch (error) {
+    // Silent error handling
+    setTimeout(() => {
+      setGlobalLoading(false);
+    }, 100);
+  }
+};
+
+const login = async (userData: User) => {
+  console.log('useAuth: login called with:', userData);
+  setGlobalUser(userData);
+  
+  // Sprawdź czy localStorage jest dostępny
+  if (typeof window !== 'undefined' && window.localStorage) {
+    localStorage.setItem('user', JSON.stringify(userData));
+    // Dodaj małe opóźnienie żeby dać czas na zapisanie danych
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Sprawdź czy dane zostały zapisane
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      // Jeśli dane nie zostały zapisane, spróbuj ponownie
+      localStorage.setItem('user', JSON.stringify(userData));
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
+  
+  // Ustaw loading na false po zalogowaniu z małym opóźnieniem
+  setTimeout(() => {
+    setGlobalLoading(false);
+  }, 100);
+};
+
+const logout = async () => {
+  try {
+    await signOut();
+    setGlobalUser(null);
+    setTimeout(() => {
+      setGlobalLoading(false);
+    }, 100);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('user');
+    }
+    window.location.href = '/login';
+  } catch (error) {
+    // Fallback - usuń dane lokalnie nawet jeśli błąd
+    setGlobalUser(null);
+    setTimeout(() => {
+      setGlobalLoading(false);
+    }, 100);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('user');
+    }
+    window.location.href = '/login';
+  }
+};
+
+export function useAuth() {
+  const [, forceUpdate] = useState({});
+  
+  useEffect(() => {
+    // Inicjalizuj globalny stan jeśli nie został zainicjalizowany
+    initializeGlobalAuth();
+    
+    // Dodaj listener do globalnych zmian
+    const listener = () => forceUpdate({});
+    globalListeners.push(listener);
+    
+    // Cleanup
+    return () => {
+      globalListeners = globalListeners.filter(l => l !== listener);
+    };
   }, []);
 
-  const fetchUserData = async (email: string) => {
-    try {
-      const response = await fetch('/api/auth/user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        login(data.user);
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
-
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
-
-  const logout = async () => {
-    try {
-      await signOut();
-      setUser(null);
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Fallback - usuń dane lokalnie nawet jeśli błąd
-      setUser(null);
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-  };
-
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!globalUser;
+  console.log('useAuth: isAuthenticated =', isAuthenticated, 'user =', globalUser, 'loading =', globalLoading, 'globalListeners count =', globalListeners.length);
 
   return {
-    user,
-    loading,
+    user: globalUser,
+    loading: globalLoading,
     login,
     logout,
     isAuthenticated,

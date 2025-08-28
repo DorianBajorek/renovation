@@ -37,13 +37,12 @@ export default function LoginPage() {
       }
 
       // Logowanie udane - użycie hooka do zapisania danych użytkownika
-      login(data.user);
+      await login(data.user);
       
       // Przekierowanie do strony głównej
-      // window.location.href = '/';
+      window.location.href = '/';
       
     } catch (error) {
-      console.error('Login error:', error);
       alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas logowania');
     } finally {
       setIsLoading(false);
@@ -62,7 +61,6 @@ export default function LoginPage() {
       setIsLoading(true);
       await signInWithGoogle();
     } catch (error) {
-      console.error('Google sign in error:', error);
       alert('Błąd podczas logowania przez Google');
     } finally {
       setIsLoading(false);
