@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Nav() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, loading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -35,6 +35,20 @@ export default function Nav() {
   const handleMenuOptionClick = () => {
     setIsMenuOpen(false);
   };
+
+  // Pokaż loading state podczas ładowania danych autoryzacji
+  if (loading) {
+    return (
+      <header className="relative w-full flex justify-between items-center p-6 border-b border-gray-200 bg-white shadow-sm">
+        <div className="text-2xl font-bold text-black flex items-center gap-2">
+          🏡 Remonto
+        </div>
+        <div className="hidden md:flex gap-6 items-center text-sm font-medium">
+          <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="relative w-full flex justify-between items-center p-6 border-b border-gray-200 bg-white shadow-sm">

@@ -3,7 +3,28 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  // Pokaż loading state podczas ładowania danych autoryzacji
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 text-gray-800 flex flex-col">
+        <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 md:py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded mb-4 w-64 mx-auto"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2 w-96 mx-auto"></div>
+              <div className="h-4 bg-gray-200 rounded mb-8 w-80 mx-auto"></div>
+              <div className="flex gap-4 justify-center">
+                <div className="h-12 bg-gray-200 rounded w-32"></div>
+                <div className="h-12 bg-gray-200 rounded w-32"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 text-gray-800 flex flex-col">

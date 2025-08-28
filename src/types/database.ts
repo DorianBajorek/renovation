@@ -5,7 +5,7 @@ export interface Database {
         Row: {
           id: string;
           email: string;
-          password_hash: string;
+          password_hash: string | null;
           first_name: string;
           last_name: string;
           created_at: string;
@@ -14,7 +14,7 @@ export interface Database {
         Insert: {
           id?: string;
           email: string;
-          password_hash: string;
+          password_hash?: string | null;
           first_name: string;
           last_name: string;
           created_at?: string;
@@ -23,7 +23,7 @@ export interface Database {
         Update: {
           id?: string;
           email?: string;
-          password_hash?: string;
+          password_hash?: string | null;
           first_name?: string;
           last_name?: string;
           created_at?: string;

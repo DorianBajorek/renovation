@@ -28,6 +28,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Sprawdź czy użytkownik to użytkownik Google (nie ma hasła)
+    if (!user.password_hash || user.password_hash === 'google_oauth_user') {
+      return NextResponse.json(
+        { error: 'To konto zostało utworzone przez Google. Zaloguj się przez Google.' },
+        { status: 401 }
+      );
+    }
+
     // Weryfikacja hasła
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
