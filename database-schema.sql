@@ -1,4 +1,7 @@
--- Clear existing database
+-- Kompletny schemat bazy danych dla aplikacji Remonto z obsługą Google OAuth
+-- Ten plik zawiera wszystko - usuwa istniejące tabele i tworzy nowe
+
+-- Usuń istniejące tabele i funkcje
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
@@ -9,31 +12,31 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS get_room_expenses() CASCADE;
 DROP FUNCTION IF EXISTS get_project_expenses() CASCADE;
 
--- Create users table
+-- Utwórz tabelę użytkowników z obsługą Google OAuth
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255), -- NULL dla użytkowników Google OAuth
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create projects table with user relationship
+-- Utwórz tabelę projektów
 CREATE TABLE projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
   budget DECIMAL(10,2) NOT NULL,
-  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'completed')),
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'planning', 'completed')),
   icon VARCHAR(50) DEFAULT 'Home',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create project_shares table for sharing projects
+-- Utwórz tabelę udostępniania projektów
 CREATE TABLE project_shares (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -45,7 +48,7 @@ CREATE TABLE project_shares (
   UNIQUE(project_id, shared_with_id)
 );
 
--- Create rooms table with user and project relationships (removed budget field)
+-- Utwórz tabelę pokoi
 CREATE TABLE rooms (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -56,7 +59,7 @@ CREATE TABLE rooms (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create products table with room relationship
+-- Utwórz tabelę produktów
 CREATE TABLE products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
@@ -70,7 +73,7 @@ CREATE TABLE products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create updated_at trigger function
+-- Utwórz funkcję do automatycznej aktualizacji updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -79,7 +82,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create function to calculate room expenses
+-- Utwórz funkcję do obliczania wydatków pokoju
 CREATE OR REPLACE FUNCTION get_room_expenses(room_uuid UUID)
 RETURNS DECIMAL(10,2) AS $$
 BEGIN
@@ -92,7 +95,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create function to calculate project expenses
+-- Utwórz funkcję do obliczania wydatków projektu
 CREATE OR REPLACE FUNCTION get_project_expenses(project_uuid UUID)
 RETURNS DECIMAL(10,2) AS $$
 BEGIN
@@ -106,7 +109,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create triggers for updated_at
+-- Utwórz triggery dla automatycznej aktualizacji updated_at
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -122,7 +125,7 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
 CREATE TRIGGER update_project_shares_updated_at BEFORE UPDATE ON project_shares
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Create indexes for better performance
+-- Utwórz indeksy dla lepszej wydajności
 CREATE INDEX idx_rooms_user_id ON rooms(user_id);
 CREATE INDEX idx_rooms_project_id ON rooms(project_id);
 CREATE INDEX idx_projects_user_id ON projects(user_id);
@@ -134,7 +137,12 @@ CREATE INDEX idx_project_shares_project_id ON project_shares(project_id);
 CREATE INDEX idx_project_shares_shared_with_id ON project_shares(shared_with_id);
 CREATE INDEX idx_project_shares_owner_id ON project_shares(owner_id);
 
--- Create unique constraints to prevent duplicates (commented out for now)
--- CREATE UNIQUE INDEX idx_rooms_user_name ON rooms(user_id, name);
--- CREATE UNIQUE INDEX idx_projects_user_name ON projects(user_id, name);
+-- Dodaj komentarz wyjaśniający obsługę Google OAuth
+COMMENT ON COLUMN users.password_hash IS 'Password hash for regular users, NULL or google_oauth_user for Google OAuth users';
 
+-- Opcjonalne: Dodaj przykładowe dane (zakomentowane)
+-- INSERT INTO users (email, password_hash, first_name, last_name) VALUES 
+--   ('admin@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4tbQJhHm2O', 'Admin', 'User');
+
+-- INSERT INTO projects (user_id, name, description, budget, status) VALUES 
+--   ((SELECT id FROM users WHERE email = 'admin@example.com'), 'Mój pierwszy projekt', 'Opis projektu', 50000.00, 'active');
