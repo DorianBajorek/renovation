@@ -15,7 +15,6 @@ let globalLoading = true;
 let globalListeners: Array<() => void> = [];
 
 const notifyListeners = () => {
-  console.log('notifyListeners called, listeners count:', globalListeners.length);
   globalListeners.forEach(listener => listener());
 };
 
@@ -25,7 +24,6 @@ const setGlobalUser = (user: User | null) => {
 };
 
 const setGlobalLoading = (loading: boolean) => {
-  console.log('setGlobalLoading called with:', loading, 'previous value:', globalLoading);
   globalLoading = loading;
   notifyListeners();
 };
@@ -36,25 +34,22 @@ const initializeGlobalAuth = async () => {
   if (isInitialized) return;
   isInitialized = true;
 
-  console.log('useAuth: Global initialization - sprawdzanie stanu zalogowania');
+
   
   try {
     // Sprawdź czy localStorage jest dostępny
     if (typeof window !== 'undefined' && window.localStorage) {
       // Sprawdź czy użytkownik jest zalogowany przy ładowaniu
       const storedUser = localStorage.getItem('user');
-      console.log('useAuth: storedUser z localStorage:', storedUser);
       if (storedUser) {
-                 try {
-           const parsedUser = JSON.parse(storedUser);
-           console.log('useAuth: Parsed user:', parsedUser);
+                           try {
+            const parsedUser = JSON.parse(storedUser);
            setGlobalUser(parsedUser);
            // Ustaw loading na false po ustawieniu użytkownika z małym opóźnieniem
            setTimeout(() => {
              setGlobalLoading(false);
            }, 100);
-         } catch (error) {
-           console.error('useAuth: Błąd podczas parsowania użytkownika:', error);
+                   } catch (error) {
            if (typeof window !== 'undefined' && window.localStorage) {
              localStorage.removeItem('user');
            }
@@ -70,8 +65,7 @@ const initializeGlobalAuth = async () => {
            }, 100);
          }
      }
-      } catch (error) {
-     console.error('useAuth: Błąd podczas inicjalizacji:', error);
+          } catch (error) {
      // Ustaw loading na false w przypadku błędu inicjalizacji z małym opóźnieniem
      setTimeout(() => {
        setGlobalLoading(false);
@@ -137,7 +131,6 @@ const fetchUserData = async (email: string) => {
 };
 
 const login = async (userData: User) => {
-  console.log('useAuth: login called with:', userData);
   setGlobalUser(userData);
   
   // Sprawdź czy localStorage jest dostępny
@@ -203,7 +196,6 @@ export function useAuth() {
   }, []);
 
   const isAuthenticated = !!globalUser;
-  console.log('useAuth: isAuthenticated =', isAuthenticated, 'user =', globalUser, 'loading =', globalLoading, 'globalListeners count =', globalListeners.length);
 
   return {
     user: globalUser,
