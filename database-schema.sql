@@ -1,4 +1,4 @@
--- Kompletny schemat bazy danych dla aplikacji Remonto z obsługą Google OAuth
+-- Kompletny schemat bazy danych dla aplikacji Remotrack z obsługą Google OAuth
 -- Ten plik zawiera wszystko - usuwa istniejące tabele i tworzy nowe
 
 -- Usuń istniejące tabele i funkcje

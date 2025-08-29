@@ -163,7 +163,7 @@ export default function RegisterPage() {
               Utwórz konto
             </h1>
             <p className="text-slate-600">
-              Dołącz do Remonto i rozpocznij planowanie remontu
+              Dołącz do Remotrack i rozpocznij planowanie remontu
             </p>
           </div>
 

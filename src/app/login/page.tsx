@@ -92,7 +92,7 @@ export default function LoginPage() {
               Witaj ponownie
             </h1>
             <p className="text-slate-600">
-              Zaloguj się do swojego konta Remonto
+              Zaloguj się do swojego konta Remotrack
             </p>
           </div>
 

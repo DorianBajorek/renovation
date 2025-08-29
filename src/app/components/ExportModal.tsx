@@ -62,24 +62,30 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         const data = await response.json();
         console.log('ExportModal - Response data:', data);
         
+        let productsList: Product[];
         if (isProjectExport && projectId) {
           // Dla eksportu konkretnego projektu, używamy products z odpowiedzi
-          const productsList = data.products || [];
+          productsList = data.products || [];
           console.log('ExportModal - Products for specific project:', productsList);
-          setProducts(productsList);
         } else {
-          // Dla eksportu pokoi lub wszystkich produktów, używamy bezpośrednio danych
-          console.log('ExportModal - Products for rooms or all:', data);
-          setProducts(data);
+          // Dla eksportu pokoi lub wszystkich produktów, sprawdź czy data to tablica czy obiekt
+          if (Array.isArray(data)) {
+            productsList = data;
+          } else if (data.products && Array.isArray(data.products)) {
+            productsList = data.products;
+          } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+            // Jeśli data to obiekt ale nie ma właściwości products, może to być pojedynczy produkt lub inna struktura
+            productsList = [];
+          } else {
+            productsList = [];
+          }
+          console.log('ExportModal - Products for rooms or all:', productsList);
         }
         
+        setProducts(productsList);
+        
         // Domyślnie zaznacz wszystkie produkty
-        let productIds: string[];
-        if (isProjectExport && projectId) {
-          productIds = (data.products || []).map((p: Product) => p.id!);
-        } else {
-          productIds = data.map((p: Product) => p.id!);
-        }
+        const productIds = productsList.map((p: Product) => p.id).filter(id => id !== undefined);
         console.log('ExportModal - Product IDs to select:', productIds);
         setSelectedProducts(new Set(productIds));
       } else {
@@ -93,6 +99,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   };
 
   const toggleProduct = (productId: string) => {
+    if (!productId) return; // Zabezpieczenie przed pustym ID
+    
     const newSelected = new Set(selectedProducts);
     if (newSelected.has(productId)) {
       newSelected.delete(productId);
@@ -106,7 +114,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     if (selectedProducts.size === products.length) {
       setSelectedProducts(new Set());
     } else {
-      setSelectedProducts(new Set(products.map(p => p.id!)));
+      const productIds = products.map(p => p.id).filter(id => id !== undefined);
+      setSelectedProducts(new Set(productIds));
     }
   };
 
@@ -118,7 +127,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
 
     setExporting(true);
     try {
-      const selectedProductsList = products.filter(p => selectedProducts.has(p.id!));
+      const selectedProductsList = products.filter(p => p.id && selectedProducts.has(p.id));
       
       const doc = new jsPDF();
       
@@ -141,158 +150,199 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       const colWidths = [50, 30, 20, 30, 30];
       const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj'];
       
-      if (isProjectExport) {
-        // Dla eksportu projektu - pogrupuj produkty według pokoi
-        const productsByRoom = selectedProductsList.reduce((acc, product) => {
-          const roomName = product.room_name || 'Nieznany pokoj';
-          if (!acc[roomName]) {
-            acc[roomName] = [];
-          }
-          acc[roomName].push(product);
-          return acc;
-        }, {} as Record<string, typeof selectedProductsList>);
-        
-        // Eksportuj produkty pogrupowane według pokoi
-        Object.entries(productsByRoom).forEach(([roomName, roomProducts]) => {
-          // Sprawdź czy potrzebna jest nowa strona
-          if (yPosition > 250) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          
-          // Nagłówek pokoju
-          doc.setFontSize(14);
-          doc.setFont(undefined, 'bold');
-          doc.text(`Pokoj: ${convertPolishChars(roomName)}`, startX, yPosition);
-          yPosition += 8;
-          
-          // Nagłówki kolumn
-          doc.setFontSize(10);
-          let currentX = startX;
-          headers.forEach((header, index) => {
-            doc.text(header, currentX, yPosition);
-            currentX += colWidths[index];
-          });
-          
-          yPosition += 10;
-          
-          // Rysuj linię pod nagłówkami
-          doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-          yPosition += 5;
-          
-          // Dane produktów w pokoju
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(9);
-          
-          roomProducts.forEach((product, index) => {
+             if (isProjectExport) {
+         // Dla eksportu projektu - pogrupuj produkty według pokoi
+         const productsByRoom = selectedProductsList.reduce((acc, product) => {
+           const roomName = product.room_name || 'Nieznany pokoj';
+           if (!acc[roomName]) {
+             acc[roomName] = [];
+           }
+           acc[roomName].push(product);
+           return acc;
+         }, {} as Record<string, typeof selectedProductsList>);
+         
+         // Eksportuj produkty pogrupowane według pokoi
+         Object.entries(productsByRoom).forEach(([roomName, roomProducts]) => {
+           // Sprawdź czy potrzebna jest nowa strona
+           if (yPosition > 250) {
+             doc.addPage();
+             yPosition = 20;
+           }
+           
+                       // Nagłówek pokoju
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text(`POKÓJ: ${convertPolishChars(roomName)}`, startX, yPosition);
+           yPosition += 15;
+           
+           // Nagłówki kolumn
+           doc.setFontSize(10);
+           doc.setFont(undefined, 'bold');
+           let currentX = startX;
+           headers.forEach((header, index) => {
+             doc.text(header, currentX, yPosition);
+             currentX += colWidths[index];
+           });
+           
+           yPosition += 10;
+           
+           // Rysuj linię pod nagłówkami
+           doc.setDrawColor(100, 100, 100);
+           doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+           yPosition += 5;
+           
+           // Dane produktów w pokoju
+           doc.setFont(undefined, 'normal');
+           doc.setFontSize(9);
+           
+                       roomProducts.forEach((product, index) => {
+              // Sprawdź czy potrzebna jest nowa strona
+              if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+              }
+             
+             const rowData = [
+               convertPolishChars(product.name),
+               `${product.price.toLocaleString()} PLN`,
+               product.quantity.toString(),
+               `${(product.price * product.quantity).toLocaleString()} PLN`,
+               convertPolishChars(product.room_name || '-')
+             ];
+             
+             currentX = startX;
+             rowData.forEach((text, colIndex) => {
+               // Skróć tekst jeśli jest za długi
+               const maxWidth = colWidths[colIndex] - 2;
+               const truncatedText = doc.getTextWidth(text) > maxWidth ? 
+                 text.substring(0, Math.floor(maxWidth / 3)) + '...' : text;
+               
+               doc.text(truncatedText, currentX, yPosition);
+               currentX += colWidths[colIndex];
+             });
+             
+             yPosition += 8;
+             
+             // Dodaj linię co kilka wierszy dla lepszej czytelności
+             if ((index + 1) % 5 === 0) {
+               doc.setDrawColor(200, 200, 200);
+               doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+               yPosition += 3;
+             }
+           });
+           
+           // Podsumowanie dla pokoju
+           const roomTotal = roomProducts.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+           yPosition += 5;
+           
+           // Linia podsumowania
+           doc.setDrawColor(200, 200, 200);
+           doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+           yPosition += 5;
+           
+                       // Tekst podsumowania
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            const roomSummaryText = `Podsumowanie pokoju "${convertPolishChars(roomName)}": ${roomTotal.toLocaleString()} PLN (${roomProducts.length} produktów)`;
+            const roomMaxWidth = 160;
+            const truncatedRoomSummary = doc.getTextWidth(roomSummaryText) > roomMaxWidth ? 
+              roomSummaryText.substring(0, Math.floor(roomMaxWidth / 4)) + '...' : roomSummaryText;
+            doc.text(truncatedRoomSummary, startX, yPosition);
+           
+           // Dodaj odstęp między pokojami
+           yPosition += 20;
+           
+           // Linia oddzielająca pokoje
+           doc.setDrawColor(100, 100, 100);
+           doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+           yPosition += 10;
+         });
+                    } else {
+         // Dla eksportu pokoi - standardowy format
+         // Nagłówek sekcji
+         doc.setFontSize(14);
+         doc.setFont(undefined, 'bold');
+         doc.text(`LISTA PRODUKTÓW - ${convertPolishChars(roomName)}`, startX, yPosition);
+         yPosition += 10;
+         
+         // Nagłówki kolumn
+         doc.setFontSize(10);
+         doc.setFont(undefined, 'bold');
+         let currentX = startX;
+         headers.forEach((header, index) => {
+           doc.text(header, currentX, yPosition);
+           currentX += colWidths[index];
+         });
+         
+         yPosition += 10;
+         
+         // Rysuj linię pod nagłówkami
+         doc.setDrawColor(100, 100, 100);
+         doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+         yPosition += 5;
+         
+         // Dane produktów
+         doc.setFont(undefined, 'normal');
+         doc.setFontSize(9);
+         
+                   selectedProductsList.forEach((product, index) => {
             // Sprawdź czy potrzebna jest nowa strona
             if (yPosition > 270) {
               doc.addPage();
               yPosition = 20;
             }
-            
-            const rowData = [
-              convertPolishChars(product.name),
-              `${product.price.toLocaleString()} PLN`,
-              product.quantity.toString(),
-              `${(product.price * product.quantity).toLocaleString()} PLN`,
-              convertPolishChars(product.room_name || '-')
-            ];
-            
-            currentX = startX;
-            rowData.forEach((text, colIndex) => {
-              // Skróć tekst jeśli jest za długi
-              const maxWidth = colWidths[colIndex] - 2;
-              const truncatedText = doc.getTextWidth(text) > maxWidth ? 
-                text.substring(0, Math.floor(maxWidth / 3)) + '...' : text;
-              
-              doc.text(truncatedText, currentX, yPosition);
-              currentX += colWidths[colIndex];
-            });
-            
-            yPosition += 8;
-            
-            // Dodaj linię co kilka wierszy dla lepszej czytelności
-            if ((index + 1) % 5 === 0) {
-              doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-              yPosition += 3;
-            }
-          });
-          
-          // Dodaj odstęp między pokojami
-          yPosition += 15;
-        });
-      } else {
-        // Dla eksportu pokoi - standardowy format
-        // Nagłówki kolumn
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        let currentX = startX;
-        headers.forEach((header, index) => {
-          doc.text(header, currentX, yPosition);
-          currentX += colWidths[index];
-        });
-        
-        yPosition += 10;
-        
-        // Rysuj linię pod nagłówkami
-        doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-        yPosition += 5;
-        
-        // Dane produktów
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(9);
-        
-        selectedProductsList.forEach((product, index) => {
-          // Sprawdź czy potrzebna jest nowa strona
-          if (yPosition > 270) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          
-          const rowData = [
-            convertPolishChars(product.name),
-            `${product.price.toLocaleString()} PLN`,
-            product.quantity.toString(),
-            `${(product.price * product.quantity).toLocaleString()} PLN`,
-            convertPolishChars(product.room_name || '-')
-          ];
-          
-          currentX = startX;
-          rowData.forEach((text, colIndex) => {
-            // Skróć tekst jeśli jest za długi
-            const maxWidth = colWidths[colIndex] - 2;
-            const truncatedText = doc.getTextWidth(text) > maxWidth ? 
-              text.substring(0, Math.floor(maxWidth / 3)) + '...' : text;
-            
-            doc.text(truncatedText, currentX, yPosition);
-            currentX += colWidths[colIndex];
-          });
-          
-          yPosition += 8;
-          
-          // Dodaj linię co kilka wierszy dla lepszej czytelności
-          if ((index + 1) % 5 === 0) {
-            doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-            yPosition += 3;
-          }
-        });
+           
+           const rowData = [
+             convertPolishChars(product.name),
+             `${product.price.toLocaleString()} PLN`,
+             product.quantity.toString(),
+             `${(product.price * product.quantity).toLocaleString()} PLN`,
+             convertPolishChars(product.room_name || '-')
+           ];
+           
+           currentX = startX;
+           rowData.forEach((text, colIndex) => {
+             // Skróć tekst jeśli jest za długi
+             const maxWidth = colWidths[colIndex] - 2;
+             const truncatedText = doc.getTextWidth(text) > maxWidth ? 
+               text.substring(0, Math.floor(maxWidth / 3)) + '...' : text;
+             
+             doc.text(truncatedText, currentX, yPosition);
+             currentX += colWidths[colIndex];
+           });
+           
+           yPosition += 8;
+           
+           // Dodaj linię co kilka wierszy dla lepszej czytelności
+           if ((index + 1) % 5 === 0) {
+             doc.setDrawColor(200, 200, 200);
+             doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+             yPosition += 3;
+           }
+         });
       }
       
-             // Podsumowanie
-       const totalValue = selectedProductsList.reduce((sum, product) => sum + (product.price * product.quantity), 0);
-       yPosition += 10;
-       
-       doc.setFontSize(12);
-       doc.setFont(undefined, 'bold');
-       doc.text(`Laczna wartosc: ${totalValue.toLocaleString()} PLN`, 20, yPosition);
-       doc.text(`Liczba produktow: ${selectedProductsList.length}`, 20, yPosition + 10);
-       
-       if (isProjectExport) {
-         // Dla projektów dodaj informację o liczbie pokoi
-         const uniqueRooms = new Set(selectedProductsList.map(p => p.room_name));
-         doc.text(`Liczba pokoi: ${uniqueRooms.size}`, 20, yPosition + 20);
-       }
+                     // Podsumowanie
+        const totalValue = selectedProductsList.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+        yPosition += 15;
+        
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text(`PODSUMOWANIE`, startX, yPosition);
+        
+                 doc.setFontSize(12);
+         const totalValueText = `Laczna wartosc: ${totalValue.toLocaleString()} PLN`;
+         const maxWidth = 160; // Maksymalna szerokość dla podsumowania
+         const truncatedTotalValue = doc.getTextWidth(totalValueText) > maxWidth ? 
+           totalValueText.substring(0, Math.floor(maxWidth / 4)) + '...' : totalValueText;
+         doc.text(truncatedTotalValue, startX, yPosition + 8);
+         doc.text(`Liczba produktow: ${selectedProductsList.length}`, startX, yPosition + 16);
+        
+        if (isProjectExport) {
+          // Dla projektów dodaj informację o liczbie pokoi
+          const uniqueRooms = new Set(selectedProductsList.map(p => p.room_name));
+          doc.text(`Liczba pokoi: ${uniqueRooms.size}`, startX, yPosition + 24);
+        }
 
              // Zapisz PDF
        const fileName = isProjectExport ? 
@@ -316,6 +366,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       default: return 'Planowany';
     }
   };
+
+
 
   // Funkcja do konwersji polskich znaków na ASCII
   const convertPolishChars = (text: string): string => {
@@ -420,14 +472,14 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                       <div className="space-y-3 pl-4">
                         {roomProducts.map((product) => (
                           <div
-                            key={product.id}
+                            key={product.id || `product-${Math.random()}`}
                             className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white shadow-sm"
                           >
                             <button
-                              onClick={() => toggleProduct(product.id!)}
+                              onClick={() => product.id && toggleProduct(product.id)}
                               className="flex-shrink-0"
                             >
-                              {selectedProducts.has(product.id!) ? (
+                              {product.id && selectedProducts.has(product.id) ? (
                                 <Check size={20} className="text-indigo-600" />
                               ) : (
                                 <Square size={20} className="text-gray-400" />
@@ -464,7 +516,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
               <>
                 Łączna wartość zaznaczonych: {
                   products
-                    .filter(p => selectedProducts.has(p.id!))
+                    .filter(p => p.id && selectedProducts.has(p.id))
                     .reduce((sum, product) => sum + (product.price * product.quantity), 0)
                     .toLocaleString()
                 } PLN
