@@ -13,6 +13,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('Starting auth callback...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -21,15 +22,36 @@ export default function AuthCallback() {
           return;
         }
 
+        console.log('Session data:', data);
+        console.log('User from session:', data.session?.user);
+
         if (data.session?.user) {
           const user = data.session.user;
           
+          // Sprawdź czy użytkownik jest już zalogowany w localStorage
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              if (parsedUser.email === user.email) {
+                console.log('User already logged in, redirecting...');
+                router.push('/');
+                return;
+              }
+            } catch (error) {
+              console.log('Error parsing stored user, continuing...');
+            }
+          }
+          
           // Sprawdź czy użytkownik istnieje w naszej bazie danych
+          console.log('Checking if user exists in database:', user.email);
           const { data: dbUser, error: dbError } = await supabase
             .from('users')
             .select('id, email, first_name, last_name, created_at')
             .eq('email', user.email)
             .single();
+
+          console.log('Database query result:', { dbUser, dbError });
 
           if (dbError && dbError.code !== 'PGRST116') {
             // PGRST116 to "not found" error
@@ -40,12 +62,26 @@ export default function AuthCallback() {
 
           if (!dbUser) {
             // Użytkownik nie istnieje w naszej bazie - utwórz go
+            console.log('Creating new user for Google OAuth:', user.email);
+            console.log('User metadata:', user.user_metadata);
+            
+            // Lepiej obsłuż dane z Google OAuth
+            const firstName = user.user_metadata?.first_name || 
+                            user.user_metadata?.full_name?.split(' ')[0] || 
+                            user.user_metadata?.name?.split(' ')[0] || 
+                            'Użytkownik';
+            
+            const lastName = user.user_metadata?.last_name || 
+                           user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
+                           user.user_metadata?.name?.split(' ').slice(1).join(' ') || 
+                           'Google';
+            
             const { data: newUser, error: createError } = await supabase
               .from('users')
               .insert({
                 email: user.email,
-                first_name: user.user_metadata?.full_name?.split(' ')[0] || 'Użytkownik',
-                last_name: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 'Google',
+                first_name: firstName,
+                last_name: lastName,
                 password_hash: 'google_oauth_user', // Specjalny marker dla użytkowników Google
               })
               .select('id, email, first_name, last_name, created_at')
@@ -56,6 +92,8 @@ export default function AuthCallback() {
               setError('Błąd podczas tworzenia konta');
               return;
             }
+
+            console.log('Successfully created user:', newUser);
 
             // Zaloguj nowego użytkownika
             await login({

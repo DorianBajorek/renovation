@@ -1,9 +1,28 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+
+  // Obsługa tokenów z hash URL (dla Google OAuth)
+  useEffect(() => {
+    const handleHashToken = async () => {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+          console.log('Found access token in hash, redirecting to callback...');
+          // Przekieruj do callback page, który obsłuży token
+          router.push('/auth/callback');
+        }
+      }
+    };
+
+    handleHashToken();
+  }, [router]);
 
   // Pokaż loading state podczas ładowania danych autoryzacji
   if (loading) {
