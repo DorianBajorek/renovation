@@ -74,9 +74,6 @@ export default function Nav() {
           </>
         ) : (
           <>
-            <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Funkcje</a>
-            <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Cennik</a>
-            <a href="#" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Kontakt</a>
             <div className="flex items-center gap-3">
               <Link href="/login" className="text-blue-600 hover:text-blue-700 transition-colors px-3 py-2 rounded-lg">Zaloguj się</Link>
               <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Zarejestruj się</Link>
@@ -129,9 +126,6 @@ export default function Nav() {
             </>
           ) : (
             <>
-              <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Funkcje</a>
-              <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Cennik</a>
-              <a href="#" className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors">Kontakt</a>
               <div className="flex flex-col gap-2 mt-2">
                 <Link 
                   href="/login" 
