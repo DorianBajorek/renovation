@@ -43,76 +43,45 @@ export default function AuthCallback() {
             }
           }
           
-          // Sprawdź czy użytkownik istnieje w naszej bazie danych
-          console.log('Checking if user exists in database:', user.email);
-          const { data: dbUser, error: dbError } = await supabase
-            .from('users')
-            .select('id, email, first_name, last_name, created_at')
-            .eq('email', user.email)
-            .single();
+          // Zawsze używaj RPC do obsługi użytkownika (sprawdzenie + utworzenie jeśli potrzeba)
+          console.log('Handling user with RPC:', user.email);
+          console.log('User metadata:', user.user_metadata);
+          
+          // Lepiej obsłuż dane z Google OAuth
+          const firstName = user.user_metadata?.first_name || 
+                          user.user_metadata?.full_name?.split(' ')[0] || 
+                          user.user_metadata?.name?.split(' ')[0] || 
+                          'Użytkownik';
+          
+          const lastName = user.user_metadata?.last_name || 
+                         user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
+                         user.user_metadata?.name?.split(' ').slice(1).join(' ') || 
+                         'Google';
+          
+          // Użyj RPC (Remote Procedure Call) do sprawdzenia i utworzenia użytkownika
+          // To pozwoli ominąć polityki RLS dla operacji INSERT
+          const { data: userData, error: createError } = await supabase.rpc('handle_new_user', {
+            user_email: user.email,
+            user_first_name: firstName,
+            user_last_name: lastName
+          });
 
-          console.log('Database query result:', { dbUser, dbError });
-
-          if (dbError && dbError.code !== 'PGRST116') {
-            // PGRST116 to "not found" error
-            console.error('Database error:', dbError);
-            setError('Błąd podczas pobierania danych użytkownika');
+          if (createError) {
+            console.error('Create user error:', createError);
+            setError('Błąd podczas tworzenia konta');
             return;
           }
 
-          if (!dbUser) {
-            // Użytkownik nie istnieje w naszej bazie - utwórz go
-            console.log('Creating new user for Google OAuth:', user.email);
-            console.log('User metadata:', user.user_metadata);
-            
-            // Lepiej obsłuż dane z Google OAuth
-            const firstName = user.user_metadata?.first_name || 
-                            user.user_metadata?.full_name?.split(' ')[0] || 
-                            user.user_metadata?.name?.split(' ')[0] || 
-                            'Użytkownik';
-            
-            const lastName = user.user_metadata?.last_name || 
-                           user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
-                           user.user_metadata?.name?.split(' ').slice(1).join(' ') || 
-                           'Google';
-            
-            const { data: newUser, error: createError } = await supabase
-              .from('users')
-              .insert({
-                email: user.email,
-                first_name: firstName,
-                last_name: lastName,
-                password_hash: 'google_oauth_user', // Specjalny marker dla użytkowników Google
-              })
-              .select('id, email, first_name, last_name, created_at')
-              .single();
+          console.log('Successfully created/retrieved user:', userData);
 
-            if (createError) {
-              console.error('Create user error:', createError);
-              setError('Błąd podczas tworzenia konta');
-              return;
-            }
-
-            console.log('Successfully created user:', newUser);
-
-            // Zaloguj nowego użytkownika
-            await login({
-              id: newUser.id,
-              email: newUser.email,
-              firstName: newUser.first_name,
-              lastName: newUser.last_name,
-              createdAt: newUser.created_at,
-            });
-          } else {
-            // Użytkownik istnieje - zaloguj go
-            await login({
-              id: dbUser.id,
-              email: dbUser.email,
-              firstName: dbUser.first_name,
-              lastName: dbUser.last_name,
-              createdAt: dbUser.created_at,
-            });
-          }
+          // Zaloguj użytkownika
+          await login({
+            id: userData[0].id,
+            email: userData[0].email,
+            firstName: userData[0].first_name,
+            lastName: userData[0].last_name,
+            createdAt: userData[0].created_at,
+          });
 
           // Przekieruj do strony głównej
           router.push('/');

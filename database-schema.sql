@@ -19,6 +19,7 @@ CREATE TABLE users (
   password_hash VARCHAR(255), -- NULL dla użytkowników Google OAuth
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
+  avatar_url VARCHAR(500), -- URL do avataru użytkownika (dla Google OAuth)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -146,3 +147,73 @@ COMMENT ON COLUMN users.password_hash IS 'Password hash for regular users, NULL 
 
 -- INSERT INTO projects (user_id, name, description, budget, status) VALUES 
 --   ((SELECT id FROM users WHERE email = 'admin@example.com'), 'Mój pierwszy projekt', 'Opis projektu', 50000.00, 'active');
+
+-- Funkcja RPC do obsługi nowych użytkowników Google OAuth
+CREATE OR REPLACE FUNCTION handle_new_user(
+  user_email TEXT,
+  user_first_name TEXT,
+  user_last_name TEXT
+)
+RETURNS TABLE (
+  id UUID,
+  email VARCHAR(255),
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  existing_user RECORD;
+  new_user RECORD;
+BEGIN
+  -- Sprawdź czy użytkownik już istnieje w public.users
+  SELECT u.* INTO existing_user FROM users u WHERE u.email = user_email;
+  
+  IF FOUND THEN
+    -- Użytkownik istnieje - zwróć jego dane
+    RETURN QUERY SELECT 
+      existing_user.id, 
+      existing_user.email, 
+      existing_user.first_name, 
+      existing_user.last_name, 
+      existing_user.created_at;
+    RETURN;
+  END IF;
+  
+  -- Użytkownik nie istnieje - utwórz nowego
+  INSERT INTO users (email, first_name, last_name, password_hash)
+  VALUES (user_email, user_first_name, user_last_name, 'google_oauth_user')
+  RETURNING id, email, first_name, last_name, created_at INTO new_user;
+  
+  RETURN QUERY SELECT 
+    new_user.id, 
+    new_user.email, 
+    new_user.first_name, 
+    new_user.last_name, 
+    new_user.created_at;
+END;
+$$;
+
+-- Włącz RLS na tabeli users
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Polityki RLS dla tabeli users
+CREATE POLICY "Users can insert their own data" ON users
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL OR
+    current_setting('app.bypass_rls', true) = 'true'
+  );
+
+CREATE POLICY "Users can view their own data" ON users
+  FOR SELECT USING (
+    auth.uid() IS NOT NULL OR
+    current_setting('app.bypass_rls', true) = 'true'
+  );
+
+CREATE POLICY "Users can update their own data" ON users
+  FOR UPDATE USING (
+    auth.uid() IS NOT NULL OR
+    current_setting('app.bypass_rls', true) = 'true'
+  );
