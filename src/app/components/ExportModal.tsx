@@ -397,22 +397,22 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200/50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-4xl mx-2 sm:mx-4 max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-gray-200/50">
 
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                     <h2 className="text-xl font-semibold text-gray-900">
-             {isProjectExport ? `Eksport projektu - ${roomName}` : `Eksport produktów - ${roomName}`}
-           </h2>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 pr-2">
+            {isProjectExport ? `Eksport projektu - ${roomName}` : `Eksport produktów - ${roomName}`}
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] sm:max-h-[60vh]">
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
@@ -424,7 +424,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={toggleAllProducts}
@@ -435,7 +435,12 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                     ) : (
                       <Square size={16} />
                     )}
-                    {selectedProducts.size === products.length ? 'Odznacz wszystkie' : 'Zaznacz wszystkie'}
+                    <span className="hidden sm:inline">
+                      {selectedProducts.size === products.length ? 'Odznacz wszystkie' : 'Zaznacz wszystkie'}
+                    </span>
+                    <span className="sm:hidden">
+                      {selectedProducts.size === products.length ? 'Odznacz' : 'Zaznacz'}
+                    </span>
                   </button>
                 </div>
                 <span className="text-sm text-gray-600">
@@ -447,11 +452,16 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                 {(() => {
                   // Group products by room
                   const productsByRoom = products.reduce((acc, product) => {
-                    const roomName = product.room_name || 'Nieznany pokój';
-                    if (!acc[roomName]) {
-                      acc[roomName] = [];
+                    // For single room export, use the roomName prop
+                    // For project export, use the product's room_name
+                    const currentRoomName = isProjectExport ? 
+                      (product.room_name || 'Nieznany pokój') : 
+                      roomName;
+                    
+                    if (!acc[currentRoomName]) {
+                      acc[currentRoomName] = [];
                     }
-                    acc[roomName].push(product);
+                    acc[currentRoomName].push(product);
                     return acc;
                   }, {} as Record<string, typeof products>);
 
@@ -459,8 +469,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                     <div key={roomName} className="space-y-3">
                       {/* Room header */}
                       <div className="flex items-center gap-3 pb-2 border-b-2 border-indigo-200">
-                        <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-                        <h3 className="text-lg font-semibold text-indigo-900 bg-indigo-50 px-3 py-1 rounded-lg">
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full flex-shrink-0"></div>
+                        <h3 className="text-base sm:text-lg font-semibold text-indigo-900 bg-indigo-50 px-3 py-1 rounded-lg">
                           {roomName}
                         </h3>
                         <span className="text-sm text-gray-500">
@@ -469,29 +479,29 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                       </div>
                       
                       {/* Products in this room */}
-                      <div className="space-y-3 pl-4">
+                      <div className="space-y-3 pl-2 sm:pl-4">
                         {roomProducts.map((product) => (
                           <div
                             key={product.id || `product-${Math.random()}`}
-                            className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white shadow-sm"
+                            className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white shadow-sm"
                           >
                             <button
                               onClick={() => product.id && toggleProduct(product.id)}
-                              className="flex-shrink-0"
+                              className="flex-shrink-0 mt-1"
                             >
                               {product.id && selectedProducts.has(product.id) ? (
-                                <Check size={20} className="text-indigo-600" />
+                                <Check size={18} className="text-indigo-600" />
                               ) : (
-                                <Square size={20} className="text-gray-400" />
+                                <Square size={18} className="text-gray-400" />
                               )}
                             </button>
                             
-                            <div className="flex-1">
-                              <h3 className="font-medium text-gray-900">{product.name}</h3>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 text-sm sm:text-base">{product.name}</h3>
                               {product.description && (
-                                <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                                <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.description}</p>
                               )}
-                              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
                                 <span className="bg-blue-50 px-2 py-1 rounded">Cena: {product.price.toLocaleString()} PLN</span>
                                 <span className="bg-green-50 px-2 py-1 rounded">Ilość: {product.quantity}</span>
                                 <span className="bg-purple-50 px-2 py-1 rounded">Wartość: {(product.price * product.quantity).toLocaleString()} PLN</span>
@@ -510,7 +520,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
           )}
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 border-t border-gray-200">
           <div className="text-sm text-gray-600">
             {selectedProducts.size > 0 && (
               <>
@@ -524,27 +534,29 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
             )}
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm sm:text-base"
             >
               Anuluj
             </button>
             <button
               onClick={exportToPDF}
               disabled={selectedProducts.size === 0 || exporting}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {exporting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Eksportuję...
+                  <span className="hidden sm:inline">Eksportuję...</span>
+                  <span className="sm:hidden">Eksport...</span>
                 </>
               ) : (
                 <>
                   <Download size={16} />
-                  Eksportuj PDF
+                  <span className="hidden sm:inline">Eksportuj PDF</span>
+                  <span className="sm:hidden">PDF</span>
                 </>
               )}
             </button>

@@ -69,7 +69,13 @@ export async function GET(request: NextRequest) {
 
     const { data: products, error } = await supabase
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        rooms:rooms(
+          id,
+          name
+        )
+      `)
       .eq('room_id', roomId)
       .order('created_at', { ascending: false });
 
@@ -81,8 +87,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Transform products to include room name
+    const transformedProducts = products?.map(product => ({
+      ...product,
+      room_name: product.rooms?.name || 'Nieznany pokój',
+      rooms: undefined // Remove rooms object from response
+    })) || [];
+
     return NextResponse.json({
-      products: products,
+      products: transformedProducts,
       userPermission: userPermission
     }, {
       status: 200,
