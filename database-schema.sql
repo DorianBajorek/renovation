@@ -212,27 +212,8 @@ BEGIN
 END;
 $$;
 
--- Włącz RLS na tabeli users
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
--- Polityki RLS dla tabeli users
-CREATE POLICY "Users can insert their own data" ON users
-  FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL OR
-    current_setting('app.bypass_rls', true) = 'true'
-  );
-
-CREATE POLICY "Users can view their own data" ON users
-  FOR SELECT USING (
-    auth.uid() IS NOT NULL OR
-    current_setting('app.bypass_rls', true) = 'true'
-  );
-
-CREATE POLICY "Users can update their own data" ON users
-  FOR UPDATE USING (
-    auth.uid() IS NOT NULL OR
-    current_setting('app.bypass_rls', true) = 'true'
-  );
+-- Wyłącz RLS na tabeli users
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
 
 -- Create function for regular user registration (with password)
 CREATE OR REPLACE FUNCTION register_user(
