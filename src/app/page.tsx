@@ -101,7 +101,7 @@ export default function Home() {
               </>
             )}
             <a
-              href="#"
+              href="#video-demo"
               className="px-8 py-4 rounded-xl border border-gray-200 bg-white font-medium hover:bg-gray-50 transition-all shadow-sm hover:shadow-md"
             >
               Zobacz demo
@@ -197,6 +197,49 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Video Demo Section */}
+      <section id="video-demo" className="py-16 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl font-bold mb-4">Zobacz jak to działa</h3>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Krótka demonstracja pokazująca jak łatwo możesz zarządzać kosztami swojego remontu
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-4xl">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl opacity-20 blur-xl"></div>
+              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
+                <iframe
+                  src="https://www.youtube.com/embed/MFvhf2M8GpM"
+                  title="Demonstracja aplikacji do zarządzania remontem"
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-8">
+            <p className="text-gray-600">
+              <span className="font-medium">Nie masz czasu na oglądanie?</span> 
+              <br />
+              <a 
+                href="https://www.youtube.com/watch?v=MFvhf2M8GpM" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 underline"
+              >
+                Otwórz film w nowej karcie
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
              {/* Testimonials Section */}
        <section className="py-16 px-6 bg-white">
          <div className="max-w-4xl mx-auto text-center">
@@ -259,7 +302,7 @@ export default function Home() {
               </>
             )}
             <a
-              href="#"
+              href="#video-demo"
               className="px-8 py-4 rounded-xl border border-white bg-transparent font-medium hover:bg-white hover:bg-opacity-10 transition-all"
             >
               Zobacz demo
