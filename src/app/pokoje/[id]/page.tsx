@@ -201,10 +201,6 @@ export default function RoomPage({ params }: RoomPageProps) {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <button className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors w-full sm:w-auto">
-                    <FileText size={18} />
-                    <span>Podgląd wydatków</span>
-                  </button>
                   <button 
                     onClick={() => setShowExportModal(true)}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors w-full sm:w-auto"

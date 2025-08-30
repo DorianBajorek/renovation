@@ -213,10 +213,6 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                  <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition-colors text-sm sm:text-base">
-                    <PieChart size={16} className="sm:w-[18px] sm:h-[18px]" />
-                    <span>Podgląd budżetu</span>
-                  </button>
                   <button 
                     onClick={() => {
                       if (!user?.id || !projectId) {

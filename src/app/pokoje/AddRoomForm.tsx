@@ -58,6 +58,37 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("Sofa");
+  const [hasUserEditedName, setHasUserEditedName] = useState(false);
+
+  const handleIconSelect = (iconValue: string) => {
+    setSelectedIcon(iconValue);
+    
+    // Aktualizuj nazwę tylko jeśli użytkownik nie edytował jej ręcznie
+    if (!hasUserEditedName) {
+      const selectedOption = iconOptions.find(option => option.value === iconValue);
+      if (selectedOption) {
+        setName(selectedOption.label);
+      }
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setName(newName);
+    
+    // Oznacz, że użytkownik ręcznie edytował nazwę
+    if (newName.trim() !== "") {
+      setHasUserEditedName(true);
+    } else {
+      // Jeśli użytkownik wyczyścił pole, zresetuj flagę
+      setHasUserEditedName(false);
+      // I ustaw nazwę na podstawie aktualnie wybranej ikony
+      const selectedOption = iconOptions.find(option => option.value === selectedIcon);
+      if (selectedOption) {
+        setName(selectedOption.label);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +149,7 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
               type="text"
               placeholder="np. Salon, Sypialnia, Kuchnia..."
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={handleNameChange}
               className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all"
               required
             />
@@ -136,7 +167,7 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setSelectedIcon(option.value)}
+                    onClick={() => handleIconSelect(option.value)}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedIcon === option.value
                         ? "border-indigo-500 bg-indigo-50"
