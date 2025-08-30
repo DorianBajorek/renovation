@@ -61,14 +61,20 @@ export default function AuthCallback() {
           // Użyj RPC (Remote Procedure Call) do sprawdzenia i utworzenia użytkownika
           // To pozwoli ominąć polityki RLS dla operacji INSERT
           const { data: userData, error: createError } = await supabase.rpc('handle_new_user', {
-            user_email: user.email,
-            user_first_name: firstName,
-            user_last_name: lastName
+            user_email: user.email || '',
+            user_first_name: firstName || '',
+            user_last_name: lastName || ''
           });
 
           if (createError) {
             console.error('Create user error:', createError);
-            setError('Błąd podczas tworzenia konta');
+            console.error('Error details:', {
+              code: createError.code,
+              message: createError.message,
+              details: createError.details,
+              hint: createError.hint
+            });
+            setError(`Błąd podczas tworzenia konta: ${createError.message}`);
             return;
           }
 

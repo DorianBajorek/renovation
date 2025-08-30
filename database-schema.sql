@@ -12,6 +12,21 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS get_room_expenses() CASCADE;
 DROP FUNCTION IF EXISTS get_project_expenses() CASCADE;
 
+-- Usuń WSZYSTKIE możliwe wersje funkcji handle_new_user aby uniknąć konfliktów
+DROP FUNCTION IF EXISTS handle_new_user(TEXT, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user(VARCHAR, VARCHAR, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user(CHARACTER VARYING, CHARACTER VARYING, CHARACTER VARYING) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user(CHARACTER VARYING(255), CHARACTER VARYING(100), CHARACTER VARYING(100)) CASCADE;
+
+-- Usuń wersję z 4 parametrami która powoduje konflikty
+DROP FUNCTION IF EXISTS handle_new_user(TEXT, TEXT, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user(VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user(CHARACTER VARYING, CHARACTER VARYING, CHARACTER VARYING, CHARACTER VARYING) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user(CHARACTER VARYING(255), CHARACTER VARYING(100), CHARACTER VARYING(100), CHARACTER VARYING(255)) CASCADE;
+
+-- Usuń inne możliwe wersje
+DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
+
 -- Utwórz tabelę użytkowników z obsługą Google OAuth
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -149,10 +164,11 @@ COMMENT ON COLUMN users.password_hash IS 'Password hash for regular users, NULL 
 --   ((SELECT id FROM users WHERE email = 'admin@example.com'), 'Mój pierwszy projekt', 'Opis projektu', 50000.00, 'active');
 
 -- Funkcja RPC do obsługi nowych użytkowników Google OAuth
+-- Użyj konkretnych typów danych aby uniknąć konfliktów
 CREATE OR REPLACE FUNCTION handle_new_user(
-  user_email TEXT,
-  user_first_name TEXT,
-  user_last_name TEXT
+  user_email VARCHAR(255),
+  user_first_name VARCHAR(100),
+  user_last_name VARCHAR(100)
 )
 RETURNS TABLE (
   id UUID,
@@ -185,7 +201,7 @@ BEGIN
   -- Użytkownik nie istnieje - utwórz nowego
   INSERT INTO users (email, first_name, last_name, password_hash)
   VALUES (user_email, user_first_name, user_last_name, 'google_oauth_user')
-  RETURNING id, email, first_name, last_name, created_at INTO new_user;
+  RETURNING users.id, users.email, users.first_name, users.last_name, users.created_at INTO new_user;
   
   RETURN QUERY SELECT 
     new_user.id, 
@@ -217,3 +233,52 @@ CREATE POLICY "Users can update their own data" ON users
     auth.uid() IS NOT NULL OR
     current_setting('app.bypass_rls', true) = 'true'
   );
+
+-- Create function for regular user registration (with password)
+CREATE OR REPLACE FUNCTION register_user(
+  user_email VARCHAR(255),
+  user_password_hash VARCHAR(255),
+  user_first_name VARCHAR(100),
+  user_last_name VARCHAR(100)
+)
+RETURNS TABLE (
+  id UUID,
+  email VARCHAR(255),
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  new_user_id UUID;
+  new_user_email VARCHAR(255);
+  new_user_first_name VARCHAR(100);
+  new_user_last_name VARCHAR(100);
+  new_user_created_at TIMESTAMPTZ;
+BEGIN
+  -- Użytkownik nie istnieje - utwórz nowego z hasłem
+  INSERT INTO users (email, password_hash, first_name, last_name)
+  VALUES (user_email, user_password_hash, user_first_name, user_last_name)
+  RETURNING 
+    users.id, 
+    users.email, 
+    users.first_name, 
+    users.last_name, 
+    users.created_at 
+  INTO 
+    new_user_id,
+    new_user_email,
+    new_user_first_name,
+    new_user_last_name,
+    new_user_created_at;
+  
+  RETURN QUERY SELECT 
+    new_user_id, 
+    new_user_email, 
+    new_user_first_name, 
+    new_user_last_name, 
+    new_user_created_at;
+END;
+$$;
