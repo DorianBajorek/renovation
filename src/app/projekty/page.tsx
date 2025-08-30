@@ -302,12 +302,12 @@ export default function ProjektyPage() {
                  <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                    <div className="flex items-center justify-between">
                      <span className="text-xs sm:text-sm text-slate-500">Budżet</span>
-                     <span className="font-semibold text-slate-900 text-xs sm:text-sm">{project.budget.toLocaleString()} PLN</span>
+                     <span className="font-semibold text-slate-900 text-xs sm:text-sm">{project.budget.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                    </div>
                    
                    <div className="flex items-center justify-between">
                      <span className="text-xs sm:text-sm text-slate-500">Wydatki</span>
-                     <span className="font-semibold text-indigo-600 text-xs sm:text-sm">{(project.expenses || 0).toLocaleString()} PLN</span>
+                     <span className="font-semibold text-indigo-600 text-xs sm:text-sm">{(project.expenses || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                    </div>
                    
                    {/* Pasek postępu budżetu */}

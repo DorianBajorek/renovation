@@ -176,7 +176,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                   </h2>
                   <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mb-3">
                     <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
-                      {totalExpenses.toLocaleString()} PLN
+                      {totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                     </span>
                     <span className="text-xs sm:text-sm text-slate-500">
                       dla {rooms.length} pomieszczeń
@@ -205,8 +205,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                         ></div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span>Budżet projektu: {project.budget?.toLocaleString()} PLN</span>
-                        <span>Pozostało: {(project.budget - totalExpenses).toLocaleString()} PLN</span>
+                                          <span>Budżet projektu: {project.budget?.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
+                  <span>Pozostało: {(project.budget - totalExpenses).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                       </div>
                     </div>
                   )}
@@ -243,7 +243,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                     <div>
                       <span className="text-slate-500">Budżet:</span>
                       <span className="ml-2 font-medium text-slate-700">
-                        {project.budget?.toLocaleString()} PLN
+                        {project.budget?.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                       </span>
                     </div>
                   </div>
@@ -306,7 +306,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                                {room.name}
                              </h2>
                              <span className="px-2 sm:px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-medium text-xs sm:text-sm group-hover:bg-indigo-100 transition-colors">
-                               {(room.expenses || 0).toLocaleString()} PLN
+                               {(room.expenses || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                              </span>
                            </div>
                          </div>

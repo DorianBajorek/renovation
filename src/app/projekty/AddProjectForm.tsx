@@ -145,14 +145,27 @@ export function AddProjectForm({ onAdd, onClose }: AddProjectFormProps) {
                 Budżet (PLN) *
               </label>
               <input
-                type="number"
-                value={formData.budget}
-                onChange={(e) => handleInputChange("budget", e.target.value)}
+                type="text"
+                value={formData.budget === "" ? "" : Number(formData.budget).toFixed(2)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9.]/g, '');
+                  // Allow only one decimal point
+                  const parts = value.split('.');
+                  if (parts.length > 2) return;
+                  // Limit to 2 decimal places
+                  if (parts.length === 2 && parts[1].length > 2) return;
+                  handleInputChange("budget", value);
+                }}
+                onBlur={() => {
+                  // Format to 2 decimal places when leaving the field
+                  if (formData.budget && Number(formData.budget) > 0) {
+                    handleInputChange("budget", Number(formData.budget).toFixed(2));
+                  }
+                }}
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.budget ? "border-red-300" : "border-slate-300"
                 } focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
-                placeholder="15000"
-                min="0"
+                placeholder="15000.00"
               />
               {errors.budget && (
                 <p className="mt-1 text-sm text-red-600">{errors.budget}</p>

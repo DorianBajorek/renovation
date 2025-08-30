@@ -212,9 +212,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
     });
 
     return {
-      expensiveScenario: Math.round(expensiveScenario),
-      averageScenario: Math.round(averageScenario),
-      cheapScenario: Math.round(cheapScenario)
+      expensiveScenario: expensiveScenario,
+      averageScenario: averageScenario,
+      cheapScenario: cheapScenario
     };
   };
 
@@ -242,7 +242,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
              <div className="text-center">
                <span className="text-sm text-slate-600">Już wydane: </span>
                <span className="text-lg font-bold text-indigo-600">
-                 {totalPurchasedValue.toLocaleString()} PLN
+                 {totalPurchasedValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                </span>
              </div>
            </div>
@@ -262,7 +262,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                       <span className="text-sm font-medium text-slate-600">Scenariusz najdroższy</span>
                     </div>
                     <div className="text-2xl font-bold text-red-600">
-                      {scenarioCosts.expensiveScenario.toLocaleString()} PLN
+                      {scenarioCosts.expensiveScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
                       Kliknij aby zobaczyć wyjaśnienie
@@ -301,7 +301,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                       <span className="text-sm font-medium text-slate-600">Scenariusz średni</span>
                     </div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {scenarioCosts.averageScenario.toLocaleString()} PLN
+                      {scenarioCosts.averageScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
                       Kliknij aby zobaczyć wyjaśnienie
@@ -340,7 +340,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                       <span className="text-sm font-medium text-slate-600">Scenariusz najtańszy</span>
                     </div>
                     <div className="text-2xl font-bold text-green-600">
-                      {scenarioCosts.cheapScenario.toLocaleString()} PLN
+                      {scenarioCosts.cheapScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
                       Kliknij aby zobaczyć wyjaśnienie
@@ -398,7 +398,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-slate-500 mt-1">
                         <span>{group.products.length} produkt{group.products.length === 1 ? '' : group.products.length < 5 ? 'y' : 'ów'}</span>
                         <span>Łącznie: {group.totalQuantity} szt.</span>
-                        <span>Zakupione: {group.products.filter(p => p.status === 'purchased').reduce((sum, p) => sum + (p.price * p.quantity), 0).toLocaleString()} PLN</span>
+                        <span>Zakupione: {group.products.filter(p => p.status === 'purchased').reduce((sum, p) => sum + (p.price * p.quantity), 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                       </div>
                     </div>
                   </div>
@@ -407,13 +407,13 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                     {hasMultipleProducts && (
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm">
                         <span className="text-red-600 font-medium">
-                          Max: {group.maxPrice.toLocaleString()} PLN
+                          Max: {group.maxPrice.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                         </span>
                         <span className="text-blue-600 font-medium">
-                          Śr: {group.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLN
+                          Śr: {group.avgPrice.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                         </span>
                         <span className="text-green-600 font-medium">
-                          Min: {group.minPrice.toLocaleString()} PLN
+                          Min: {group.minPrice.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                         </span>
                       </div>
                     )}
@@ -484,9 +484,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                {getStatusText(product.status)}
                              </span>
                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                               <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                 Cena: {product.price.toLocaleString()} PLN
-                               </span>
+                                                                <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                   Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                                 </span>
                                <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
                                  Ilość: {product.quantity}
                                </span>
@@ -556,7 +556,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                </span>
                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                  <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                   Cena: {product.price.toLocaleString()} PLN
+                                   Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                                  </span>
                                  <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
                                    Ilość: {product.quantity}

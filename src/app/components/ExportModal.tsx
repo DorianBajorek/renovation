@@ -204,9 +204,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              
              const rowData = [
                convertPolishChars(product.name),
-               `${product.price.toLocaleString()} PLN`,
+               `${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
                product.quantity.toString(),
-               `${(product.price * product.quantity).toLocaleString()} PLN`,
+               `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
                convertPolishChars(product.room_name || '-')
              ];
              
@@ -243,7 +243,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                        // Tekst podsumowania
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
-            const roomSummaryText = `Podsumowanie pokoju "${convertPolishChars(roomName)}": ${roomTotal.toLocaleString()} PLN (${roomProducts.length} produktów)`;
+            const roomSummaryText = `Podsumowanie pokoju "${convertPolishChars(roomName)}": ${roomTotal.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN (${roomProducts.length} produktów)`;
             const roomMaxWidth = 160;
             const truncatedRoomSummary = doc.getTextWidth(roomSummaryText) > roomMaxWidth ? 
               roomSummaryText.substring(0, Math.floor(roomMaxWidth / 4)) + '...' : roomSummaryText;
@@ -294,9 +294,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            
            const rowData = [
              convertPolishChars(product.name),
-             `${product.price.toLocaleString()} PLN`,
+             `${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
              product.quantity.toString(),
-             `${(product.price * product.quantity).toLocaleString()} PLN`,
+             `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
              convertPolishChars(product.room_name || '-')
            ];
            
@@ -331,7 +331,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         doc.text(`PODSUMOWANIE`, startX, yPosition);
         
                  doc.setFontSize(12);
-         const totalValueText = `Laczna wartosc: ${totalValue.toLocaleString()} PLN`;
+         const totalValueText = `Laczna wartosc: ${totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
          const maxWidth = 160; // Maksymalna szerokość dla podsumowania
          const truncatedTotalValue = doc.getTextWidth(totalValueText) > maxWidth ? 
            totalValueText.substring(0, Math.floor(maxWidth / 4)) + '...' : totalValueText;
@@ -502,9 +502,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.description}</p>
                               )}
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
-                                <span className="bg-blue-50 px-2 py-1 rounded">Cena: {product.price.toLocaleString()} PLN</span>
+                                <span className="bg-blue-50 px-2 py-1 rounded">Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                                 <span className="bg-green-50 px-2 py-1 rounded">Ilość: {product.quantity}</span>
-                                <span className="bg-purple-50 px-2 py-1 rounded">Wartość: {(product.price * product.quantity).toLocaleString()} PLN</span>
+                                <span className="bg-purple-50 px-2 py-1 rounded">Wartość: {(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                                 <span className="bg-orange-50 px-2 py-1 rounded">Status: {getStatusText(product.status)}</span>
                                 {product.category && <span className="bg-gray-50 px-2 py-1 rounded">Kategoria: {product.category}</span>}
                               </div>
@@ -528,7 +528,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                   products
                     .filter(p => p.id && selectedProducts.has(p.id))
                     .reduce((sum, product) => sum + (product.price * product.quantity), 0)
-                    .toLocaleString()
+                    .toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 } PLN
               </>
             )}

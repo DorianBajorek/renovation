@@ -111,13 +111,13 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                     </span>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                        Cena: {product.price.toLocaleString()} PLN
+                        Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                       </span>
                       <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
                         Ilość: {product.quantity}
                       </span>
                       <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                        Wartość: {(product.price * product.quantity).toLocaleString()} PLN
+                        Wartość: {(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                       </span>
                     </div>
                   </div>

@@ -190,7 +190,7 @@ export default function RoomPage({ params }: RoomPageProps) {
                   </h2>
                   <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mb-3">
                     <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
-                      {(room.expenses || 0).toLocaleString()} PLN
+                      {(room.expenses || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                     </span>
                     <span className="text-sm text-slate-500">
                       całkowite wydatki
