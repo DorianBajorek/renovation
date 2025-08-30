@@ -149,21 +149,13 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
                   <input
                     type="text"
                     placeholder="0.00"
-                    value={formData.price === 0 ? '' : formData.price.toFixed(2)}
+                    value={formData.price === 0 ? '' : formData.price.toString()}
                     onChange={e => {
-                      const value = e.target.value.replace(/[^0-9.]/g, '');
-                      // Allow only one decimal point
-                      const parts = value.split('.');
-                      if (parts.length > 2) return;
-                      // Limit to 2 decimal places
-                      if (parts.length === 2 && parts[1].length > 2) return;
-                      const numValue = parseFloat(value) || 0;
-                      handleInputChange("price", numValue);
-                    }}
-                    onBlur={() => {
-                      // Format to 2 decimal places when leaving the field
-                      if (formData.price > 0) {
-                        handleInputChange("price", Math.round(formData.price * 100) / 100);
+                      const value = e.target.value;
+                      // Allow only numbers, dots, and commas
+                      if (/^[0-9.,]*$/.test(value)) {
+                        const numValue = parseFloat(value.replace(',', '.')) || 0;
+                        handleInputChange("price", numValue);
                       }
                     }}
                     className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"

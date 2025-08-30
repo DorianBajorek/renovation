@@ -52,7 +52,10 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
     // Validation
     const newErrors: FormErrors = {};
     if (!formData.name.trim()) newErrors.name = "Nazwa projektu jest wymagana";
-    if (!formData.budget || Number(formData.budget) <= 0) newErrors.budget = "Budżet musi być większy od 0";
+    
+    // Convert comma to dot for validation
+    const budgetValue = parseFloat(formData.budget.replace(',', '.')) || 0;
+    if (!formData.budget || budgetValue <= 0) newErrors.budget = "Budżet musi być większy od 0";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -73,7 +76,7 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
         body: JSON.stringify({
           name: formData.name.trim(),
           description: formData.description,
-          budget: Number(formData.budget),
+          budget: budgetValue,
           status: formData.status,
           icon: formData.icon,
           userId: user.id,
@@ -163,20 +166,12 @@ export function EditProjectForm({ project, onUpdate, onClose }: EditProjectFormP
               </label>
               <input
                 type="text"
-                value={formData.budget === "" ? "" : Number(formData.budget).toFixed(2)}
+                value={formData.budget}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9.]/g, '');
-                  // Allow only one decimal point
-                  const parts = value.split('.');
-                  if (parts.length > 2) return;
-                  // Limit to 2 decimal places
-                  if (parts.length === 2 && parts[1].length > 2) return;
-                  handleInputChange("budget", value);
-                }}
-                onBlur={() => {
-                  // Format to 2 decimal places when leaving the field
-                  if (formData.budget && Number(formData.budget) > 0) {
-                    handleInputChange("budget", Number(formData.budget).toFixed(2));
+                  const value = e.target.value;
+                  // Allow only numbers, dots, and commas
+                  if (/^[0-9.,]*$/.test(value)) {
+                    handleInputChange("budget", value);
                   }
                 }}
                 className={`w-full px-4 py-3 rounded-xl border ${
