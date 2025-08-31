@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Product } from "../types/product";
-import { Package, X, Tag, FileText, DollarSign, Hash, ShoppingCart, CheckCircle, Link } from "lucide-react";
+import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EditProductFormProps {
@@ -168,7 +168,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
                   Cena (PLN) *
                 </label>
                 <div className="relative">
-                  <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <Banknote size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     placeholder="0.00"
