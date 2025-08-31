@@ -160,23 +160,6 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
               </div>
             </div>
 
-            {/* Opis */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Opis (opcjonalnie)
-              </label>
-              <div className="relative">
-                <FileText size={18} className="absolute left-3 top-3 text-slate-400" />
-                <textarea
-                  placeholder="Dodatkowe informacje o produkcie..."
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
-
             {/* Link do produktu */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -190,6 +173,23 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                   value={link}
                   onChange={e => handleLinkChange(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Opis */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Opis (opcjonalnie)
+              </label>
+              <div className="relative">
+                <FileText size={18} className="absolute left-3 top-3 text-slate-400" />
+                <textarea
+                  placeholder="Dodatkowe informacje o produkcie..."
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                  rows={3}
                 />
               </div>
             </div>

@@ -132,23 +132,6 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
               </div>
             </div>
 
-            {/* Opis */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Opis (opcjonalnie)
-              </label>
-              <div className="relative">
-                <FileText size={18} className="absolute left-3 top-3 text-slate-400" />
-                <textarea
-                  placeholder="Dodatkowe informacje o produkcie..."
-                  value={formData.description}
-                  onChange={e => handleInputChange("description", e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
-
             {/* Link do produktu */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -162,6 +145,23 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
                   value={formData.link}
                   onChange={e => handleInputChange("link", e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Opis */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Opis (opcjonalnie)
+              </label>
+              <div className="relative">
+                <FileText size={18} className="absolute left-3 top-3 text-slate-400" />
+                <textarea
+                  placeholder="Dodatkowe informacje o produkcie..."
+                  value={formData.description}
+                  onChange={e => handleInputChange("description", e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                  rows={3}
                 />
               </div>
             </div>
