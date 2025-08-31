@@ -502,7 +502,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.description}</p>
                               )}
                               {product.link && (
-                                <p className="text-xs sm:text-sm text-blue-600 mt-1">
+                                <p className="text-xs sm:text-sm text-blue-600 mt-1 break-all">
                                   <a href={product.link} target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">
                                     Link do produktu: {product.link}
                                   </a>
