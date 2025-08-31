@@ -131,6 +131,24 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                     </div>
                   )}
                   
+                  {/* Product Link */}
+                  {product.link && (
+                    <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-blue-700">Link do produktu:</span>
+                        <a
+                          href={product.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {product.link}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Product Footer */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                     {product.category && (

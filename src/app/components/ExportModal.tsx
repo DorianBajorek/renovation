@@ -501,6 +501,13 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                               {product.description && (
                                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.description}</p>
                               )}
+                              {product.link && (
+                                <p className="text-xs sm:text-sm text-blue-600 mt-1">
+                                  <a href={product.link} target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">
+                                    Link do produktu: {product.link}
+                                  </a>
+                                </p>
+                              )}
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
                                 <span className="bg-blue-50 px-2 py-1 rounded">Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                                 <span className="bg-green-50 px-2 py-1 rounded">Ilość: {product.quantity}</span>

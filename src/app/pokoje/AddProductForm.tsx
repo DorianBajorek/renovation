@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Product } from "../types/product";
-import { Package, X, Tag, FileText, DollarSign, Hash, ShoppingCart, CheckCircle } from "lucide-react";
+import { Package, X, Tag, FileText, DollarSign, Hash, ShoppingCart, CheckCircle, Link } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AddProductFormProps {
@@ -14,6 +14,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [link, setLink] = useState("");
   const [price, setPrice] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [status, setStatus] = useState<'planned' | 'purchased'>('planned');
@@ -33,6 +34,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
         body: JSON.stringify({
           name,
           description: description || undefined,
+          link: link || undefined,
           price,
           quantity,
           status,
@@ -119,6 +121,23 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                   onChange={e => setDescription(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
                   rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Link do produktu */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Link do produktu (opcjonalnie)
+              </label>
+              <div className="relative">
+                <Link size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                <input
+                  type="url"
+                  placeholder="https://example.com/product"
+                  value={link}
+                  onChange={e => setLink(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>

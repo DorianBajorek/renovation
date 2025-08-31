@@ -100,6 +100,7 @@ export async function PUT(
       .update({
         name: body.name,
         description: body.description,
+        link: body.link,
         price: body.price,
         quantity: body.quantity,
         category: body.category,

@@ -4,6 +4,7 @@ export interface Product {
   room_id?: string;
   name: string;
   description?: string;
+  link?: string;
   price: number;
   quantity: number;
   category?: string;
@@ -16,6 +17,7 @@ export interface Product {
 export interface ProductFormData {
   name: string;
   description?: string;
+  link?: string;
   price: number;
   quantity: number;
   category?: string;

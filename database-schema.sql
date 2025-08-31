@@ -81,6 +81,7 @@ CREATE TABLE products (
   room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
+  link TEXT,
   price DECIMAL(10,2) NOT NULL,
   quantity INTEGER DEFAULT 1,
   category VARCHAR(100),

@@ -179,6 +179,7 @@ export async function POST(request: NextRequest) {
         room_id: body.roomId,
         name: body.name,
         description: body.description || null,
+        link: body.link || null,
         price: body.price,
         quantity: body.quantity || 1,
         category: body.category || null,
