@@ -145,10 +145,10 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       doc.setFontSize(12);
       doc.text(`Data eksportu: ${new Date().toLocaleDateString('pl-PL')}`, 20, 30);
       
-            let yPosition = 50;
-      const startX = 20;
-      const colWidths = [50, 30, 20, 30, 30];
-      const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj'];
+                   let yPosition = 50;
+       const startX = 20;
+       const colWidths = [40, 25, 15, 25, 25, 40];
+       const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj', 'Opis'];
       
              if (isProjectExport) {
          // Dla eksportu projektu - pogrupuj produkty według pokoi
@@ -207,7 +207,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                `${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
                product.quantity.toString(),
                `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
-               convertPolishChars(product.room_name || '-')
+               convertPolishChars(product.room_name || '-'),
+               convertPolishChars(product.description || '-')
              ];
              
              currentX = startX;
@@ -297,7 +298,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              `${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
              product.quantity.toString(),
              `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
-             convertPolishChars(product.room_name || '-')
+             convertPolishChars(product.room_name || '-'),
+             convertPolishChars(product.description || '-')
            ];
            
            currentX = startX;
