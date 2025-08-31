@@ -59,10 +59,10 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-white/20">
-        <div className="p-6 sm:p-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col border border-white/20">
+        {/* Header - Fixed */}
+        <div className="p-6 sm:p-8 border-b border-slate-200">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-100 rounded-xl">
                 <Package size={24} className="text-indigo-600" />
@@ -83,8 +83,11 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
               <X size={20} className="text-slate-500" />
             </button>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+          <form id="add-product-form" onSubmit={handleSubmit} className="space-y-6">
             {/* Nazwa produktu */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -222,35 +225,39 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
               </div>
             )}
 
-            {/* Przyciski */}
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
-                disabled={loading}
-              >
-                Anuluj
-              </button>
-              <button
-                type="submit"
-                className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                disabled={loading || !name || price <= 0}
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Dodawanie...
-                  </>
-                ) : (
-                  <>
-                    <Package size={16} />
-                    Dodaj produkt
-                  </>
-                )}
-              </button>
-            </div>
           </form>
+        </div>
+
+        {/* Footer - Fixed */}
+        <div className="p-6 sm:p-8 border-t border-slate-200 bg-white">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+              disabled={loading}
+            >
+              Anuluj
+            </button>
+            <button
+              type="submit"
+              form="add-product-form"
+              className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={loading || !name || price <= 0}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Dodawanie...
+                </>
+              ) : (
+                <>
+                  <Package size={16} />
+                  Dodaj produkt
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
