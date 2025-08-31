@@ -56,15 +56,15 @@ const iconOptions = [
 
 export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => {
   const { user } = useAuth();
-  const [name, setName] = useState("");
+  const [name, setName] = useState("Salon");
   const [selectedIcon, setSelectedIcon] = useState("Sofa");
-  const [hasUserEditedName, setHasUserEditedName] = useState(false);
+  const [isNameManuallyEdited, setIsNameManuallyEdited] = useState(false);
 
   const handleIconSelect = (iconValue: string) => {
     setSelectedIcon(iconValue);
     
     // Aktualizuj nazwę tylko jeśli użytkownik nie edytował jej ręcznie
-    if (!hasUserEditedName) {
+    if (!isNameManuallyEdited) {
       const selectedOption = iconOptions.find(option => option.value === iconValue);
       if (selectedOption) {
         setName(selectedOption.label);
@@ -78,15 +78,10 @@ export const AddRoomForm = ({ onAdd, onClose, projectId }: AddRoomFormProps) => 
     
     // Oznacz, że użytkownik ręcznie edytował nazwę
     if (newName.trim() !== "") {
-      setHasUserEditedName(true);
+      setIsNameManuallyEdited(true);
     } else {
       // Jeśli użytkownik wyczyścił pole, zresetuj flagę
-      setHasUserEditedName(false);
-      // I ustaw nazwę na podstawie aktualnie wybranej ikony
-      const selectedOption = iconOptions.find(option => option.value === selectedIcon);
-      if (selectedOption) {
-        setName(selectedOption.label);
-      }
+      setIsNameManuallyEdited(false);
     }
   };
 
