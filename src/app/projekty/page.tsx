@@ -136,8 +136,14 @@ export default function ProjektyPage() {
 
   const ownProjects = projects.filter(project => !project.is_shared);
   const sharedProjects = projects.filter(project => project.is_shared);
-  const activeProjects = ownProjects.filter(project => project.status === 'active').length;
-  const completedProjects = ownProjects.filter(project => project.status === 'completed').length;
+  
+  // Liczenie projektów aktywnych i zakończonych w zależności od aktywnej zakładki
+  const activeProjects = activeTab === 'own' 
+    ? ownProjects.filter(project => project.status === 'active').length
+    : sharedProjects.filter(project => project.status === 'active').length;
+  const completedProjects = activeTab === 'own'
+    ? ownProjects.filter(project => project.status === 'completed').length
+    : sharedProjects.filter(project => project.status === 'completed').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -212,11 +218,8 @@ export default function ProjektyPage() {
                 {activeTab === 'own' ? 'Przegląd projektów' : 'Projekty udostępnione'}
               </h2>
               {activeTab === 'own' && (
-                <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm">
-                    <span className="text-green-600 font-medium">{activeProjects} aktywnych</span>
-                    <span className="text-gray-600">{completedProjects} zakończonych</span>
-                  </div>
+                <div className="text-xs sm:text-sm text-gray-600">
+                  {ownProjects.length} projektów
                 </div>
               )}
               {activeTab === 'shared' && (
