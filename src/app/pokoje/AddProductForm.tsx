@@ -16,6 +16,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
   const [price, setPrice] = useState<number>(0);
+  const [priceText, setPriceText] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [status, setStatus] = useState<'planned' | 'purchased'>('planned');
   const [loading, setLoading] = useState(false);
@@ -153,13 +154,26 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                   <input
                     type="text"
                     placeholder="0.00"
-                    value={price === 0 ? '' : price.toString()}
+                    value={priceText}
                     onChange={e => {
                       const value = e.target.value;
                       // Allow only numbers, dots, and commas
                       if (/^[0-9.,]*$/.test(value)) {
+                        setPriceText(value);
                         const numValue = parseFloat(value.replace(',', '.')) || 0;
                         setPrice(numValue);
+                      }
+                    }}
+                    onBlur={e => {
+                      // Format the value on blur to show proper decimal places
+                      const value = e.target.value;
+                      if (value && !isNaN(parseFloat(value.replace(',', '.')))) {
+                        const numValue = parseFloat(value.replace(',', '.'));
+                        setPrice(numValue);
+                        setPriceText(numValue.toFixed(2));
+                      } else if (value === '') {
+                        setPrice(0);
+                        setPriceText('');
                       }
                     }}
                     className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
