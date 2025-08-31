@@ -180,6 +180,7 @@ export async function POST(request: NextRequest) {
         name: body.name,
         description: body.description || null,
         link: body.link || null,
+        shop: body.shop || null,
         price: body.price,
         quantity: body.quantity || 1,
         category: body.category || null,

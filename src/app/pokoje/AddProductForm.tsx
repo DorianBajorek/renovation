@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Product } from "../types/product";
-import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link } from "lucide-react";
+import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link, Store } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AddProductFormProps {
@@ -15,11 +15,61 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
+  const [shop, setShop] = useState("");
   const [price, setPrice] = useState<number>(0);
   const [priceText, setPriceText] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [status, setStatus] = useState<'planned' | 'purchased'>('planned');
   const [loading, setLoading] = useState(false);
+
+  // Function to extract shop name from URL
+  const extractShopFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      let hostname = urlObj.hostname;
+      
+      // Remove www. prefix if present
+      if (hostname.startsWith('www.')) {
+        hostname = hostname.substring(4);
+      }
+      
+      // Extract domain name (everything before the first dot after www removal)
+      const domainParts = hostname.split('.');
+      if (domainParts.length > 0) {
+        return domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+      }
+      
+      return hostname;
+    } catch (error) {
+      // If URL parsing fails, try to extract manually
+      let urlString = url.toLowerCase();
+      
+      // Remove protocol
+      urlString = urlString.replace(/^https?:\/\//, '');
+      
+      // Remove www. prefix
+      if (urlString.startsWith('www.')) {
+        urlString = urlString.substring(4);
+      }
+      
+      // Extract domain name
+      const domainParts = urlString.split('.');
+      if (domainParts.length > 0) {
+        return domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+      }
+      
+      return '';
+    }
+  };
+
+  // Handle link change and auto-fill shop
+  const handleLinkChange = (newLink: string) => {
+    setLink(newLink);
+    if (newLink && !shop) {
+      const extractedShop = extractShopFromUrl(newLink);
+      setShop(extractedShop);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +86,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
           name,
           description: description || undefined,
           link: link || undefined,
+          shop: shop || undefined,
           price,
           quantity,
           status,
@@ -137,7 +188,24 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                   type="url"
                   placeholder="https://example.com/product"
                   value={link}
-                  onChange={e => setLink(e.target.value)}
+                  onChange={e => handleLinkChange(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Sklep */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Sklep (opcjonalnie)
+              </label>
+              <div className="relative">
+                <Store size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="np. Brico"
+                  value={shop}
+                  onChange={e => setShop(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>

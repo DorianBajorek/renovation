@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Product } from "../types/product";
-import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link } from "lucide-react";
+import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link, Store } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EditProductFormProps {
@@ -16,6 +16,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
     name: product.name,
     description: product.description || "",
     link: product.link || "",
+    shop: product.shop || "",
     price: product.price,
     quantity: product.quantity,
     category: product.category || "",
@@ -29,6 +30,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
       name: product.name,
       description: product.description || "",
       link: product.link || "",
+      shop: product.shop || "",
       price: product.price,
       quantity: product.quantity,
       category: product.category || "",
@@ -52,6 +54,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
           name: formData.name,
           description: formData.description || undefined,
           link: formData.link || undefined,
+          shop: formData.shop || undefined,
           price: formData.price,
           quantity: formData.quantity,
           category: formData.category || undefined,
@@ -158,6 +161,23 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
                   placeholder="https://example.com/product"
                   value={formData.link}
                   onChange={e => handleInputChange("link", e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Sklep */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Sklep (opcjonalnie)
+              </label>
+              <div className="relative">
+                <Store size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="np. Brico"
+                  value={formData.shop}
+                  onChange={e => handleInputChange("shop", e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>

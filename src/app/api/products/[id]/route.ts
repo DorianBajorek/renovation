@@ -101,6 +101,7 @@ export async function PUT(
         name: body.name,
         description: body.description,
         link: body.link,
+        shop: body.shop,
         price: body.price,
         quantity: body.quantity,
         category: body.category,

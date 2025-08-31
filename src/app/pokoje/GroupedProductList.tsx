@@ -483,13 +483,18 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
                                {getStatusText(product.status)}
                              </span>
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                                                <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                   Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                                 </span>
+                                                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                               <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                 Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                               </span>
                                <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
                                  Ilość: {product.quantity}
                                </span>
+                               {product.shop && (
+                                 <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
+                                   Sklep: {product.shop}
+                                 </span>
+                               )}
                              </div>
                            </div>
                            
@@ -516,6 +521,30 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                    >
                                      {product.link}
                                    </a>
+                                 </div>
+                               </div>
+                             )}
+                             
+                             {/* Product Shop */}
+                             {product.shop && (
+                               <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-sm font-medium text-green-700">Sklep:</span>
+                                   <span className="text-green-600 text-sm font-medium">
+                                     {product.shop}
+                                   </span>
+                                 </div>
+                               </div>
+                             )}
+                             
+                             {/* Product Shop */}
+                             {product.shop && (
+                               <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-sm font-medium text-green-700">Sklep:</span>
+                                   <span className="text-green-600 text-sm font-medium">
+                                     {product.shop}
+                                   </span>
                                  </div>
                                </div>
                              )}
@@ -579,6 +608,11 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                  <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
                                    Ilość: {product.quantity}
                                  </span>
+                                 {product.shop && (
+                                   <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
+                                     Sklep: {product.shop}
+                                   </span>
+                                 )}
                                </div>
                              </div>
                              

@@ -82,6 +82,7 @@ CREATE TABLE products (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   link TEXT,
+  shop VARCHAR(255),
   price DECIMAL(10,2) NOT NULL,
   quantity INTEGER DEFAULT 1,
   category VARCHAR(100),
@@ -150,6 +151,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_products_room_id ON products(room_id);
 CREATE INDEX idx_products_category ON products(category);
 CREATE INDEX idx_products_status ON products(status);
+CREATE INDEX idx_products_shop ON products(shop);
 CREATE INDEX idx_project_shares_project_id ON project_shares(project_id);
 CREATE INDEX idx_project_shares_shared_with_id ON project_shares(shared_with_id);
 CREATE INDEX idx_project_shares_owner_id ON project_shares(owner_id);

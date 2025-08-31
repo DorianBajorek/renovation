@@ -119,6 +119,11 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                       <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
                         Wartość: {(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                       </span>
+                      {product.shop && (
+                        <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
+                          Sklep: {product.shop}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
@@ -145,6 +150,18 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                         >
                           {product.link}
                         </a>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Product Shop */}
+                  {product.shop && (
+                    <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-green-700">Sklep:</span>
+                        <span className="text-green-600 text-sm font-medium">
+                          {product.shop}
+                        </span>
                       </div>
                     </div>
                   )}

@@ -5,6 +5,7 @@ export interface Product {
   name: string;
   description?: string;
   link?: string;
+  shop?: string;
   price: number;
   quantity: number;
   category?: string;
@@ -18,6 +19,7 @@ export interface ProductFormData {
   name: string;
   description?: string;
   link?: string;
+  shop?: string;
   price: number;
   quantity: number;
   category?: string;

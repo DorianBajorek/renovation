@@ -147,8 +147,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       
                    let yPosition = 50;
        const startX = 20;
-       const colWidths = [40, 25, 15, 25, 25, 40];
-       const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj', 'Opis'];
+       const colWidths = [35, 20, 12, 20, 20, 20, 35];
+       const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj', 'Sklep', 'Opis'];
       
              if (isProjectExport) {
          // Dla eksportu projektu - pogrupuj produkty według pokoi
@@ -208,6 +208,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                product.quantity.toString(),
                `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
                convertPolishChars(product.room_name || '-'),
+               convertPolishChars(product.shop || '-'),
                convertPolishChars(product.description || '-')
              ];
              
@@ -299,6 +300,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              product.quantity.toString(),
              `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
              convertPolishChars(product.room_name || '-'),
+             convertPolishChars(product.shop || '-'),
              convertPolishChars(product.description || '-')
            ];
            
@@ -515,6 +517,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                                 <span className="bg-green-50 px-2 py-1 rounded">Ilość: {product.quantity}</span>
                                 <span className="bg-purple-50 px-2 py-1 rounded">Wartość: {(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                                 <span className="bg-orange-50 px-2 py-1 rounded">Status: {getStatusText(product.status)}</span>
+                                {product.shop && <span className="bg-emerald-50 px-2 py-1 rounded text-emerald-700">Sklep: {product.shop}</span>}
                                 {product.category && <span className="bg-gray-50 px-2 py-1 rounded">Kategoria: {product.category}</span>}
                               </div>
                             </div>
