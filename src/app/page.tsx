@@ -212,7 +212,7 @@ export default function Home() {
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl opacity-20 blur-xl"></div>
               <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
                 <iframe
-                  src="https://www.youtube.com/embed/MFvhf2M8GpM"
+                  src="https://www.youtube.com/embed/2VtMc5iaPdY"
                   title="Demonstracja aplikacji do zarządzania remontem"
                   className="w-full h-full"
                   frameBorder="0"
@@ -221,21 +221,6 @@ export default function Home() {
                 ></iframe>
               </div>
             </div>
-          </div>
-          
-          <div className="text-center mt-8">
-            <p className="text-gray-600">
-              <span className="font-medium">Nie masz czasu na oglądanie?</span> 
-              <br />
-              <a 
-                href="https://www.youtube.com/watch?v=MFvhf2M8GpM" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 underline"
-              >
-                Otwórz film w nowej karcie
-              </a>
-            </p>
           </div>
         </div>
       </section>
