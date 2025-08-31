@@ -295,7 +295,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                     return (
                                              <div
                          key={idx}
-                         className="group p-4 sm:p-6 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col min-h-[240px] sm:min-h-[280px] hover:-translate-y-1"
+                         className="group p-4 sm:p-6 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col min-h-[240px] sm:min-h-[280px] hover:-translate-y-1 cursor-pointer"
+                         onClick={() => room.id && router.push(`/pokoje/${room.id}?projectId=${projectId}`)}
                        >
                          <div className="flex flex-col items-center gap-3 sm:gap-4 mb-4">
                                                        <div className="p-3 sm:p-4 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
@@ -314,7 +315,10 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                          <div className="mt-auto space-y-2 sm:space-y-3">
                            <div className="flex gap-2">
                              <button 
-                               onClick={() => room.id && router.push(`/pokoje/${room.id}?projectId=${projectId}`)}
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 room.id && router.push(`/pokoje/${room.id}?projectId=${projectId}`);
+                               }}
                                className="flex-1 px-2 sm:px-3 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                disabled={!room.id}
                              >
@@ -327,7 +331,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                              <>
                                <div className="flex gap-2">
                                  <button
-                                   onClick={() => {
+                                   onClick={(e) => {
+                                     e.stopPropagation();
                                      setEditingRoom(room);
                                      setShowEditForm(true);
                                    }}
@@ -337,7 +342,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                                    <Edit size={14} className="sm:w-4 sm:h-4 mx-auto" />
                                  </button>
                                  <button
-                                   onClick={async () => {
+                                   onClick={async (e) => {
+                                     e.stopPropagation();
                                      if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
                                        try {
                                          const response = await fetch(`/api/rooms/${room.id}`, {

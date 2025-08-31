@@ -273,10 +273,11 @@ export default function ProjektyPage() {
              const iconMap: Record<string, any> = { Home, Building, Briefcase };
              const Icon = iconMap[project.icon] || FolderOpen;
              return (
-               <div
-                 key={project.id}
-                 className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/60 hover:-translate-y-1 sm:hover:-translate-y-2"
-               >
+                               <div
+                  key={project.id}
+                  className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/60 hover:-translate-y-1 sm:hover:-translate-y-2 cursor-pointer"
+                  onClick={() => project.id && router.push(`/projekty/${project.id}/pokoje`)}
+                >
                  <div className="flex items-start justify-between mb-3 sm:mb-4">
                    <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                      <Icon size={24} className="sm:w-8 sm:h-8 strokeWidth={1.5} text-black" />
@@ -342,36 +343,48 @@ export default function ProjektyPage() {
                  </div>
 
                  <div className="flex gap-2">
-                   <button 
-                     onClick={() => project.id && router.push(`/projekty/${project.id}/pokoje`)}
-                     className="flex-1 px-3 sm:px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                     disabled={!project.id}
-                   >
+                                       <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        project.id && router.push(`/projekty/${project.id}/pokoje`);
+                      }}
+                      className="flex-1 px-3 sm:px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                      disabled={!project.id}
+                    >
                      Otwórz
                      <ChevronRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                    </button>
                    {!project.is_shared && (
                      <>
-                       <button 
-                         onClick={() => handleEditProject(project)}
-                         className="px-3 sm:px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-                         title="Edytuj projekt"
-                       >
+                                               <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProject(project);
+                          }}
+                          className="px-3 sm:px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                          title="Edytuj projekt"
+                        >
                          <Edit size={14} className="sm:w-4 sm:h-4" />
                        </button>
-                       <button 
-                         onClick={() => handleShareProject(project)}
-                         className="px-3 sm:px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                         title="Udostępnij projekt"
-                       >
+                                               <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareProject(project);
+                          }}
+                          className="px-3 sm:px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                          title="Udostępnij projekt"
+                        >
                          <Share2 size={14} className="sm:w-4 sm:h-4" />
                        </button>
-                       <button 
-                         onClick={() => project.id && handleDeleteProject(project.id, project.name)}
-                         className="px-3 sm:px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                         title="Usuń projekt"
-                         disabled={!project.id}
-                       >
+                                               <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            project.id && handleDeleteProject(project.id, project.name);
+                          }}
+                          className="px-3 sm:px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                          title="Usuń projekt"
+                          disabled={!project.id}
+                        >
                          <Trash2 size={14} className="sm:w-4 sm:h-4" />
                        </button>
                      </>

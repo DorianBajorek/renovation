@@ -184,7 +184,8 @@ export default function PokojePage() {
             return (
               <div
                 key={idx}
-                className="group p-8 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col items-center justify-between aspect-square hover:-translate-y-1"
+                className="group p-8 rounded-2xl bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 border border-white/60 flex flex-col items-center justify-between aspect-square hover:-translate-y-1 cursor-pointer"
+                onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
               >
                 <div className="flex flex-col items-center gap-5">
                                      <div className="p-5 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
@@ -203,7 +204,10 @@ export default function PokojePage() {
 
                 <div className="w-full flex gap-2">
                   <button 
-                    onClick={() => room.id && router.push(`/pokoje/${room.id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      room.id && router.push(`/pokoje/${room.id}`);
+                    }}
                     className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
                     disabled={!room.id}
                   >
@@ -211,7 +215,8 @@ export default function PokojePage() {
                     <ChevronRight size={18} />
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEditingRoom(room);
                       setShowEditForm(true);
                     }}
@@ -221,7 +226,8 @@ export default function PokojePage() {
                     <Edit size={18} />
                   </button>
                   <button
-                    onClick={async () => {
+                    onClick={async (e) => {
+                      e.stopPropagation();
                       if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
                         try {
                           const response = await fetch(`/api/rooms/${room.id}`, {
