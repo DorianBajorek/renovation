@@ -1,6 +1,6 @@
 "use client";
 import { Product } from "../types/product";
-import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart } from "lucide-react";
+import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, TrendingUp, Minus, TrendingDown } from "lucide-react";
 
 interface ProductListProps {
   products: Product[];
@@ -73,9 +73,9 @@ const getStatusColor = (status: string) => {
 export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   if (products.length === 0) {
     return (
-      <div className="text-center py-8">
-        <Package size={48} className="text-slate-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-slate-700 mb-2">
+      <div className="text-center py-12">
+        <Package size={64} className="text-slate-300 mx-auto mb-4" />
+        <h3 className="text-xl font-medium text-slate-700 mb-2">
           Brak produktów w tym pokoju
         </h3>
         <p className="text-slate-500">
@@ -86,9 +86,73 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
   }
 
   const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+  const totalPurchasedValue = products
+    .filter(product => product.status === 'purchased')
+    .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+  const totalPlannedValue = products
+    .filter(product => product.status === 'planned')
+    .reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Original Summary Section */}
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-slate-900">Scenariusze wydatków</h3>
+        </div>
+        <div className="mb-4 p-3 bg-white rounded-lg border border-indigo-200">
+          <div className="text-center">
+            <span className="text-sm text-slate-600">Już wydane: </span>
+            <span className="text-lg font-bold text-indigo-600">
+              {totalPurchasedValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+            </span>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Scenariusz najdroższy */}
+          <div className="bg-white rounded-xl p-4 border border-indigo-200">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp size={20} className="text-red-500" />
+              <span className="text-sm font-medium text-slate-600">Scenariusz najdroższy</span>
+            </div>
+            <div className="text-2xl font-bold text-red-600">
+              {totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Suma wszystkich produktów
+            </p>
+          </div>
+
+          {/* Scenariusz średni */}
+          <div className="bg-white rounded-xl p-4 border border-indigo-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Minus size={20} className="text-blue-500" />
+              <span className="text-sm font-medium text-slate-600">Scenariusz średni</span>
+            </div>
+            <div className="text-2xl font-bold text-blue-600">
+              {(totalPurchasedValue + totalPlannedValue * 0.8).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Zakupione + 80% planowanych
+            </p>
+          </div>
+
+          {/* Scenariusz najtańszy */}
+          <div className="bg-white rounded-xl p-4 border border-indigo-200">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingDown size={20} className="text-green-500" />
+              <span className="text-sm font-medium text-slate-600">Scenariusz najtańszy</span>
+            </div>
+            <div className="text-2xl font-bold text-green-600">
+              {(totalPurchasedValue + totalPlannedValue * 0.6).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Zakupione + 60% planowanych
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-4">
         {products.map((product) => (
           <div
