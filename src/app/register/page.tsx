@@ -3,8 +3,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Check } from "lucide-react";
 import { signInWithGoogle } from "@/lib/supabase-service";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -79,9 +81,11 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Błąd podczas rejestracji');
       }
 
-      // Rejestracja udana - przekierowanie do logowania
-      alert('Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.');
-      window.location.href = '/login';
+      // Rejestracja udana - automatyczne logowanie użytkownika
+      await login(data.user);
+      
+      // Przekierowanie do strony głównej po zalogowaniu
+      window.location.href = '/';
       
     } catch (error) {
       console.error('Registration error:', error);
