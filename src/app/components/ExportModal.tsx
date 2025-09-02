@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Product } from '../types/product';
-import { X, Download, Check, Square } from 'lucide-react';
+import { X, Download, Check, Square, Filter } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 interface ExportModalProps {
@@ -19,6 +19,11 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  
+  // Nowe stany dla filtrowania
+  const [selectedShop, setSelectedShop] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [availableShops, setAvailableShops] = useState<string[]>([]);
 
   useEffect(() => {
     console.log('ExportModal useEffect - isOpen:', isOpen, 'roomId:', roomId, 'roomId type:', typeof roomId);
@@ -84,6 +89,10 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         
         setProducts(productsList);
         
+        // Wyodrębnij unikalne sklepy
+        const shops = [...new Set(productsList.map(p => p.shop).filter((shop): shop is string => Boolean(shop)))];
+        setAvailableShops(shops);
+        
         // Domyślnie zaznacz wszystkie produkty
         const productIds = productsList.map((p: Product) => p.id).filter(id => id !== undefined);
         console.log('ExportModal - Product IDs to select:', productIds);
@@ -98,6 +107,30 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     }
   };
 
+  // Funkcja do filtrowania produktów
+  const getFilteredProducts = () => {
+    return products.filter(product => {
+      const shopMatch = selectedShop === 'all' || product.shop === selectedShop;
+      const statusMatch = selectedStatus === 'all' || product.status === selectedStatus;
+      return shopMatch && statusMatch;
+    });
+  };
+
+  // Funkcja do resetowania filtrów
+  const resetFilters = () => {
+    setSelectedShop('all');
+    setSelectedStatus('all');
+  };
+
+  // Funkcja do aktualizacji zaznaczonych produktów po zmianie filtrów
+  useEffect(() => {
+    const filteredProducts = getFilteredProducts();
+    const filteredProductIds = filteredProducts.map(p => p.id).filter(id => id !== undefined);
+    
+    // Zaznacz tylko produkty, które są widoczne po filtrowaniu
+    setSelectedProducts(new Set(filteredProductIds));
+  }, [selectedShop, selectedStatus]);
+
   const toggleProduct = (productId: string) => {
     if (!productId) return; // Zabezpieczenie przed pustym ID
     
@@ -111,10 +144,11 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   };
 
   const toggleAllProducts = () => {
-    if (selectedProducts.size === products.length) {
+    const filteredProducts = getFilteredProducts();
+    if (selectedProducts.size === filteredProducts.length) {
       setSelectedProducts(new Set());
     } else {
-      const productIds = products.map(p => p.id).filter(id => id !== undefined);
+      const productIds = filteredProducts.map(p => p.id).filter(id => id !== undefined);
       setSelectedProducts(new Set(productIds));
     }
   };
@@ -127,7 +161,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
 
     setExporting(true);
     try {
-      const selectedProductsList = products.filter(p => p.id && selectedProducts.has(p.id));
+      const selectedProductsList = getFilteredProducts().filter(p => p.id && selectedProducts.has(p.id));
       
       const doc = new jsPDF();
       
@@ -136,9 +170,19 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       
       // Tytuł
       doc.setFontSize(20);
-      const title = isProjectExport ? 
+      let title = isProjectExport ? 
         `Lista produktow projektu - ${convertPolishChars(roomName)}` :
         `Lista produktow - ${convertPolishChars(roomName)}`;
+      
+      // Dodaj informację o aktywnych filtrach
+      const activeFilters = [];
+      if (selectedShop !== 'all') activeFilters.push(`Sklep: ${selectedShop}`);
+      if (selectedStatus !== 'all') activeFilters.push(`Status: ${getStatusText(selectedStatus)}`);
+      
+      if (activeFilters.length > 0) {
+        title += ` (Filtry: ${activeFilters.join(', ')})`;
+      }
+      
       doc.text(title, 20, 20);
       
       // Data eksportu
@@ -349,9 +393,17 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         }
 
              // Zapisz PDF
-       const fileName = isProjectExport ? 
+       let fileName = isProjectExport ? 
          `projekt-${convertPolishChars(roomName)}-${new Date().toISOString().split('T')[0]}.pdf` :
          `produkty-${convertPolishChars(roomName)}-${new Date().toISOString().split('T')[0]}.pdf`;
+       
+       // Dodaj informację o filtrach do nazwy pliku
+       if (selectedShop !== 'all' || selectedStatus !== 'all') {
+         const filterSuffix = [];
+         if (selectedShop !== 'all') filterSuffix.push(`sklep-${selectedShop}`);
+         if (selectedStatus !== 'all') filterSuffix.push(`status-${selectedStatus}`);
+         fileName = fileName.replace('.pdf', `-${filterSuffix.join('-')}.pdf`);
+       }
        doc.save(fileName);
       
       onClose();
@@ -407,6 +459,14 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 pr-2">
             {isProjectExport ? `Eksport projektu - ${roomName}` : `Eksport produktów - ${roomName}`}
+            {(selectedShop !== 'all' || selectedStatus !== 'all') && (
+              <span className="block text-sm font-normal text-gray-600 mt-1">
+                Filtry: {[
+                  selectedShop !== 'all' ? `Sklep: ${selectedShop}` : null,
+                  selectedStatus !== 'all' ? `Status: ${getStatusText(selectedStatus)}` : null
+                ].filter(Boolean).join(', ')}
+              </span>
+            )}
           </h2>
           <button
             onClick={onClose}
@@ -422,12 +482,84 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Ładowanie produktów...</p>
             </div>
-          ) : products.length === 0 ? (
+          ) : getFilteredProducts().length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">Brak produktów w tym pokoju</p>
+              <p className="text-gray-600">
+                {products.length === 0 ? 'Brak produktów w tym pokoju' : 'Brak produktów spełniających wybrane filtry'}
+              </p>
+              {products.length > 0 && (
+                <button
+                  onClick={resetFilters}
+                  className="mt-3 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Resetuj filtry
+                </button>
+              )}
             </div>
           ) : (
             <>
+              {/* Sekcja filtrów */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Filter size={18} className="text-indigo-600" />
+                  <h3 className="font-medium text-gray-900">Filtry eksportu</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Filtr sklepu */}
+                  <div>
+                    <label htmlFor="shop-filter" className="block text-sm font-medium text-gray-700 mb-2">
+                      Sklep
+                    </label>
+                    <select
+                      id="shop-filter"
+                      value={selectedShop}
+                      onChange={(e) => setSelectedShop(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                    >
+                      <option value="all">Wszystkie sklepy</option>
+                      {availableShops.map((shop) => (
+                        <option key={shop} value={shop}>
+                          {shop}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filtr statusu */}
+                  <div>
+                    <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      id="status-filter"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                    >
+                      <option value="all">Wszystkie statusy</option>
+                      <option value="planned">Planowane</option>
+                      <option value="purchased">Zakupione</option>
+                    </select>
+                  </div>
+
+                  {/* Przycisk resetowania filtrów */}
+                  <div className="flex items-end">
+                    <button
+                      onClick={resetFilters}
+                      className="w-full px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+                    >
+                      Resetuj filtry
+                    </button>
+                  </div>
+                </div>
+
+                {/* Informacja o liczbie przefiltrowanych produktów */}
+                <div className="mt-3 text-sm text-gray-600">
+                  Pokazano: {getFilteredProducts().length} z {products.length} produktów
+                </div>
+              </div>
+
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <button
@@ -448,14 +580,25 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                   </button>
                 </div>
                 <span className="text-sm text-gray-600">
-                  Zaznaczono: {selectedProducts.size} z {products.length}
+                  Zaznaczono: {selectedProducts.size} z {getFilteredProducts().length}
+                  {(selectedShop !== 'all' || selectedStatus !== 'all') && (
+                    <span className="block text-xs text-gray-500 mt-1">
+                      (Filtry: {[
+                        selectedShop !== 'all' ? `Sklep: ${selectedShop}` : null,
+                        selectedStatus !== 'all' ? `Status: ${getStatusText(selectedStatus)}` : null
+                      ].filter(Boolean).join(', ')})
+                    </span>
+                  )}
                 </span>
               </div>
 
               <div className="space-y-6">
                 {(() => {
+                  // Użyj przefiltrowanych produktów
+                  const filteredProducts = getFilteredProducts();
+                  
                   // Group products by room
-                  const productsByRoom = products.reduce((acc, product) => {
+                  const productsByRoom = filteredProducts.reduce((acc, product) => {
                     // For single room export, use the roomName prop
                     // For project export, use the product's room_name
                     const currentRoomName = isProjectExport ? 
@@ -467,7 +610,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                     }
                     acc[currentRoomName].push(product);
                     return acc;
-                  }, {} as Record<string, typeof products>);
+                  }, {} as Record<string, typeof filteredProducts>);
 
                   return Object.entries(productsByRoom).map(([roomName, roomProducts]) => (
                     <div key={roomName} className="space-y-3">
@@ -537,12 +680,20 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
             {selectedProducts.size > 0 && (
               <>
                 Łączna wartość zaznaczonych: {
-                  products
+                  getFilteredProducts()
                     .filter(p => p.id && selectedProducts.has(p.id))
                     .reduce((sum, product) => sum + (product.price * product.quantity), 0)
                     .toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 } PLN
               </>
+            )}
+            {(selectedShop !== 'all' || selectedStatus !== 'all') && (
+              <div className="text-xs text-gray-500 mt-1">
+                Aktywne filtry: {[
+                  selectedShop !== 'all' ? `Sklep: ${selectedShop}` : null,
+                  selectedStatus !== 'all' ? `Status: ${getStatusText(selectedStatus)}` : null
+                ].filter(Boolean).join(', ')}
+              </div>
             )}
           </div>
           
