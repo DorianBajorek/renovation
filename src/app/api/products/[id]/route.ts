@@ -106,6 +106,7 @@ export async function PUT(
         quantity: body.quantity,
         category: body.category,
         status: body.status,
+        image_url: body.image_url,
         updated_at: new Date().toISOString()
       })
       .eq('id', productId)

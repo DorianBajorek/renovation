@@ -20,7 +20,9 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const [priceText, setPriceText] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [status, setStatus] = useState<'planned' | 'purchased'>('planned');
+  const [imageUrl, setImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [extractingImage, setExtractingImage] = useState(false);
 
   // Function to extract shop name from URL
   const extractShopFromUrl = (url: string): string => {
@@ -71,6 +73,33 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
     }
   };
 
+  // Function to extract image from URL
+  const extractImageFromUrl = async (url: string) => {
+    if (!url) return;
+    
+    try {
+      setExtractingImage(true);
+      const response = await fetch('/api/products/extract-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.image_url) {
+          setImageUrl(data.image_url);
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting image:', error);
+    } finally {
+      setExtractingImage(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || price <= 0 || !user) return;
@@ -92,6 +121,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
           status,
           roomId,
           userId: user.id,
+          image_url: imageUrl || undefined,
         }),
       });
 
@@ -165,17 +195,66 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Link do produktu (opcjonalnie)
               </label>
-              <div className="relative">
-                <Link size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                <input
-                  type="url"
-                  placeholder="https://example.com/product"
-                  value={link}
-                  onChange={e => handleLinkChange(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Link size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="url"
+                    placeholder="https://example.com/product"
+                    value={link}
+                    onChange={e => handleLinkChange(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                {link && (
+                  <button
+                    type="button"
+                    onClick={() => extractImageFromUrl(link)}
+                    disabled={extractingImage}
+                    className="px-4 py-3 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-xl transition-all disabled:opacity-50 border border-indigo-200 hover:border-indigo-300 flex items-center gap-2 whitespace-nowrap"
+                    title="Pobierz obrazek z linku"
+                  >
+                    {extractingImage ? (
+                      <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm font-medium">Pobierz zdjęcie</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Product Image Preview */}
+            {imageUrl && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Obrazek produktu
+                </label>
+                <div className="relative">
+                  <img
+                    src={imageUrl}
+                    alt="Podgląd produktu"
+                    className="w-32 h-24 object-cover rounded-xl border border-slate-300"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl("")}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    title="Usuń obrazek"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Opis */}
             <div>

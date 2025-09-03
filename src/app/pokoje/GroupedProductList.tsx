@@ -2,6 +2,7 @@
 import { Product } from "../types/product";
 import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useState } from "react";
+import { ImageModal } from "../../components/ImageModal";
 
 interface ProductListProps {
   products: Product[];
@@ -124,6 +125,11 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
 export const GroupedProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
+  const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; alt: string }>({
+    isOpen: false,
+    imageUrl: '',
+    alt: ''
+  });
 
   const toggleCard = (cardId: string) => {
     const newFlipped = new Set(flippedCards);
@@ -133,6 +139,14 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
       newFlipped.add(cardId);
     }
     setFlippedCards(newFlipped);
+  };
+
+  const openImageModal = (imageUrl: string, alt: string) => {
+    setImageModal({ isOpen: true, imageUrl, alt });
+  };
+
+  const closeImageModal = () => {
+    setImageModal({ isOpen: false, imageUrl: '', alt: '' });
   };
 
   if (products.length === 0) {
@@ -328,6 +342,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                 
                 <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Removed image from group header - only showing Package icon */}
                     <div className="p-1 sm:p-2 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 transition-colors">
                       <Package size={18} className="sm:w-5 sm:h-5 text-indigo-600" />
                     </div>
@@ -417,33 +432,59 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                          <div className="flex-1">
                            {/* Product Header */}
                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                             <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                             <div className="flex items-center gap-3">
+                               {product.image_url ? (
+                                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                                   <img
+                                     src={product.image_url}
+                                     alt={product.name}
+                                     className="w-full h-full object-cover"
+                                     onClick={() => openImageModal(product.image_url!, product.name)}
+                                     onError={(e) => {
+                                       const target = e.currentTarget as HTMLImageElement;
+                                       target.style.display = 'none';
+                                       const fallback = target.nextElementSibling as HTMLElement;
+                                       if (fallback) fallback.style.display = 'flex';
+                                     }}
+                                   />
+                                   <div className="w-full h-full bg-indigo-100 flex items-center justify-center" style={{ display: 'none' }}>
+                                     <Package size={24} className="text-indigo-600" />
+                                   </div>
+                                 </div>
+                               ) : (
+                                 <div className="p-2 rounded-lg bg-indigo-100">
+                                   <Package size={18} className="text-indigo-600" />
+                                 </div>
+                               )}
+                               <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                             </div>
                              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
                                {getStatusText(product.status)}
                              </span>
-                                                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                               <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                 Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                               </span>
-                               <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                 Ilość: {product.quantity}
-                               </span>
-                               {product.shop && (
-                                 <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                                   Sklep: {product.shop}
-                                 </span>
-                               )}
-                             </div>
                            </div>
                            
-                                                        {/* Product Description */}
-                             {product.description && (
-                               <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                 <p className="text-slate-700 text-sm leading-relaxed">
-                                   {parseTextWithLinks(product.description)}
-                                 </p>
-                               </div>
+                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
+                             <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                               Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                             </span>
+                             <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                               Ilość: {product.quantity}
+                             </span>
+                             {product.shop && (
+                               <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
+                                 Sklep: {product.shop}
+                               </span>
                              )}
+                           </div>
+                           
+                           {/* Product Description */}
+                           {product.description && (
+                             <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                               <p className="text-slate-700 text-sm leading-relaxed">
+                                 {parseTextWithLinks(product.description)}
+                               </p>
+                             </div>
+                           )}
                              
                              {/* Product Link */}
                              {product.link && (
@@ -459,18 +500,6 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                    >
                                      {product.link}
                                    </a>
-                                 </div>
-                               </div>
-                             )}
-                             
-                             {/* Product Shop */}
-                             {product.shop && (
-                               <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-sm font-medium text-green-700">Sklep:</span>
-                                   <span className="text-green-600 text-sm font-medium">
-                                     {product.shop}
-                                   </span>
                                  </div>
                                </div>
                              )}
@@ -535,7 +564,32 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                            <div className="flex-1">
                              {/* Product Header */}
                              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                               <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                               <div className="flex items-center gap-3">
+                                 {product.image_url ? (
+                                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                                     <img
+                                       src={product.image_url}
+                                       alt={product.name}
+                                       className="w-full h-full object-cover"
+                                       onClick={() => openImageModal(product.image_url!, product.name)}
+                                       onError={(e) => {
+                                         const target = e.currentTarget as HTMLImageElement;
+                                         target.style.display = 'none';
+                                         const fallback = target.nextElementSibling as HTMLElement;
+                                         if (fallback) fallback.style.display = 'flex';
+                                       }}
+                                     />
+                                     <div className="w-full h-full bg-indigo-100 flex items-center justify-center" style={{ display: 'none' }}>
+                                       <Package size={24} className="text-indigo-600" />
+                                     </div>
+                                   </div>
+                                 ) : (
+                                   <div className="p-2 rounded-lg bg-indigo-100">
+                                     <Package size={18} className="text-indigo-600" />
+                                   </div>
+                                 )}
+                                 <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                               </div>
                                <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
                                  {getStatusText(product.status)}
                                </span>
@@ -601,6 +655,14 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
           );
         })}
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={imageModal.isOpen}
+        onClose={closeImageModal}
+        imageUrl={imageModal.imageUrl}
+        alt={imageModal.alt}
+      />
     </div>
   );
 };

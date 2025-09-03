@@ -2,6 +2,7 @@
 import { Product } from "../types/product";
 import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, TrendingUp, Minus, TrendingDown } from "lucide-react";
 import { useState } from "react";
+import { ImageModal } from "../../components/ImageModal";
 
 interface ProductListProps {
   products: Product[];
@@ -73,6 +74,11 @@ const getStatusColor = (status: string) => {
 
 export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
+  const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; alt: string }>({
+    isOpen: false,
+    imageUrl: '',
+    alt: ''
+  });
 
   const toggleCard = (cardId: string) => {
     const newFlipped = new Set(flippedCards);
@@ -82,6 +88,14 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
       newFlipped.add(cardId);
     }
     setFlippedCards(newFlipped);
+  };
+
+  const openImageModal = (imageUrl: string, alt: string) => {
+    setImageModal({ isOpen: true, imageUrl, alt });
+  };
+
+  const closeImageModal = () => {
+    setImageModal({ isOpen: false, imageUrl: '', alt: '' });
   };
 
   if (products.length === 0) {
@@ -252,10 +266,30 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                 <div className="flex-1">
                   {/* Product Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-indigo-100">
-                        <Package size={18} className="text-indigo-600" />
-                      </div>
+                    <div className="flex items-center gap-3">
+                      {product.image_url ? (
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onClick={() => openImageModal(product.image_url!, product.name)}
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-full bg-indigo-100 flex items-center justify-center" style={{ display: 'none' }}>
+                            <Package size={24} className="text-indigo-600" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-lg bg-indigo-100">
+                          <Package size={18} className="text-indigo-600" />
+                        </div>
+                      )}
                       <h4 className="text-lg font-semibold text-slate-900">{product.name}</h4>
                     </div>
                     <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
@@ -356,6 +390,14 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
           </div>
         ))}
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={imageModal.isOpen}
+        onClose={closeImageModal}
+        imageUrl={imageModal.imageUrl}
+        alt={imageModal.alt}
+      />
     </div>
   );
 };

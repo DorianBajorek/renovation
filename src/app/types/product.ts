@@ -11,6 +11,7 @@ export interface Product {
   category?: string;
   status: 'planned' | 'purchased';
   room_name?: string; // Added for export functionality
+  image_url?: string; // Added for product image
   created_at?: string;
   updated_at?: string;
 }
@@ -24,4 +25,5 @@ export interface ProductFormData {
   quantity: number;
   category?: string;
   status: 'planned' | 'purchased';
+  image_url?: string; // Added for product image
 }

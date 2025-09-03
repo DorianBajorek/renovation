@@ -12,6 +12,47 @@ interface EditProductFormProps {
 
 export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormProps) => {
   const { user } = useAuth();
+  
+  // Function to extract shop name from URL
+  const extractShopFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      let hostname = urlObj.hostname;
+      
+      // Remove www. prefix if present
+      if (hostname.startsWith('www.')) {
+        hostname = hostname.substring(4);
+      }
+      
+      // Extract domain name (everything before the first dot after www removal)
+      const domainParts = hostname.split('.');
+      if (domainParts.length > 0) {
+        return domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+      }
+      
+      return hostname;
+    } catch (error) {
+      // If URL parsing fails, try to extract manually
+      let urlString = url.toLowerCase();
+      
+      // Remove protocol
+      urlString = urlString.replace(/^https?:\/\//, '');
+      
+      // Remove www. prefix
+      if (urlString.startsWith('www.')) {
+        urlString = urlString.substring(4);
+      }
+      
+      // Extract domain name
+      const domainParts = urlString.split('.');
+      if (domainParts.length > 0) {
+        return domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+      }
+      
+      return '';
+    }
+  };
+
   const [formData, setFormData] = useState({
     name: product.name,
     description: product.description || "",
@@ -21,9 +62,11 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
     quantity: product.quantity,
     category: product.category || "",
     status: product.status,
+    image_url: product.image_url || "",
   });
   const [priceText, setPriceText] = useState(product.price > 0 ? product.price.toFixed(2) : "");
   const [loading, setLoading] = useState(false);
+  const [extractingImage, setExtractingImage] = useState(false);
 
   useEffect(() => {
     setFormData({
@@ -35,6 +78,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
       quantity: product.quantity,
       category: product.category || "",
       status: product.status,
+      image_url: product.image_url || "",
     });
     setPriceText(product.price > 0 ? product.price.toFixed(2) : "");
   }, [product]);
@@ -59,6 +103,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
           quantity: formData.quantity,
           category: formData.category || undefined,
           status: formData.status,
+          image_url: formData.image_url || undefined,
           userId: user.id,
         }),
       });
@@ -81,6 +126,42 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle link change and auto-fill shop
+  const handleLinkChange = (newLink: string) => {
+    setFormData(prev => ({ ...prev, link: newLink }));
+    if (newLink && !formData.shop) {
+      const extractedShop = extractShopFromUrl(newLink);
+      setFormData(prev => ({ ...prev, shop: extractedShop }));
+    }
+  };
+
+  // Function to extract image from URL
+  const extractImageFromUrl = async (url: string) => {
+    if (!url) return;
+    
+    try {
+      setExtractingImage(true);
+      const response = await fetch('/api/products/extract-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.image_url) {
+          setFormData(prev => ({ ...prev, image_url: data.image_url }));
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting image:', error);
+    } finally {
+      setExtractingImage(false);
+    }
   };
 
   return (
@@ -137,17 +218,66 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Link do produktu (opcjonalnie)
               </label>
-              <div className="relative">
-                <Link size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                <input
-                  type="url"
-                  placeholder="https://example.com/product"
-                  value={formData.link}
-                  onChange={e => handleInputChange("link", e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Link size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="url"
+                    placeholder="https://example.com/product"
+                    value={formData.link}
+                    onChange={e => handleLinkChange(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                {formData.link && (
+                  <button
+                    type="button"
+                    onClick={() => extractImageFromUrl(formData.link)}
+                    disabled={extractingImage}
+                    className="px-4 py-3 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-xl transition-all disabled:opacity-50 border border-indigo-200 hover:border-indigo-300 flex items-center gap-2 whitespace-nowrap"
+                    title="Pobierz obrazek z linku"
+                  >
+                    {extractingImage ? (
+                      <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm font-medium">Pobierz zdjęcie</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Product Image Preview */}
+            {formData.image_url && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Obrazek produktu
+                </label>
+                <div className="relative">
+                  <img
+                    src={formData.image_url}
+                    alt="Podgląd produktu"
+                    className="w-32 h-24 object-cover rounded-xl border border-slate-300"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, image_url: "" }))}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    title="Usuń obrazek"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Opis */}
             <div>

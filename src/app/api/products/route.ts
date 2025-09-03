@@ -184,7 +184,8 @@ export async function POST(request: NextRequest) {
         price: body.price,
         quantity: body.quantity || 1,
         category: body.category || null,
-        status: body.status || 'planned'
+        status: body.status || 'planned',
+        image_url: body.image_url || null
       })
       .select()
       .single();
