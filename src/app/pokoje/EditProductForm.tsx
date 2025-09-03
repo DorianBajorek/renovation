@@ -67,6 +67,8 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
   const [priceText, setPriceText] = useState(product.price > 0 ? product.price.toFixed(2) : "");
   const [loading, setLoading] = useState(false);
   const [extractingImage, setExtractingImage] = useState(false);
+  const [manualImageUrl, setManualImageUrl] = useState<string>("");
+  const [showManualInput, setShowManualInput] = useState(false);
 
   useEffect(() => {
     setFormData({
@@ -81,6 +83,8 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
       image_url: product.image_url || "",
     });
     setPriceText(product.price > 0 ? product.price.toFixed(2) : "");
+    setShowManualInput(false);
+    setManualImageUrl("");
   }, [product]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,10 +159,20 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
         const data = await response.json();
         if (data.image_url) {
           setFormData(prev => ({ ...prev, image_url: data.image_url }));
+          setShowManualInput(false);
+        } else {
+          alert('Nie znaleziono obrazka na tej stronie. Możesz wkleić link ręcznie poniżej.');
+          setShowManualInput(true);
         }
+      } else {
+        const errorData = await response.json();
+        alert(`Błąd podczas pobierania obrazka: ${errorData.error || 'Nieznany błąd'}. Możesz wkleić link ręcznie poniżej.`);
+        setShowManualInput(true);
       }
     } catch (error) {
       console.error('Error extracting image:', error);
+      alert('Wystąpił błąd podczas pobierania obrazka. Sprawdź poprawność linku. Możesz wkleić link ręcznie poniżej.');
+      setShowManualInput(true);
     } finally {
       setExtractingImage(false);
     }
@@ -276,6 +290,52 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
                     <X size={14} />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Ręczne dodanie obrazka - pokazuje się tylko po nieudanej próbie */}
+            {showManualInput && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Wklej link do obrazka ręcznie
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    value={manualImageUrl}
+                    onChange={e => setManualImageUrl(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  {manualImageUrl && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, image_url: manualImageUrl }));
+                          setManualImageUrl("");
+                          setShowManualInput(false);
+                        }}
+                        className="flex-1 px-4 py-3 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-all border border-green-200 hover:border-green-300 text-sm font-medium"
+                      >
+                        Zastosuj
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setManualImageUrl("");
+                          setShowManualInput(false);
+                        }}
+                        className="flex-1 px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all border border-red-200 hover:border-red-300 text-sm font-medium"
+                      >
+                        Anuluj
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Jeśli automatyczne pobieranie nie działa, skopiuj link do obrazka ze strony i wklej tutaj
+                </p>
               </div>
             )}
 
