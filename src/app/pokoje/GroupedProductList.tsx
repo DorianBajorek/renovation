@@ -1,7 +1,7 @@
 "use client";
 import { Product } from "../types/product";
-import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { useState } from "react";
+import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus, Search, X } from "lucide-react";
+import { useState, useMemo } from "react";
 import { ImageModal } from "../../components/ImageModal";
 
 interface ProductListProps {
@@ -130,6 +130,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
     imageUrl: '',
     alt: ''
   });
+  
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toggleCard = (cardId: string) => {
     const newFlipped = new Set(flippedCards);
@@ -149,6 +152,18 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
     setImageModal({ isOpen: false, imageUrl: '', alt: '' });
   };
 
+  // Filter products based on search term only
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm) return products;
+    
+    return products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.shop?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [products, searchTerm]);
+
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
@@ -163,9 +178,9 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
     );
   }
 
-  const groupedProducts = groupProductsByName(products);
+  const groupedProducts = groupProductsByName(filteredProducts);
   
-  // Calculate summary statistics
+  // Calculate summary statistics (always use all products, not filtered)
   const totalPurchasedValue = products
     .filter(product => product.status === 'purchased')
     .reduce((sum, product) => sum + (product.price * product.quantity), 0);
@@ -319,9 +334,66 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
         </div>
       </div>
 
+      {/* Search Section */}
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/60 p-4 sm:p-6">
+        <div className="flex flex-col gap-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Szukaj produktów po nazwie, opisie, sklepie lub kategorii..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80 backdrop-blur-sm text-slate-700 placeholder-slate-400"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {/* Search Results Info */}
+          {searchTerm && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Znaleziono: <span className="font-semibold text-slate-900">{filteredProducts.length}</span> z {products.length} produktów
+              </div>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-sm text-red-600 hover:text-red-800 underline"
+              >
+                Wyczyść wyszukiwanie
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Grouped Products */}
       <div className="space-y-4">
-        {groupedProducts.map((group) => {
+        {searchTerm && groupedProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <Search size={64} className="text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-slate-700 mb-2">
+              Nie znaleziono produktów
+            </h3>
+            <p className="text-slate-500 mb-4">
+              Spróbuj zmienić kryteria wyszukiwania.
+            </p>
+            <button
+              onClick={() => setSearchTerm('')}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Wyczyść wyszukiwanie
+            </button>
+          </div>
+        ) : (
+          groupedProducts.map((group) => {
           const isExpanded = expandedGroups.has(group.name);
           const hasMultipleProducts = group.products.length > 1;
 
@@ -653,7 +725,8 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                  )}
             </div>
           );
-        })}
+          })
+        )}
       </div>
 
       {/* Image Modal */}
