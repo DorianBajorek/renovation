@@ -189,6 +189,49 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
     .filter(product => product.status === 'planned')
     .reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
+  // Calculate scenarios based on actual product prices within groups
+  const calculateScenarios = () => {
+    const allGroups = groupProductsByName(products);
+    
+    let expensiveScenario = totalPurchasedValue;
+    let averageScenario = totalPurchasedValue;
+    let cheapScenario = totalPurchasedValue;
+
+    allGroups.forEach(group => {
+      const purchasedProducts = group.products.filter(p => p.status === 'purchased');
+      const plannedProducts = group.products.filter(p => p.status === 'planned');
+      
+      // If we already have purchased products in this group, use their actual cost
+      if (purchasedProducts.length > 0) {
+        // Already included in totalPurchasedValue, so skip
+        return;
+      }
+      
+      // If no purchased products, use planned products for scenarios
+      if (plannedProducts.length > 0) {
+        const plannedPrices = plannedProducts.map(p => p.price * p.quantity).sort((a, b) => a - b);
+        
+        // For expensive scenario: use the highest price
+        const maxValue = Math.max(...plannedPrices);
+        expensiveScenario += maxValue;
+        
+        // For average scenario: use median price
+        const medianValue = plannedPrices.length % 2 === 0 
+          ? (plannedPrices[plannedPrices.length / 2 - 1] + plannedPrices[plannedPrices.length / 2]) / 2
+          : plannedPrices[Math.floor(plannedPrices.length / 2)];
+        averageScenario += medianValue;
+        
+        // For cheap scenario: use the lowest price
+        const minValue = Math.min(...plannedPrices);
+        cheapScenario += minValue;
+      }
+    });
+
+    return { expensiveScenario, averageScenario, cheapScenario };
+  };
+
+  const scenarios = calculateScenarios();
+
   const toggleGroup = (groupName: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupName)) {
@@ -230,7 +273,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                   <span className="text-sm font-medium text-slate-600">Scenariusz najdroższy</span>
                 </div>
                 <div className="text-2xl font-bold text-red-600">
-                  {(totalPurchasedValue + totalPlannedValue).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {scenarios.expensiveScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   Kliknij aby zobaczyć wyjaśnienie
@@ -269,7 +312,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                   <span className="text-sm font-medium text-slate-600">Scenariusz średni</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {(totalPurchasedValue + totalPlannedValue * 0.8).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {scenarios.averageScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   Kliknij aby zobaczyć wyjaśnienie
@@ -308,7 +351,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                   <span className="text-sm font-medium text-slate-600">Scenariusz najtańszy</span>
                 </div>
                 <div className="text-2xl font-bold text-green-600">
-                  {(totalPurchasedValue + totalPlannedValue * 0.6).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {scenarios.cheapScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   Kliknij aby zobaczyć wyjaśnienie
