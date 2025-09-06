@@ -380,6 +380,12 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
       {/* Search Section */}
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/60 p-4 sm:p-6">
         <div className="flex flex-col gap-4">
+          {/* Search Header */}
+          <div className="flex items-center gap-2 mb-2">
+            <Search size={20} className="text-indigo-600" />
+            <h3 className="text-lg font-medium text-slate-900">Wyszukiwarka produktów</h3>
+          </div>
+          
           {/* Search Bar */}
           <div className="relative">
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />

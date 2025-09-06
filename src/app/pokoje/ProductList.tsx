@@ -72,6 +72,56 @@ const getStatusColor = (status: string) => {
   }
 };
 
+interface ProductGroup {
+  name: string;
+  products: Product[];
+  totalValue: number;
+  maxPrice: number;
+  minPrice: number;
+  avgPrice: number;
+  totalQuantity: number;
+}
+
+const groupProductsByName = (products: Product[]): ProductGroup[] => {
+  const groups: Record<string, Product[]> = {};
+  
+  products.forEach(product => {
+    // Normalize product name to lowercase for grouping
+    const normalizedName = product.name.toLowerCase().trim();
+    if (!groups[normalizedName]) {
+      groups[normalizedName] = [];
+    }
+    groups[normalizedName].push(product);
+  });
+
+  return Object.entries(groups).map(([normalizedName, products]) => {
+    const prices = products.map(p => p.price).sort((a, b) => a - b);
+    const maxPrice = Math.max(...prices);
+    const minPrice = Math.min(...prices);
+    
+    // Calculate median
+    const medianPrice = prices.length % 2 === 0 
+      ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+      : prices[Math.floor(prices.length / 2)];
+    
+    const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
+
+    // Use the first product's name as the display name (preserves original casing)
+    const displayName = products[0].name;
+
+    return {
+      name: displayName,
+      products,
+      totalValue,
+      maxPrice,
+      minPrice,
+      avgPrice: medianPrice, // Using median instead of average
+      totalQuantity
+    };
+  }).sort((a, b) => b.totalValue - a.totalValue); // Sort by total value descending
+};
+
 export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; alt: string }>({
@@ -127,13 +177,52 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
     );
   }
 
-  const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
   const totalPurchasedValue = products
     .filter(product => product.status === 'purchased')
     .reduce((sum, product) => sum + (product.price * product.quantity), 0);
-  const totalPlannedValue = products
-    .filter(product => product.status === 'planned')
-    .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+  
+  // Calculate scenarios based on actual product prices within groups (same logic as GroupedProductList)
+  const calculateScenarios = () => {
+    const allGroups = groupProductsByName(products);
+    
+    let expensiveScenario = totalPurchasedValue;
+    let averageScenario = totalPurchasedValue;
+    let cheapScenario = totalPurchasedValue;
+
+    allGroups.forEach(group => {
+      const purchasedProducts = group.products.filter(p => p.status === 'purchased');
+      const plannedProducts = group.products.filter(p => p.status === 'planned');
+      
+      // If we already have purchased products in this group, use their actual cost
+      if (purchasedProducts.length > 0) {
+        // Already included in totalPurchasedValue, so skip
+        return;
+      }
+      
+      // If no purchased products, use planned products for scenarios
+      if (plannedProducts.length > 0) {
+        const plannedPrices = plannedProducts.map(p => p.price * p.quantity).sort((a, b) => a - b);
+        
+        // For expensive scenario: use the highest price
+        const maxValue = Math.max(...plannedPrices);
+        expensiveScenario += maxValue;
+        
+        // For average scenario: use median price
+        const medianValue = plannedPrices.length % 2 === 0 
+          ? (plannedPrices[plannedPrices.length / 2 - 1] + plannedPrices[plannedPrices.length / 2]) / 2
+          : plannedPrices[Math.floor(plannedPrices.length / 2)];
+        averageScenario += medianValue;
+        
+        // For cheap scenario: use the lowest price
+        const minValue = Math.min(...plannedPrices);
+        cheapScenario += minValue;
+      }
+    });
+
+    return { expensiveScenario, averageScenario, cheapScenario };
+  };
+
+  const scenarios = calculateScenarios();
 
   return (
     <div className="space-y-6">
@@ -166,7 +255,7 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                   <span className="text-sm font-medium text-slate-600">Scenariusz najdroższy</span>
                 </div>
                 <div className="text-2xl font-bold text-red-600">
-                  {totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {scenarios.expensiveScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   Kliknij aby zobaczyć wyjaśnienie
@@ -205,7 +294,7 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                   <span className="text-sm font-medium text-slate-600">Scenariusz średni</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {(totalPurchasedValue + totalPlannedValue * 0.8).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {scenarios.averageScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   Kliknij aby zobaczyć wyjaśnienie
@@ -244,7 +333,7 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                   <span className="text-sm font-medium text-slate-600">Scenariusz najtańszy</span>
                 </div>
                 <div className="text-2xl font-bold text-green-600">
-                  {(totalPurchasedValue + totalPlannedValue * 0.6).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {scenarios.cheapScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   Kliknij aby zobaczyć wyjaśnienie
@@ -273,6 +362,12 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
       {/* Search Section */}
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/60 p-4 sm:p-6">
         <div className="flex flex-col gap-4">
+          {/* Search Header */}
+          <div className="flex items-center gap-2 mb-2">
+            <Search size={20} className="text-indigo-600" />
+            <h3 className="text-lg font-medium text-slate-900">Wyszukiwarka produktów</h3>
+          </div>
+          
           {/* Search Bar */}
           <div className="relative">
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
