@@ -246,13 +246,13 @@ export const RoomImagesManager = ({
           {currentImages.map((imageUrl, index) => (
             <div
               key={index}
-              className="relative group bg-slate-50 rounded-xl overflow-hidden aspect-square border border-slate-200 hover:border-purple-300 transition-colors"
+              className="relative group bg-slate-50 rounded-xl overflow-hidden aspect-square border border-slate-200 hover:border-purple-300 transition-colors cursor-pointer"
+              onClick={() => setSelectedImageIndex(index)}
             >
               <img
                 src={imageUrl}
                 alt={`Wizualizacja pokoju ${index + 1}`}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={() => setSelectedImageIndex(index)}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;
@@ -271,32 +271,29 @@ export const RoomImagesManager = ({
                 </div>
               </div>
 
-              {/* Overlay with actions */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <button
-                  onClick={() => setSelectedImageIndex(index)}
-                  className="p-2 bg-white/90 rounded-lg hover:bg-white transition-colors"
-                  title="Powiększ"
-                >
-                  <ImageIcon size={16} className="text-slate-700" />
-                </button>
+              {/* Action buttons - appears only on hover */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                 <a
                   href={imageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-white/90 rounded-lg hover:bg-white transition-colors"
+                  className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-colors shadow-sm"
                   title="Otwórz w nowej karcie"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <ExternalLink size={16} className="text-slate-700" />
+                  <ExternalLink size={14} className="text-slate-700" />
                 </a>
                 {userPermission === 'edit' && (
                   <button
-                    onClick={() => handleRemoveImage(imageUrl)}
-                    className="p-2 bg-red-500/90 rounded-lg hover:bg-red-500 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage(imageUrl);
+                    }}
+                    className="p-1.5 bg-red-500/90 backdrop-blur-sm rounded-lg hover:bg-red-500 transition-colors shadow-sm"
                     title="Usuń"
                     disabled={loading}
                   >
-                    <X size={16} className="text-white" />
+                    <X size={14} className="text-white" />
                   </button>
                 )}
               </div>
