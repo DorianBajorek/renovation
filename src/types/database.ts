@@ -37,6 +37,7 @@ export interface Database {
           project_id: string | null;
           name: string;
           icon: string;
+          visualization_images: string[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -46,6 +47,7 @@ export interface Database {
           project_id?: string | null;
           name: string;
           icon?: string;
+          visualization_images?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -55,6 +57,7 @@ export interface Database {
           project_id?: string | null;
           name?: string;
           icon?: string;
+          visualization_images?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };

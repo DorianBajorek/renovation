@@ -36,6 +36,7 @@ import { AddProductForm } from "../AddProductForm";
 import { EditProductForm } from "../EditProductForm";
 import { GroupedProductList } from "../GroupedProductList";
 import { ProductList } from "../ProductList";
+import { RoomImagesManager } from "../RoomImagesManager";
 import { ExportModal } from "../../components/ExportModal";
 
 interface RoomPageProps {
@@ -216,6 +217,18 @@ export default function RoomPage({ params }: RoomPageProps) {
 
         <main className="flex-1 px-4 sm:px-6 md:px-12 pb-16">
           <div className="max-w-7xl mx-auto">
+            {/* Room Images Section */}
+            <div className="mb-8">
+              <RoomImagesManager
+                roomId={roomId}
+                images={room.visualization_images}
+                onImagesUpdate={(images) => {
+                  setRoom(prev => prev ? { ...prev, visualization_images: images } : null);
+                }}
+                userPermission={userPermission}
+              />
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
               <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Produkty w pokoju</h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
