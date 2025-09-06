@@ -38,6 +38,7 @@ import { EditProductForm } from "../EditProductForm";
 import { GroupedProductList } from "../GroupedProductList";
 import { ProductList } from "../ProductList";
 import { ExportModal } from "../../components/ExportModal";
+import { ImageGalleryModal } from "@/components/ImageGalleryModal";
 
 interface RoomPageProps {
   params: Promise<{
@@ -61,6 +62,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [addingProduct, setAddingProduct] = useState(false);
   const [useGroupedView, setUseGroupedView] = useState(true);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const getRoomId = async () => {
@@ -202,18 +204,6 @@ export default function RoomPage({ params }: RoomPageProps) {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <button
-                    onClick={() => {
-                      const visualizationsUrl = projectId 
-                        ? `/pokoje/${roomId}/wizualizacje?projectId=${projectId}`
-                        : `/pokoje/${roomId}/wizualizacje`;
-                      router.push(visualizationsUrl);
-                    }}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-100 text-purple-700 rounded-xl font-medium hover:bg-purple-200 transition-colors w-full sm:w-auto"
-                  >
-                    <ImageIcon size={18} />
-                    <span>Wizualizacje</span>
-                  </button>
                   <button 
                     onClick={() => setShowExportModal(true)}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors w-full sm:w-auto"
@@ -229,6 +219,113 @@ export default function RoomPage({ params }: RoomPageProps) {
 
         <main className="flex-1 px-4 sm:px-6 md:px-12 pb-16">
           <div className="max-w-7xl mx-auto">
+            {/* Visualization Preview Section */}
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-purple-100">
+                    <ImageIcon size={24} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-semibold text-slate-900">
+                      Wizualizacje pokoju
+                    </h3>
+                    <p className="text-sm text-slate-600">
+                      {room.visualization_images && room.visualization_images.length > 0 
+                        ? `${room.visualization_images.length} ${room.visualization_images.length === 1 ? 'zdjęcie' : room.visualization_images.length < 5 ? 'zdjęcia' : 'zdjęć'}`
+                        : 'Brak zdjęć wizualizacji'
+                      }
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const visualizationsUrl = projectId 
+                      ? `/pokoje/${roomId}/wizualizacje?projectId=${projectId}`
+                      : `/pokoje/${roomId}/wizualizacje`;
+                    router.push(visualizationsUrl);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors text-sm w-full sm:w-auto"
+                >
+                  <ImageIcon size={16} />
+                  <span>{room.visualization_images && room.visualization_images.length > 0 ? 'Zobacz wszystkie' : 'Dodaj zdjęcia'}</span>
+                </button>
+              </div>
+
+              {/* Preview Images */}
+              {room.visualization_images && room.visualization_images.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {room.visualization_images.slice(0, 4).map((imageUrl, index) => (
+                    <div
+                      key={index}
+                      className="relative group bg-slate-50 rounded-lg overflow-hidden aspect-square border border-slate-200 hover:border-purple-300 transition-all duration-200 cursor-pointer hover:shadow-md"
+                      onClick={() => setSelectedImageIndex(index)}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`Wizualizacja pokoju ${index + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (errorDiv) errorDiv.style.display = 'flex';
+                        }}
+                      />
+                      
+                      {/* Error fallback */}
+                      <div 
+                        className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-500"
+                        style={{ display: 'none' }}
+                      >
+                        <div className="text-center">
+                          <ImageIcon size={16} className="mx-auto mb-1" />
+                          <p className="text-xs">Błąd</p>
+                        </div>
+                      </div>
+                      
+                      {/* Image counter for the last image if there are more */}
+                      {index === 3 && room.visualization_images && room.visualization_images.length > 4 && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="bg-black/60 backdrop-blur-sm rounded-md px-2 py-1">
+                            <p className="text-white font-semibold text-sm">+{room.visualization_images.length - 4}</p>
+                            <p className="text-white/80 text-xs text-center">więcej</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Empty state */
+                <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-dashed border-purple-200">
+                  <div className="max-w-sm mx-auto">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <ImageIcon size={32} className="text-purple-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-slate-800 mb-2">Brak wizualizacji</h4>
+                    <p className="text-slate-600 mb-4">
+                      Dodaj zdjęcia wizualizacji, aby pokazać jak pokój ma wyglądać lub jak wygląda obecnie.
+                    </p>
+                    {userPermission === 'edit' && (
+                      <button
+                        onClick={() => {
+                          const visualizationsUrl = projectId 
+                            ? `/pokoje/${roomId}/wizualizacje?projectId=${projectId}`
+                            : `/pokoje/${roomId}/wizualizacje`;
+                          router.push(visualizationsUrl);
+                        }}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
+                      >
+                        <Plus size={18} />
+                        <span>Dodaj pierwsze zdjęcie</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
               <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Produkty w pokoju</h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -437,6 +534,15 @@ export default function RoomPage({ params }: RoomPageProps) {
             roomId={roomId}
             roomName={room.name}
             userId={user?.id}
+          />
+        )}
+
+        {/* Image Gallery Modal */}
+        {selectedImageIndex !== null && room.visualization_images && (
+          <ImageGalleryModal
+            images={room.visualization_images}
+            initialIndex={selectedImageIndex}
+            onClose={() => setSelectedImageIndex(null)}
           />
         )}
       </div>
