@@ -235,8 +235,6 @@ export function useAuth() {
 
   const isAuthenticated = !!globalUser;
 
-  console.log('useAuth state:', { user: globalUser, loading: globalLoading, isAuthenticated });
-
   return {
     user: globalUser,
     loading: globalLoading,

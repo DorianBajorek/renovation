@@ -34,6 +34,10 @@ export default function ProjektyPage() {
   });
 
   useEffect(() => {
+    console.log("SIEMAA");
+  }, []);
+
+  useEffect(() => {
     if (user) {
       setLoading(true);
       const includeShared = activeTab === 'shared';

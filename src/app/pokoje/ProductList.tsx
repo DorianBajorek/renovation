@@ -184,7 +184,7 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
   // Calculate scenarios based on actual product prices within groups (same logic as GroupedProductList)
   const calculateScenarios = () => {
     const allGroups = groupProductsByName(products);
-    
+
     let expensiveScenario = totalPurchasedValue;
     let averageScenario = totalPurchasedValue;
     let cheapScenario = totalPurchasedValue;

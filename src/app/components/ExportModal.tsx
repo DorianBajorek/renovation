@@ -174,22 +174,26 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         `Lista produktow projektu - ${convertPolishChars(roomName)}` :
         `Lista produktow - ${convertPolishChars(roomName)}`;
       
-      // Dodaj informację o aktywnych filtrach
+      doc.text(title, 20, 20);
+      
+      let yPos = 30;
+      
+      // Dodaj informację o aktywnych filtrach w osobnej linii
       const activeFilters = [];
       if (selectedShop !== 'all') activeFilters.push(`Sklep: ${selectedShop}`);
       if (selectedStatus !== 'all') activeFilters.push(`Status: ${getStatusText(selectedStatus)}`);
       
       if (activeFilters.length > 0) {
-        title += ` (Filtry: ${activeFilters.join(', ')})`;
+        doc.setFontSize(14);
+        doc.text(`Filtry: ${activeFilters.join(', ')}`, 20, yPos);
+        yPos += 10;
       }
-      
-      doc.text(title, 20, 20);
       
       // Data eksportu
       doc.setFontSize(12);
-      doc.text(`Data eksportu: ${new Date().toLocaleDateString('pl-PL')}`, 20, 30);
+      doc.text(`Data eksportu: ${new Date().toLocaleDateString('pl-PL')}`, 20, yPos);
       
-                   let yPosition = 50;
+                   let yPosition = yPos + 20;
        const startX = 20;
        const colWidths = [35, 20, 12, 20, 20, 20, 35];
        const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj', 'Sklep', 'Opis'];
