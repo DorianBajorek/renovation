@@ -185,7 +185,7 @@ export default function RoomVisualizationsPage({ params }: RoomVisualizationsPag
           <div className="max-w-7xl mx-auto">
             <RoomImagesManager
               roomId={roomId}
-              images={room.visualization_images}
+              images={room.visualization_images || null}
               onImagesUpdate={(images) => {
                 setRoom(prev => prev ? { ...prev, visualization_images: images } : null);
               }}

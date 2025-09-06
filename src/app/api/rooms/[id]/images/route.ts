@@ -200,7 +200,7 @@ export async function DELETE(
     }
 
     // Remove image URL from array
-    const updatedImages = currentImages.filter(img => img !== imageUrl);
+    const updatedImages = currentImages.filter((img: string) => img !== imageUrl);
 
     // Update room with new visualization_images array
     const { data: updatedRoom, error: updateError } = await supabase
