@@ -230,14 +230,15 @@ export default function PokojePage() {
                       e.stopPropagation();
                       if (room.id && confirm('Czy na pewno chcesz usunąć ten pokój? Wszystkie produkty w tym pokoju również zostaną usunięte.')) {
                         try {
-                          const response = await fetch(`/api/rooms/${room.id}`, {
+                          const response = await fetch(`/api/rooms/${room.id}?userId=${user?.id}`, {
                             method: 'DELETE',
                           });
                           
                           if (response.ok) {
                             setRooms(prev => prev.filter(r => r.id !== room.id));
                           } else {
-                            alert('Błąd podczas usuwania pokoju');
+                            const errorData = await response.json();
+                            alert(`Błąd podczas usuwania pokoju: ${errorData.error || 'Nieznany błąd'}`);
                           }
                         } catch (error) {
                           console.error('Error deleting room:', error);

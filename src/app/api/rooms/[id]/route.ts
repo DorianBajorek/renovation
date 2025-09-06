@@ -133,19 +133,81 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const roomId = id;
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
 
   try {
+    // Check permissions - user must be owner of room or project
+    if (userId) {
+      const { data: roomCheck, error: roomError } = await supabase
+        .from('rooms')
+        .select(`
+          user_id,
+          project_id,
+          projects!rooms_project_id_fkey(user_id)
+        `)
+        .eq('id', roomId)
+        .single();
+
+      if (roomError || !roomCheck) {
+        return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      }
+
+      // Check if user is owner of room or project
+      const project = roomCheck.projects as any;
+      if (roomCheck.user_id !== userId && project?.user_id !== userId) {
+        // Check project shares
+        if (roomCheck.project_id) {
+          const { data: share, error: shareError } = await supabase
+            .from('project_shares')
+            .select('permission_type')
+            .eq('project_id', roomCheck.project_id)
+            .eq('shared_with_id', userId)
+            .single();
+
+          if (shareError || !share || share.permission_type !== 'edit') {
+            return NextResponse.json(
+              { error: 'Insufficient permissions to delete this room' },
+              { status: 403 }
+            );
+          }
+        } else {
+          return NextResponse.json(
+            { error: 'Insufficient permissions to delete this room' },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
+    // First, delete all products in this room (backup to CASCADE)
+    const { error: productsError } = await supabase
+      .from('products')
+      .delete()
+      .eq('room_id', roomId);
+
+    if (productsError) {
+      console.error('Error deleting room products:', productsError);
+      return NextResponse.json(
+        { error: 'Failed to delete room products' },
+        { status: 500 }
+      );
+    }
+
+    // Then, delete the room itself
     const { error } = await supabase
       .from('rooms')
       .delete()
       .eq('id', roomId);
 
     if (error) {
+      console.error('Error deleting room:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ message: 'Room deleted successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Room and all its products deleted successfully' }, { status: 200 });
   } catch (error) {
+    console.error('Error deleting room:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

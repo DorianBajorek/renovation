@@ -210,7 +210,63 @@ export async function DELETE(
       );
     }
 
-    // Delete the project from database
+    // First, get all rooms for this project to delete associated products
+    const { data: rooms, error: roomsError } = await supabase
+      .from('rooms')
+      .select('id')
+      .eq('project_id', projectId);
+
+    if (roomsError) {
+      console.error('Error fetching project rooms:', roomsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch project rooms' },
+        { status: 500 }
+      );
+    }
+
+    // Delete all products in all rooms of this project (backup to CASCADE)
+    if (rooms && rooms.length > 0) {
+      const roomIds = rooms.map(room => room.id);
+      const { error: productsError } = await supabase
+        .from('products')
+        .delete()
+        .in('room_id', roomIds);
+
+      if (productsError) {
+        console.error('Error deleting project products:', productsError);
+        return NextResponse.json(
+          { error: 'Failed to delete project products' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Delete all rooms in this project (backup to CASCADE)
+    const { error: roomsDeleteError } = await supabase
+      .from('rooms')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (roomsDeleteError) {
+      console.error('Error deleting project rooms:', roomsDeleteError);
+      return NextResponse.json(
+        { error: 'Failed to delete project rooms' },
+        { status: 500 }
+      );
+    }
+
+    // Delete all project shares for this project (backup to CASCADE)
+    const { error: sharesError } = await supabase
+      .from('project_shares')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (sharesError) {
+      console.error('Error deleting project shares:', sharesError);
+      // Don't fail the entire operation if shares deletion fails
+    }
+
+    // Finally, delete the project itself
     const { error } = await supabase
       .from('projects')
       .delete()
