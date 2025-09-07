@@ -45,7 +45,10 @@ export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGaller
       <div className="relative w-full h-full flex items-center justify-center">
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           className="absolute top-4 right-4 p-2 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 rounded-lg"
         >
           <X size={24} />
@@ -55,16 +58,22 @@ export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGaller
         {images.length > 1 && (
           <>
             <button
-              onClick={goToPrevious}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 rounded-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPrevious();
+              }}
+              className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 p-3 sm:p-2 text-white hover:text-gray-300 transition-colors z-20 bg-black/70 hover:bg-black/90 rounded-lg touch-manipulation min-w-[48px] min-h-[48px] flex items-center justify-center"
             >
-              <ChevronLeft size={32} />
+              <ChevronLeft size={28} className="sm:w-8 sm:h-8" />
             </button>
             <button
-              onClick={goToNext}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 rounded-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNext();
+              }}
+              className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 p-3 sm:p-2 text-white hover:text-gray-300 transition-colors z-20 bg-black/70 hover:bg-black/90 rounded-lg touch-manipulation min-w-[48px] min-h-[48px] flex items-center justify-center"
             >
-              <ChevronRight size={32} />
+              <ChevronRight size={28} className="sm:w-8 sm:h-8" />
             </button>
           </>
         )}
@@ -78,9 +87,9 @@ export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGaller
             onClick={(e) => e.stopPropagation()}
           />
           
-          {/* Image counter */}
+          {/* Image counter - positioned at top on mobile, bottom on desktop */}
           {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-black/70 text-white text-sm rounded-lg">
+            <div className="absolute top-4 left-4 sm:bottom-4 sm:left-1/2 sm:top-auto sm:transform sm:-translate-x-1/2 px-3 py-1 bg-black/70 text-white text-sm rounded-lg z-10">
               {currentIndex + 1} / {images.length}
             </div>
           )}
@@ -88,12 +97,15 @@ export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGaller
 
         {/* Thumbnail navigation - show if more than 1 image */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/70 p-2 rounded-lg max-w-[90vw] overflow-x-auto">
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/70 p-2 rounded-lg max-w-[90vw] overflow-x-auto z-10">
             {images.map((image, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`relative w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={`relative w-12 h-12 sm:w-12 sm:h-12 rounded-md overflow-hidden border-2 transition-all touch-manipulation min-w-[48px] min-h-[48px] flex-shrink-0 ${
                   index === currentIndex 
                     ? 'border-white' 
                     : 'border-transparent hover:border-gray-300'
