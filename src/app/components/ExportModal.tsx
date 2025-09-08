@@ -311,8 +311,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                yPosition = 20;
              }
              
-             // Ramka wokół produktu - zwiększona wysokość dla opisu
-             const productBoxHeight = product.description ? 60 : 50;
+             // Ramka wokół produktu - kompaktowa wysokość
+             const productBoxHeight = product.description ? 45 : 35;
              doc.setDrawColor(220, 220, 220);
              doc.rect(startX, yPosition - 5, 170, productBoxHeight);
              
@@ -321,8 +321,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                try {
                  const imageBase64 = await loadImageAsBase64(product.image_url);
                  if (imageBase64) {
-                   const imageWidth = 35;
-                   const imageHeight = 35;
+                   const imageWidth = 28;
+                   const imageHeight = 28;
                    const imageX = startX + 5;
                    const imageY = yPosition;
                    
@@ -339,7 +339,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              }
              
              // Informacje o produkcie
-             const textStartX = product.image_url ? startX + 45 : startX + 5;
+             const textStartX = product.image_url ? startX + 38 : startX + 5;
              
              // Nazwa produktu
              doc.setFontSize(12);
@@ -353,12 +353,12 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              // Cena i ilość
              doc.setFontSize(10);
              doc.setFont(undefined, 'normal');
-             doc.text(`Cena: ${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`, textStartX, yPosition + 18);
-             doc.text(`Ilosc: ${product.quantity}`, textStartX, yPosition + 28);
+             doc.text(`Cena: ${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`, textStartX, yPosition + 15);
+             doc.text(`Ilosc: ${product.quantity}`, textStartX, yPosition + 20);
              
              // Sklep (jeśli istnieje)
              if (product.shop) {
-               doc.text(`Sklep: ${convertPolishChars(product.shop)}`, textStartX, yPosition + 38);
+               doc.text(`Sklep: ${convertPolishChars(product.shop)}`, textStartX, yPosition + 25);
              }
              
              // Opis (jeśli istnieje)
@@ -369,8 +369,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                const maxDescWidth = 120;
                const truncatedDesc = doc.getTextWidth(description) > maxDescWidth ? 
                  description.substring(0, Math.floor(maxDescWidth / 3)) + '...' : description;
-               // Umieść opis poniżej sklepu lub na pozycji 38 jeśli nie ma sklepu
-               const descY = product.shop ? yPosition + 48 : yPosition + 38;
+               // Umieść opis poniżej sklepu lub na pozycji 25 jeśli nie ma sklepu
+               const descY = product.shop ? yPosition + 33 : yPosition + 25;
                doc.text(`Opis: ${truncatedDesc}`, textStartX, descY);
              }
              
@@ -425,8 +425,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              yPosition = 20;
            }
            
-           // Ramka wokół produktu - zwiększona wysokość dla opisu
-           const productBoxHeight = product.description ? 60 : 50;
+           // Ramka wokół produktu - kompaktowa wysokość
+           const productBoxHeight = product.description ? 45 : 35;
            doc.setDrawColor(220, 220, 220);
            doc.rect(startX, yPosition - 5, 170, productBoxHeight);
            
@@ -435,8 +435,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              try {
                const imageBase64 = await loadImageAsBase64(product.image_url);
                if (imageBase64) {
-                 const imageWidth = 35;
-                 const imageHeight = 35;
+                 const imageWidth = 28;
+                 const imageHeight = 28;
                  const imageX = startX + 5;
                  const imageY = yPosition;
                  
@@ -453,7 +453,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            }
            
            // Informacje o produkcie
-           const textStartX = product.image_url ? startX + 45 : startX + 5;
+           const textStartX = product.image_url ? startX + 38 : startX + 5;
            
            // Nazwa produktu
            doc.setFontSize(12);
@@ -467,12 +467,12 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            // Cena i ilość
            doc.setFontSize(10);
            doc.setFont(undefined, 'normal');
-           doc.text(`Cena: ${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`, textStartX, yPosition + 18);
-           doc.text(`Ilosc: ${product.quantity}`, textStartX, yPosition + 28);
+           doc.text(`Cena: ${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`, textStartX, yPosition + 15);
+           doc.text(`Ilosc: ${product.quantity}`, textStartX, yPosition + 20);
            
            // Sklep (jeśli istnieje)
            if (product.shop) {
-             doc.text(`Sklep: ${convertPolishChars(product.shop)}`, textStartX, yPosition + 38);
+             doc.text(`Sklep: ${convertPolishChars(product.shop)}`, textStartX, yPosition + 25);
            }
            
            // Opis (jeśli istnieje)
@@ -483,8 +483,8 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              const maxDescWidth = 120;
              const truncatedDesc = doc.getTextWidth(description) > maxDescWidth ? 
                description.substring(0, Math.floor(maxDescWidth / 3)) + '...' : description;
-             // Umieść opis poniżej sklepu lub na pozycji 38 jeśli nie ma sklepu
-             const descY = product.shop ? yPosition + 48 : yPosition + 38;
+             // Umieść opis poniżej sklepu lub na pozycji 25 jeśli nie ma sklepu
+             const descY = product.shop ? yPosition + 33 : yPosition + 25;
              doc.text(`Opis: ${truncatedDesc}`, textStartX, descY);
            }
            
