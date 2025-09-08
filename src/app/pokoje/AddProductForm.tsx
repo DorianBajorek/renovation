@@ -75,7 +75,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
     }
   };
 
-  // Function to extract image from URL
+  // Function to extract image and price from URL
   const extractImageFromUrl = async (url: string) => {
     if (!url) return;
     
@@ -91,21 +91,44 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
 
       if (response.ok) {
         const data = await response.json();
+        let successMessage = '';
+        
+        // Handle image extraction
         if (data.image_url) {
           setImageUrl(data.image_url);
           setShowManualInput(false);
-        } else {
+          successMessage += 'Znaleziono obrazek';
+        }
+        
+        // Handle price extraction
+        if (data.price) {
+          const cleanPrice = data.price.replace(/[^\d.,]/g, '').replace(',', '.');
+          const numericPrice = parseFloat(cleanPrice);
+          
+          if (!isNaN(numericPrice) && numericPrice > 0) {
+            setPrice(numericPrice);
+            setPriceText(numericPrice.toFixed(2));
+            successMessage += successMessage ? ' i cenę' : 'Znaleziono cenę';
+            successMessage += ` (${data.price})`;
+          }
+        }
+        
+        // Show success message or handle no results
+        if (successMessage) {
+          alert(`✅ ${successMessage}. Możesz edytować wartości przed zapisaniem.`);
+        } else if (!data.image_url) {
           alert('Nie znaleziono obrazka na tej stronie. Możesz wkleić link ręcznie poniżej.');
           setShowManualInput(true);
         }
+        
       } else {
         const errorData = await response.json();
-        alert(`Błąd podczas pobierania obrazka: ${errorData.error || 'Nieznany błąd'}. Możesz wkleić link ręcznie poniżej.`);
+        alert(`Błąd podczas pobierania danych: ${errorData.error || 'Nieznany błąd'}. Możesz wkleić link ręcznie poniżej.`);
         setShowManualInput(true);
       }
     } catch (error) {
-      console.error('Error extracting image:', error);
-      alert('Wystąpił błąd podczas pobierania obrazka. Sprawdź poprawność linku. Możesz wkleić link ręcznie poniżej.');
+      console.error('Error extracting data:', error);
+      alert('Wystąpił błąd podczas pobierania danych. Sprawdź poprawność linku. Możesz wkleić link ręcznie poniżej.');
       setShowManualInput(true);
     } finally {
       setExtractingImage(false);
@@ -233,7 +256,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span className="text-sm font-medium">Pobierz zdjęcie</span>
+                        <span className="text-sm font-medium">Pobierz zdjęcie i cenę</span>
                       </>
                     )}
                   </button>
