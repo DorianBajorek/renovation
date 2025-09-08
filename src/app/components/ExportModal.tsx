@@ -19,6 +19,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [imageLoadErrors, setImageLoadErrors] = useState<string[]>([]);
   
   // Nowe stany dla filtrowania
   const [selectedShop, setSelectedShop] = useState<string>('all');
@@ -153,6 +154,79 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     }
   };
 
+  // Funkcja do ładowania obrazu jako base64 z obsługą CORS
+  const loadImageAsBase64 = async (imageUrl: string): Promise<string | null> => {
+    try {
+      // Użyj naszego własnego proxy API
+      const proxyUrl = `/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
+      
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) {
+        console.warn(`Failed to load image via proxy: ${response.status}`);
+        return null;
+      }
+      
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => {
+          console.warn('Failed to convert image to base64');
+          resolve(null);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Error loading image via proxy, trying canvas method:', error);
+      
+      // Alternatywna metoda - użyj canvas do konwersji
+      try {
+        return await loadImageViaCanvas(imageUrl);
+      } catch (canvasError) {
+        console.warn('Canvas method also failed:', canvasError);
+        return null;
+      }
+    }
+  };
+
+  // Alternatywna metoda ładowania obrazu przez canvas
+  const loadImageViaCanvas = (imageUrl: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+          
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          
+          const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(dataURL);
+        } catch (error) {
+          console.warn('Canvas conversion failed:', error);
+          resolve(null);
+        }
+      };
+      
+      img.onerror = () => {
+        console.warn('Image failed to load in canvas');
+        resolve(null);
+      };
+      
+      img.src = imageUrl;
+    });
+  };
+
   const exportToPDF = async () => {
     if (selectedProducts.size === 0) {
       alert('Wybierz przynajmniej jeden produkt do eksportu');
@@ -160,6 +234,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     }
 
     setExporting(true);
+    setImageLoadErrors([]);
     try {
       const selectedProductsList = getFilteredProducts().filter(p => p.id && selectedProducts.has(p.id));
       
@@ -195,8 +270,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       
                    let yPosition = yPos + 20;
        const startX = 20;
-       const colWidths = [35, 20, 12, 20, 20, 20, 35];
-       const headers = ['Nazwa', 'Cena', 'Ilosc', 'Wartosc', 'Pokoj', 'Sklep', 'Opis'];
+       // Używamy układu kartowego - nie potrzebujemy kolumn tabeli
       
              if (isProjectExport) {
          // Dla eksportu projektu - pogrupuj produkty według pokoi
@@ -210,7 +284,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
          }, {} as Record<string, typeof selectedProductsList>);
          
          // Eksportuj produkty pogrupowane według pokoi
-         Object.entries(productsByRoom).forEach(([roomName, roomProducts]) => {
+         for (const [roomName, roomProducts] of Object.entries(productsByRoom)) {
            // Sprawdź czy potrzebna jest nowa strona
            if (yPosition > 250) {
              doc.addPage();
@@ -223,63 +297,85 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
             doc.text(`POKÓJ: ${convertPolishChars(roomName)}`, startX, yPosition);
            yPosition += 15;
            
-           // Nagłówki kolumn
-           doc.setFontSize(10);
-           doc.setFont(undefined, 'bold');
-           let currentX = startX;
-           headers.forEach((header, index) => {
-             doc.text(header, currentX, yPosition);
-             currentX += colWidths[index];
-           });
+           // Brak nagłówków tabeli - używamy układu kartowego
            
-           yPosition += 10;
-           
-           // Rysuj linię pod nagłówkami
-           doc.setDrawColor(100, 100, 100);
-           doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-           yPosition += 5;
-           
-           // Dane produktów w pokoju
+           // Dane produktów w pokoju - układ kartowy
            doc.setFont(undefined, 'normal');
-           doc.setFontSize(9);
            
-                       roomProducts.forEach((product, index) => {
-              // Sprawdź czy potrzebna jest nowa strona
-              if (yPosition > 270) {
-                doc.addPage();
-                yPosition = 20;
-              }
+           for (let index = 0; index < roomProducts.length; index++) {
+             const product = roomProducts[index];
              
-             const rowData = [
-               convertPolishChars(product.name),
-               `${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
-               product.quantity.toString(),
-               `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
-               convertPolishChars(product.room_name || '-'),
-               convertPolishChars(product.shop || '-'),
-               convertPolishChars(product.description || '-')
-             ];
-             
-             currentX = startX;
-             rowData.forEach((text, colIndex) => {
-               // Skróć tekst jeśli jest za długi
-               const maxWidth = colWidths[colIndex] - 2;
-               const truncatedText = doc.getTextWidth(text) > maxWidth ? 
-                 text.substring(0, Math.floor(maxWidth / 3)) + '...' : text;
-               
-               doc.text(truncatedText, currentX, yPosition);
-               currentX += colWidths[colIndex];
-             });
-             
-             yPosition += 8;
-             
-             // Dodaj linię co kilka wierszy dla lepszej czytelności
-             if ((index + 1) % 5 === 0) {
-               doc.setDrawColor(200, 200, 200);
-               doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-               yPosition += 3;
+             // Sprawdź czy potrzebna jest nowa strona
+             if (yPosition > 200) {
+               doc.addPage();
+               yPosition = 20;
              }
-           });
+             
+             // Ramka wokół produktu - zwiększona wysokość dla opisu
+             const productBoxHeight = product.description ? 60 : 50;
+             doc.setDrawColor(220, 220, 220);
+             doc.rect(startX, yPosition - 5, 170, productBoxHeight);
+             
+             // Obraz produktu (jeśli istnieje)
+             if (product.image_url) {
+               try {
+                 const imageBase64 = await loadImageAsBase64(product.image_url);
+                 if (imageBase64) {
+                   const imageWidth = 35;
+                   const imageHeight = 35;
+                   const imageX = startX + 5;
+                   const imageY = yPosition;
+                   
+                   doc.addImage(imageBase64, 'JPEG', imageX, imageY, imageWidth, imageHeight);
+                   
+                   // Ramka wokół obrazu
+                   doc.setDrawColor(180, 180, 180);
+                   doc.rect(imageX, imageY, imageWidth, imageHeight);
+                 }
+               } catch (error) {
+                 console.error('Error adding image to PDF:', error);
+                 setImageLoadErrors(prev => [...prev, product.name]);
+               }
+             }
+             
+             // Informacje o produkcie
+             const textStartX = product.image_url ? startX + 45 : startX + 5;
+             
+             // Nazwa produktu
+             doc.setFontSize(12);
+             doc.setFont(undefined, 'bold');
+             const productName = convertPolishChars(product.name);
+             const maxNameWidth = 100;
+             const truncatedName = doc.getTextWidth(productName) > maxNameWidth ? 
+               productName.substring(0, Math.floor(maxNameWidth / 4)) + '...' : productName;
+             doc.text(truncatedName, textStartX, yPosition + 8);
+             
+             // Cena i ilość
+             doc.setFontSize(10);
+             doc.setFont(undefined, 'normal');
+             doc.text(`Cena: ${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`, textStartX, yPosition + 18);
+             doc.text(`Ilosc: ${product.quantity}`, textStartX, yPosition + 28);
+             
+             // Sklep (jeśli istnieje)
+             if (product.shop) {
+               doc.text(`Sklep: ${convertPolishChars(product.shop)}`, textStartX, yPosition + 38);
+             }
+             
+             // Opis (jeśli istnieje)
+             if (product.description) {
+               doc.setFontSize(9);
+               const description = convertPolishChars(product.description);
+               // Skróć opis jeśli jest za długi
+               const maxDescWidth = 120;
+               const truncatedDesc = doc.getTextWidth(description) > maxDescWidth ? 
+                 description.substring(0, Math.floor(maxDescWidth / 3)) + '...' : description;
+               // Umieść opis poniżej sklepu lub na pozycji 38 jeśli nie ma sklepu
+               const descY = product.shop ? yPosition + 48 : yPosition + 38;
+               doc.text(`Opis: ${truncatedDesc}`, textStartX, descY);
+             }
+             
+             yPosition += productBoxHeight + 10;
+           }
            
            // Podsumowanie dla pokoju
            const roomTotal = roomProducts.reduce((sum, product) => sum + (product.price * product.quantity), 0);
@@ -287,7 +383,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            
            // Linia podsumowania
            doc.setDrawColor(200, 200, 200);
-           doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+           doc.line(startX, yPosition, startX + 170, yPosition);
            yPosition += 5;
            
                        // Tekst podsumowania
@@ -304,9 +400,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            
            // Linia oddzielająca pokoje
            doc.setDrawColor(100, 100, 100);
-           doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
+           doc.line(startX, yPosition, startX + 170, yPosition);
            yPosition += 10;
-         });
+         }
                     } else {
          // Dla eksportu pokoi - standardowy format
          // Nagłówek sekcji
@@ -315,63 +411,85 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
          doc.text(`LISTA PRODUKTÓW - ${convertPolishChars(roomName)}`, startX, yPosition);
          yPosition += 10;
          
-         // Nagłówki kolumn
-         doc.setFontSize(10);
-         doc.setFont(undefined, 'bold');
-         let currentX = startX;
-         headers.forEach((header, index) => {
-           doc.text(header, currentX, yPosition);
-           currentX += colWidths[index];
-         });
+         // Brak nagłówków tabeli - używamy układu kartowego
          
-         yPosition += 10;
-         
-         // Rysuj linię pod nagłówkami
-         doc.setDrawColor(100, 100, 100);
-         doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-         yPosition += 5;
-         
-         // Dane produktów
+         // Dane produktów - układ kartowy
          doc.setFont(undefined, 'normal');
-         doc.setFontSize(9);
          
-                   selectedProductsList.forEach((product, index) => {
-            // Sprawdź czy potrzebna jest nowa strona
-            if (yPosition > 270) {
-              doc.addPage();
-              yPosition = 20;
-            }
+         for (let index = 0; index < selectedProductsList.length; index++) {
+           const product = selectedProductsList[index];
            
-           const rowData = [
-             convertPolishChars(product.name),
-             `${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
-             product.quantity.toString(),
-             `${(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
-             convertPolishChars(product.room_name || '-'),
-             convertPolishChars(product.shop || '-'),
-             convertPolishChars(product.description || '-')
-           ];
-           
-           currentX = startX;
-           rowData.forEach((text, colIndex) => {
-             // Skróć tekst jeśli jest za długi
-             const maxWidth = colWidths[colIndex] - 2;
-             const truncatedText = doc.getTextWidth(text) > maxWidth ? 
-               text.substring(0, Math.floor(maxWidth / 3)) + '...' : text;
-             
-             doc.text(truncatedText, currentX, yPosition);
-             currentX += colWidths[colIndex];
-           });
-           
-           yPosition += 8;
-           
-           // Dodaj linię co kilka wierszy dla lepszej czytelności
-           if ((index + 1) % 5 === 0) {
-             doc.setDrawColor(200, 200, 200);
-             doc.line(startX, yPosition, startX + colWidths.reduce((a, b) => a + b, 0), yPosition);
-             yPosition += 3;
+           // Sprawdź czy potrzebna jest nowa strona
+           if (yPosition > 200) {
+             doc.addPage();
+             yPosition = 20;
            }
-         });
+           
+           // Ramka wokół produktu - zwiększona wysokość dla opisu
+           const productBoxHeight = product.description ? 60 : 50;
+           doc.setDrawColor(220, 220, 220);
+           doc.rect(startX, yPosition - 5, 170, productBoxHeight);
+           
+           // Obraz produktu (jeśli istnieje)
+           if (product.image_url) {
+             try {
+               const imageBase64 = await loadImageAsBase64(product.image_url);
+               if (imageBase64) {
+                 const imageWidth = 35;
+                 const imageHeight = 35;
+                 const imageX = startX + 5;
+                 const imageY = yPosition;
+                 
+                 doc.addImage(imageBase64, 'JPEG', imageX, imageY, imageWidth, imageHeight);
+                 
+                 // Ramka wokół obrazu
+                 doc.setDrawColor(180, 180, 180);
+                 doc.rect(imageX, imageY, imageWidth, imageHeight);
+               }
+             } catch (error) {
+               console.error('Error adding image to PDF:', error);
+               setImageLoadErrors(prev => [...prev, product.name]);
+             }
+           }
+           
+           // Informacje o produkcie
+           const textStartX = product.image_url ? startX + 45 : startX + 5;
+           
+           // Nazwa produktu
+           doc.setFontSize(12);
+           doc.setFont(undefined, 'bold');
+           const productName = convertPolishChars(product.name);
+           const maxNameWidth = 100;
+           const truncatedName = doc.getTextWidth(productName) > maxNameWidth ? 
+             productName.substring(0, Math.floor(maxNameWidth / 4)) + '...' : productName;
+           doc.text(truncatedName, textStartX, yPosition + 8);
+           
+           // Cena i ilość
+           doc.setFontSize(10);
+           doc.setFont(undefined, 'normal');
+           doc.text(`Cena: ${product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`, textStartX, yPosition + 18);
+           doc.text(`Ilosc: ${product.quantity}`, textStartX, yPosition + 28);
+           
+           // Sklep (jeśli istnieje)
+           if (product.shop) {
+             doc.text(`Sklep: ${convertPolishChars(product.shop)}`, textStartX, yPosition + 38);
+           }
+           
+           // Opis (jeśli istnieje)
+           if (product.description) {
+             doc.setFontSize(9);
+             const description = convertPolishChars(product.description);
+             // Skróć opis jeśli jest za długi
+             const maxDescWidth = 120;
+             const truncatedDesc = doc.getTextWidth(description) > maxDescWidth ? 
+               description.substring(0, Math.floor(maxDescWidth / 3)) + '...' : description;
+             // Umieść opis poniżej sklepu lub na pozycji 38 jeśli nie ma sklepu
+             const descY = product.shop ? yPosition + 48 : yPosition + 38;
+             doc.text(`Opis: ${truncatedDesc}`, textStartX, descY);
+           }
+           
+           yPosition += productBoxHeight + 10;
+         }
       }
       
                      // Podsumowanie
@@ -409,6 +527,11 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
          fileName = fileName.replace('.pdf', `-${filterSuffix.join('-')}.pdf`);
        }
        doc.save(fileName);
+      
+      // Pokaż informację o błędach ładowania obrazów
+      if (imageLoadErrors.length > 0) {
+        alert(`PDF został wygenerowany, ale nie udało się załadować obrazów dla produktów: ${imageLoadErrors.join(', ')}. To może być spowodowane ograniczeniami CORS.`);
+      }
       
       onClose();
     } catch (error) {
