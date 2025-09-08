@@ -69,6 +69,33 @@ const STORE_SELECTORS = {
     ],
     regex: /(\d{1,3}(?:[,\s]\d{3})*(?:[,\.-]\d{0,2})?)\s*(?:zł|PLN|€|EUR|\$|USD|,-)?/i
   },
+  'bodziomeble': {
+    selectors: [
+      '#version_PRICE',
+      '.product-data--price .text-danger',
+      '.product-data--price span',
+      '.product-data--price',
+      '[itemprop="price"]',
+      'meta[itemprop="price"]'
+    ],
+    regex: /(\d{1,3}(?:[,\s]\d{3})*(?:[,\.-]\d{0,2})?)\s*(?:zł|PLN|€|EUR|\$|USD|,-)?/i
+  },
+  'obi': {
+    selectors: [
+      '[data-ui-name="ads.price.strong"]',
+      'span[data-ui-name*="price"]',
+      '.font-obi-bold span',
+      '.font-obi-bold',
+      '.font-xl span',
+      '.font-xl',
+      '[data-ui-name*="price"]',
+      '.d-flex span',
+      '.justify-content-end span',
+      '[itemprop="priceCurrency"]',
+      'meta[itemprop="priceCurrency"]'
+    ],
+    regex: /(\d{1,3}(?:[,\s]\d{3})*(?:[,\.-]\d{0,2})?)\s*(?:zł|PLN|€|EUR|\$|USD|,-)?/i
+  },
   'default': {
     selectors: [
       '[class*="price"]',
@@ -113,6 +140,14 @@ function detectStore(url: string): string {
     if (hostname.includes('agatameble') || hostname.includes('agata')) {
       console.log('Detected store: agatameble');
       return 'agatameble';
+    }
+    if (hostname.includes('bodziomeble') || hostname.includes('bodzio')) {
+      console.log('Detected store: bodziomeble');
+      return 'bodziomeble';
+    }
+    if (hostname.includes('obi') || hostname.includes('obi.pl')) {
+      console.log('Detected store: obi');
+      return 'obi';
     }
     
     console.log('Using default store configuration');
@@ -211,6 +246,56 @@ function extractPrice(html: string, storeType: string): string | null {
     
     // Enhanced fallback: search for common price patterns in HTML
     console.log('Trying enhanced fallback price detection...');
+    
+    // Special case for Bodzio Meble meta itemprop="price"
+    if (storeType === 'bodziomeble') {
+      const metaPricePattern = /<meta[^>]*itemprop[^>]*=["']price["'][^>]*content[^>]*=["']([^"']+)["'][^>]*>/gi;
+      const metaMatches = html.match(metaPricePattern);
+      
+      if (metaMatches) {
+        for (const match of metaMatches) {
+          const contentMatch = match.match(/content[^>]*=["']([^"']+)["']/i);
+          if (contentMatch && contentMatch[1]) {
+            const foundPrice = contentMatch[1];
+            const numValue = parseFloat(foundPrice);
+            if (numValue > 0 && numValue < 1000000) {
+              console.log(`Bodziomeble meta price found: ${foundPrice}`);
+              return foundPrice;
+            }
+          }
+        }
+      }
+    }
+    
+    // Special case for OBI data-ui-name="ads.price.strong"
+    if (storeType === 'obi') {
+      const obiPricePattern = /<span[^>]*data-ui-name[^>]*=["'][^"']*ads\.price\.strong[^"']*["'][^>]*>([^<]+)<\/span>/gi;
+      const obiMatches = html.match(obiPricePattern);
+      
+      if (obiMatches) {
+        for (const match of obiMatches) {
+          let textContent = match.replace(/<[^>]*>/g, '').trim();
+          textContent = textContent
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          console.log(`OBI fallback - extracted text: "${textContent}"`);
+          
+          // Try to extract just the number
+          const numberMatch = textContent.match(/^(\d+(?:[,\.]\d{2})?)/);
+          if (numberMatch && numberMatch[1]) {
+            const foundPrice = numberMatch[1];
+            const numValue = parseFloat(foundPrice.replace(',', '.'));
+            if (numValue > 0 && numValue < 1000000) {
+              console.log(`OBI fallback - price found: ${foundPrice}`);
+              return foundPrice;
+            }
+          }
+        }
+      }
+    }
     
     // Special case for Castorama data-testid="product-price"
     if (storeType === 'castorama') {
