@@ -516,10 +516,10 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                             e.stopPropagation();
                             product.link && copyToClipboard(product.link);
                           }}
-                          className="p-1 hover:bg-blue-200 rounded transition-colors"
+                          className="p-2 hover:bg-blue-200 rounded transition-colors"
                           title="Kopiuj link"
                         >
-                          <Copy size={12} className="text-blue-600" />
+                          <Copy size={16} className="text-blue-600" />
                         </button>
                       </div>
                     </div>
@@ -553,19 +553,19 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                     {onEdit && (
                       <button
                         onClick={() => onEdit(product)}
-                        className="p-2 sm:p-3 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                         title="Edytuj produkt"
                       >
-                        <Edit size={16} className="sm:w-5 sm:h-5" />
+                        <Edit size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                     {onDelete && (
                       <button
                         onClick={() => onDelete(product.id!)}
-                        className="p-2 sm:p-3 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                         title="Usuń produkt"
                       >
-                        <Trash2 size={16} className="sm:w-5 sm:h-5" />
+                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                   </div>

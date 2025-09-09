@@ -825,10 +825,10 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                                       e.stopPropagation();
                                       product.link && copyToClipboard(product.link);
                                     }}
-                                    className="p-1 hover:bg-blue-200 rounded transition-colors"
+                                    className="p-2 hover:bg-blue-200 rounded transition-colors"
                                     title="Kopiuj link"
                                   >
-                                    <Copy size={12} className="text-blue-600" />
+                                    <Copy size={16} className="text-blue-600" />
                                   </button>
                                 </div>
                               )}
