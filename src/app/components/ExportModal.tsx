@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Product } from '../types/product';
-import { X, Download, Check, Square, Filter } from 'lucide-react';
+import { X, Download, Check, Square, Filter, Copy, ExternalLink } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 interface ExportModalProps {
@@ -563,6 +563,17 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     }
   };
 
+  // Funkcja do kopiowania linku do schowka
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Można dodać toast notification tutaj
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+
 
 
   // Funkcja do dodawania brandingu aplikacji
@@ -801,11 +812,25 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.description}</p>
                               )}
                               {product.link && (
-                                <p className="text-xs sm:text-sm text-blue-600 mt-1 break-all">
-                                  <a href={product.link} target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">
-                                    Link do produktu: {product.link}
-                                  </a>
-                                </p>
+                                <div 
+                                  className="flex items-center gap-2 mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                                  onClick={() => product.link && window.open(product.link, '_blank', 'noopener,noreferrer')}
+                                >
+                                  <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
+                                  <span className="text-xs sm:text-sm text-blue-600 flex-1 font-medium">
+                                    Link do produktu
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      product.link && copyToClipboard(product.link);
+                                    }}
+                                    className="p-1 hover:bg-blue-200 rounded transition-colors"
+                                    title="Kopiuj link"
+                                  >
+                                    <Copy size={12} className="text-blue-600" />
+                                  </button>
+                                </div>
                               )}
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
                                 <span className="bg-blue-50 px-2 py-1 rounded">Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>

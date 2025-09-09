@@ -1,6 +1,6 @@
 "use client";
 import { Product } from "../types/product";
-import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, TrendingUp, Minus, TrendingDown, Search, X } from "lucide-react";
+import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, TrendingUp, Minus, TrendingDown, Search, X, Copy, ExternalLink } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ImageModal } from "../../components/ImageModal";
 
@@ -71,6 +71,17 @@ const getStatusColor = (status: string) => {
       return 'bg-slate-100 text-slate-700';
   }
 };
+
+// Funkcja do kopiowania linku do schowka
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    // Można dodać toast notification tutaj
+  } catch (err) {
+    console.error('Failed to copy text: ', err);
+  }
+};
+
 
 interface ProductGroup {
   name: string;
@@ -491,18 +502,25 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                   
                   {/* Product Link */}
                   {product.link && (
-                    <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div 
+                      className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                      onClick={() => product.link && window.open(product.link, '_blank', 'noopener,noreferrer')}
+                    >
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-blue-700">Link do produktu:</span>
-                        <a
-                          href={product.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
-                          onClick={(e) => e.stopPropagation()}
+                        <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
+                        <span className="text-sm font-medium text-blue-700 flex-1">
+                          Link do produktu
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            product.link && copyToClipboard(product.link);
+                          }}
+                          className="p-1 hover:bg-blue-200 rounded transition-colors"
+                          title="Kopiuj link"
                         >
-                          {product.link}
-                        </a>
+                          <Copy size={12} className="text-blue-600" />
+                        </button>
                       </div>
                     </div>
                   )}
