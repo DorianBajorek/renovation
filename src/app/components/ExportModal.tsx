@@ -266,7 +266,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       
       // Data eksportu
       doc.setFontSize(12);
-      doc.text(`Data eksportu: ${new Date().toLocaleDateString('pl-PL')}`, 20, yPos);
+      doc.text(`Data eksportu: ${new Date().toLocaleString('pl-PL')}`, 20, yPos);
       
                    let yPosition = yPos + 20;
        const startX = 20;
@@ -284,17 +284,19 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
          }, {} as Record<string, typeof selectedProductsList>);
          
          // Eksportuj produkty pogrupowane według pokoi
+         let isFirstRoom = true;
          for (const [roomName, roomProducts] of Object.entries(productsByRoom)) {
-           // Sprawdź czy potrzebna jest nowa strona
-           if (yPosition > 250) {
+           // Każdy pokój (oprócz pierwszego) zaczyna się na nowej stronie
+           if (!isFirstRoom) {
              doc.addPage();
              yPosition = 20;
            }
+           isFirstRoom = false;
            
-                       // Nagłówek pokoju
-            doc.setFontSize(16);
-            doc.setFont(undefined, 'bold');
-            doc.text(`POKÓJ: ${convertPolishChars(roomName)}`, startX, yPosition);
+           // Nagłówek pokoju
+           doc.setFontSize(16);
+           doc.setFont(undefined, 'bold');
+           doc.text(`POKÓJ: ${convertPolishChars(roomName)}`, startX, yPosition);
            yPosition += 15;
            
            // Brak nagłówków tabeli - używamy układu kartowego
@@ -305,10 +307,15 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            for (let index = 0; index < roomProducts.length; index++) {
              const product = roomProducts[index];
              
-             // Sprawdź czy potrzebna jest nowa strona
-             if (yPosition > 200) {
+             // Sprawdź czy potrzebna jest nowa strona dla produktu
+             if (yPosition > 220) {
                doc.addPage();
                yPosition = 20;
+               // Dodaj ponownie nagłówek pokoju na nowej stronie
+               doc.setFontSize(16);
+               doc.setFont(undefined, 'bold');
+               doc.text(`POKÓJ: ${convertPolishChars(roomName)} (cd.)`, startX, yPosition);
+               yPosition += 15;
              }
              
              // Ramka wokół produktu - kompaktowa wysokość
