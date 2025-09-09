@@ -243,6 +243,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       // Dodaj obsługę polskich znaków - użyj fontu z obsługą UTF-8
       doc.setFont('helvetica');
       
+      // Branding aplikacji w prawym górnym rogu
+      addAppBranding(doc);
+      
       // Tytuł
       doc.setFontSize(20);
       let title = isProjectExport ? 
@@ -289,6 +292,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            // Każdy pokój (oprócz pierwszego) zaczyna się na nowej stronie
            if (!isFirstRoom) {
              doc.addPage();
+             addAppBranding(doc);
              yPosition = 20;
            }
            isFirstRoom = false;
@@ -310,6 +314,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              // Sprawdź czy potrzebna jest nowa strona dla produktu
              if (yPosition > 220) {
                doc.addPage();
+               addAppBranding(doc);
                yPosition = 20;
                // Dodaj ponownie nagłówek pokoju na nowej stronie
                doc.setFontSize(16);
@@ -429,6 +434,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            // Sprawdź czy potrzebna jest nowa strona
            if (yPosition > 200) {
              doc.addPage();
+             addAppBranding(doc);
              yPosition = 20;
            }
            
@@ -558,6 +564,18 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
   };
 
 
+
+  // Funkcja do dodawania brandingu aplikacji
+  const addAppBranding = (doc: jsPDF) => {
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text('Remotrack', 170, 15);
+    
+    // Reset koloru i fontu
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+  };
 
   // Funkcja do konwersji polskich znaków na ASCII
   const convertPolishChars = (text: string): string => {
