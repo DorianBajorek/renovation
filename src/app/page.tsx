@@ -373,7 +373,7 @@ export default function Home() {
               ></motion.div>
               <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
                 <iframe
-                  src="https://www.youtube.com/embed/2VtMc5iaPdY"
+                  src="https://www.youtube.com/embed/17YtBq5rFps"
                   title="Demonstracja aplikacji do zarządzania remontem"
                   className="w-full h-full"
                   frameBorder="0"
