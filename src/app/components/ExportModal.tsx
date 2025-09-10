@@ -581,7 +581,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(100, 100, 100);
-    doc.text('Remotrack', 170, 15);
+    doc.text('PlanRemontu', 170, 15);
     
     // Reset koloru i fontu
     doc.setTextColor(0, 0, 0);

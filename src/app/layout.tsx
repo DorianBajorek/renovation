@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Remotrack",
+  title: "PlanRemontu",
   description: "Kontroluj koszty swojego remontu",
   icons: {
     icon: '/favicon.svg',

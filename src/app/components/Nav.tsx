@@ -41,7 +41,7 @@ export default function Nav() {
     return (
       <header className="relative w-full flex justify-between items-center p-6 border-b border-gray-200 bg-white shadow-sm">
         <div className="text-2xl font-bold text-black flex items-center gap-2">
-          🏡 Remotrack
+          🏡 PlanRemontu
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-medium">
           <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
@@ -54,7 +54,7 @@ export default function Nav() {
     <header className="relative w-full flex justify-between items-center p-6 border-b border-gray-200 bg-white shadow-sm">
       {/* Logo jako link do strony głównej */}
       <Link href="/" className="text-2xl font-bold text-black flex items-center gap-2">
-        🏡 Remotrack
+        🏡 PlanRemontu
       </Link>
       
       {/* Desktop Navigation */}
