@@ -1,5 +1,6 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, X, Camera, ExternalLink, Image as ImageIcon, Upload, Link } from "lucide-react";
 import { ImageGalleryModal } from "@/components/ImageGalleryModal";
@@ -25,7 +26,26 @@ export const RoomImagesManager = ({
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('url');
   const [loading, setLoading] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Block scrolling when modal is open
+  useEffect(() => {
+    if (showAddForm || loading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function to restore scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddForm, loading]);
 
   const handleAddImageFromUrl = async () => {
     if (!newImageUrl.trim() || !user) return;
@@ -313,21 +333,25 @@ export const RoomImagesManager = ({
       )}
 
       {/* Add Image Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/40 w-full max-w-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold text-slate-900">Dodaj zdjęcie wizualizacji</h4>
-              <button
-                onClick={resetForm}
-                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <X size={20} className="text-slate-500" />
-              </button>
+      {showAddForm && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+            <div className="flex-shrink-0 p-6 pb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold text-slate-900">Dodaj zdjęcie wizualizacji</h4>
+                <button
+                  onClick={resetForm}
+                  className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X size={20} className="text-slate-500" />
+                </button>
+              </div>
             </div>
 
-            {/* Upload Method Tabs */}
-            <div className="flex bg-slate-100 rounded-xl p-1 mb-6">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-6">
+              {/* Upload Method Tabs */}
+              <div className="flex bg-slate-100 rounded-xl p-1 mb-6">
               <button
                 type="button"
                 onClick={() => setUploadMethod('url')}
@@ -354,7 +378,7 @@ export const RoomImagesManager = ({
               </button>
             </div>
 
-            <form onSubmit={handleAddImage} className="space-y-4">
+            <form id="add-image-form" onSubmit={handleAddImage} className="space-y-4">
               {uploadMethod === 'url' ? (
                 /* URL Input */
                 <div>
@@ -411,7 +435,7 @@ export const RoomImagesManager = ({
                 (uploadMethod === 'file' && filePreview)) && (
                 <div className="bg-slate-50 rounded-xl p-4">
                   <p className="text-sm text-slate-600 mb-2">Podgląd:</p>
-                  <div className="relative aspect-video bg-white rounded-lg overflow-hidden border border-slate-200">
+                  <div className="relative aspect-video max-h-48 bg-white rounded-lg overflow-hidden border border-slate-200">
                     <img
                       src={uploadMethod === 'url' ? newImageUrl : filePreview || ''}
                       alt="Podgląd zdjęcia"
@@ -439,7 +463,11 @@ export const RoomImagesManager = ({
                   )}
                 </div>
               )}
+            </form>
+            </div>
 
+            {/* Fixed Bottom Buttons */}
+            <div className="flex-shrink-0 p-6 pt-4 border-t border-slate-200">
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -451,6 +479,7 @@ export const RoomImagesManager = ({
                 </button>
                 <button
                   type="submit"
+                  form="add-image-form"
                   className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
                   disabled={
                     loading || 
@@ -464,9 +493,10 @@ export const RoomImagesManager = ({
                   }
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Image Gallery Modal */}
@@ -479,15 +509,16 @@ export const RoomImagesManager = ({
       )}
 
       {/* Loading overlay */}
-      {loading && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40">
+      {loading && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[9998]">
           <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/40">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
               <p className="text-slate-700">Przetwarzanie...</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

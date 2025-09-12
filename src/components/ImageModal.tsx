@@ -1,4 +1,6 @@
 "use client";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface ImageModalProps {
@@ -9,9 +11,28 @@ interface ImageModalProps {
 }
 
 export const ImageModal = ({ isOpen, onClose, imageUrl, alt }: ImageModalProps) => {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Block scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={onClose}
@@ -33,6 +54,7 @@ export const ImageModal = ({ isOpen, onClose, imageUrl, alt }: ImageModalProps) 
           onClick={(e) => e.stopPropagation()}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ImageGalleryModalProps {
@@ -10,6 +11,20 @@ interface ImageGalleryModalProps {
 
 export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGalleryModalProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Block scrolling when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -35,11 +50,11 @@ export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGaller
     setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
   };
 
-  if (images.length === 0) return null;
+  if (images.length === 0 || !mounted) return null;
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
       onClick={onClose}
     >
       <div className="relative w-full h-full flex items-center justify-center">
@@ -121,6 +136,7 @@ export const ImageGalleryModal = ({ images, initialIndex, onClose }: ImageGaller
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
