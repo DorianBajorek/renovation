@@ -2,8 +2,9 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, X, Camera, ExternalLink, Image as ImageIcon, Upload, Link } from "lucide-react";
+import { Plus, X, Camera, ExternalLink, Image as ImageIcon, Upload, Link, Trash2 } from "lucide-react";
 import { ImageGalleryModal } from "@/components/ImageGalleryModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 interface RoomImagesManagerProps {
   roomId: string;
@@ -27,6 +28,15 @@ export const RoomImagesManager = ({
   const [loading, setLoading] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; imageUrl: string }>({
+    isOpen: false,
+    imageUrl: ''
+  });
+  const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -47,12 +57,16 @@ export const RoomImagesManager = ({
     };
   }, [showAddForm, loading]);
 
+  const showError = (title: string, message: string) => {
+    setErrorModal({ isOpen: true, title, message });
+  };
+
   const handleAddImageFromUrl = async () => {
     if (!newImageUrl.trim() || !user) return;
 
     // Validate JPG format
     if (!newImageUrl.match(/\.(jpg|jpeg)(\?.*)?$/i)) {
-      alert('Tylko pliki JPG są obsługiwane');
+      showError('Nieprawidłowy format', 'Tylko pliki JPG są obsługiwane');
       return;
     }
 
@@ -80,7 +94,7 @@ export const RoomImagesManager = ({
       resetForm();
     } catch (error) {
       console.error('Error adding image:', error);
-      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas dodawania zdjęcia');
+      showError('Błąd dodawania zdjęcia', error instanceof Error ? error.message : 'Wystąpił błąd podczas dodawania zdjęcia');
     } finally {
       setLoading(false);
     }
@@ -111,7 +125,7 @@ export const RoomImagesManager = ({
       resetForm();
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas uploadu zdjęcia');
+      showError('Błąd uploadu zdjęcia', error instanceof Error ? error.message : 'Wystąpił błąd podczas uploadu zdjęcia');
     } finally {
       setLoading(false);
     }
@@ -142,7 +156,7 @@ export const RoomImagesManager = ({
 
     // Validate file type
     if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/jpg')) {
-      alert('Tylko pliki JPG są obsługiwane');
+      showError('Nieprawidłowy format', 'Tylko pliki JPG są obsługiwane');
       event.target.value = '';
       return;
     }
@@ -150,7 +164,7 @@ export const RoomImagesManager = ({
     // Validate file size (5MB)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert('Rozmiar pliku musi być mniejszy niż 5MB');
+      showError('Plik za duży', 'Rozmiar pliku musi być mniejszy niż 5MB');
       event.target.value = '';
       return;
     }
@@ -173,14 +187,14 @@ export const RoomImagesManager = ({
       
       // Validate file type
       if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/jpg')) {
-        alert('Tylko pliki JPG są obsługiwane');
+        showError('Nieprawidłowy format', 'Tylko pliki JPG są obsługiwane');
         return;
       }
 
       // Validate file size (5MB)
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert('Rozmiar pliku musi być mniejszy niż 5MB');
+        showError('Plik za duży', 'Rozmiar pliku musi być mniejszy niż 5MB');
         return;
       }
 
@@ -200,33 +214,36 @@ export const RoomImagesManager = ({
     e.preventDefault();
   };
 
-  const handleRemoveImage = async (imageUrl: string) => {
-    if (!user) return;
+  const handleRemoveImage = (imageUrl: string) => {
+    setDeleteModal({ isOpen: true, imageUrl });
+  };
 
-    if (confirm('Czy na pewno chcesz usunąć to zdjęcie?')) {
-      try {
-        setLoading(true);
-        
-        const response = await fetch(
-          `/api/rooms/${roomId}/images?imageUrl=${encodeURIComponent(imageUrl)}&userId=${user.id}`,
-          {
-            method: 'DELETE',
-          }
-        );
+  const confirmDeleteImage = async () => {
+    if (!user || !deleteModal.imageUrl) return;
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Błąd podczas usuwania zdjęcia');
+    try {
+      setLoading(true);
+      
+      const response = await fetch(
+        `/api/rooms/${roomId}/images?imageUrl=${encodeURIComponent(deleteModal.imageUrl)}&userId=${user.id}`,
+        {
+          method: 'DELETE',
         }
+      );
 
-        const data = await response.json();
-        onImagesUpdate(data.room.visualization_images || []);
-      } catch (error) {
-        console.error('Error removing image:', error);
-        alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas usuwania zdjęcia');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Błąd podczas usuwania zdjęcia');
       }
+
+      const data = await response.json();
+      onImagesUpdate(data.room.visualization_images || []);
+    } catch (error) {
+      console.error('Error removing image:', error);
+      showError('Błąd usuwania zdjęcia', error instanceof Error ? error.message : 'Wystąpił błąd podczas usuwania zdjęcia');
+    } finally {
+      setLoading(false);
+      setDeleteModal({ isOpen: false, imageUrl: '' });
     }
   };
 
@@ -310,10 +327,10 @@ export const RoomImagesManager = ({
                       handleRemoveImage(imageUrl);
                     }}
                     className="p-1.5 bg-red-500/90 backdrop-blur-sm rounded-lg hover:bg-red-500 transition-colors shadow-sm"
-                    title="Usuń"
+                    title="Usuń zdjęcie"
                     disabled={loading}
                   >
-                    <X size={14} className="text-white" />
+                    <Trash2 size={14} className="text-white" />
                   </button>
                 )}
               </div>
@@ -520,6 +537,30 @@ export const RoomImagesManager = ({
         </div>,
         document.body
       )}
+
+      {/* Delete Image Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, imageUrl: '' })}
+        onConfirm={confirmDeleteImage}
+        title="Usuń zdjęcie"
+        message="Czy na pewno chcesz usunąć to zdjęcie wizualizacji? Ta operacja jest nieodwracalna."
+        confirmText="Usuń zdjęcie"
+        cancelText="Anuluj"
+        type="danger"
+      />
+
+      {/* Error Modal */}
+      <ConfirmationModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+        onConfirm={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+        title={errorModal.title}
+        message={errorModal.message}
+        confirmText="OK"
+        cancelText=""
+        type="warning"
+      />
     </div>
   );
 };
