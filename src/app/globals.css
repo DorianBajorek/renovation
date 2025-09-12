@@ -201,3 +201,32 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Cursor pointer for interactive elements */
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+.cursor-pointer,
+a[href],
+summary,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+select,
+label[for] {
+  cursor: pointer;
+}
+
+/* Disabled states should not have pointer cursor */
+button:disabled,
+[role="button"][disabled],
+[type="button"]:disabled,
+[type="submit"]:disabled,
+[type="reset"]:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
