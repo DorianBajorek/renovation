@@ -22,6 +22,7 @@ export default function ProjektyPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [sharingProject, setSharingProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingProject, setDeletingProject] = useState(false);
   const [activeTab, setActiveTab] = useState<'own' | 'shared'>('own');
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -117,6 +118,8 @@ export default function ProjektyPage() {
     if (!deleteModal.projectId || !user) return;
 
     try {
+      setDeletingProject(true);
+      document.body.style.overflow = 'hidden';
       const response = await fetch(`/api/projects/${deleteModal.projectId}?userId=${user.id}`, {
         method: 'DELETE',
       });
@@ -126,11 +129,15 @@ export default function ProjektyPage() {
         setProjects(prevProjects => 
           prevProjects.filter(project => project.id !== deleteModal.projectId)
         );
+        setDeleteModal({ isOpen: false, projectId: null, projectName: '' });
       } else {
         console.error('Failed to delete project');
       }
     } catch (error) {
       console.error('Error deleting project:', error);
+    } finally {
+      setDeletingProject(false);
+      document.body.style.overflow = 'unset';
     }
   };
 
@@ -471,6 +478,18 @@ export default function ProjektyPage() {
           projectId={sharingProject.id!}
           projectName={sharingProject.name}
         />
+      )}
+
+      {/* Delete Project Loading Overlay */}
+      {deletingProject && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/40">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              <p className="text-slate-700">Usuwanie projektu...</p>
+            </div>
+          </div>
+        </div>
       )}
 
       </div>
