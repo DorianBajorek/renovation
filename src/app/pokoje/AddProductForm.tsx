@@ -113,22 +113,18 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
           }
         }
         
-        // Show success message or handle no results
-        if (successMessage) {
-          alert(`✅ ${successMessage}. Możesz edytować wartości przed zapisaniem.`);
-        } else if (!data.image_url) {
-          alert('Nie znaleziono obrazka na tej stronie. Możesz wkleić link ręcznie poniżej.');
+        // Handle no results silently
+        if (!successMessage && !data.image_url) {
           setShowManualInput(true);
         }
         
       } else {
         const errorData = await response.json();
-        alert(`Błąd podczas pobierania danych: ${errorData.error || 'Nieznany błąd'}. Możesz wkleić link ręcznie poniżej.`);
+        console.error('Error extracting data:', errorData.error || 'Unknown error');
         setShowManualInput(true);
       }
     } catch (error) {
       console.error('Error extracting data:', error);
-      alert('Wystąpił błąd podczas pobierania danych. Sprawdź poprawność linku. Możesz wkleić link ręcznie poniżej.');
       setShowManualInput(true);
     } finally {
       setExtractingImage(false);
