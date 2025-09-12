@@ -65,6 +65,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
     image_url: product.image_url || "",
   });
   const [priceText, setPriceText] = useState(product.price > 0 ? product.price.toFixed(2) : "");
+  const [quantityText, setQuantityText] = useState(product.quantity.toString());
   const [loading, setLoading] = useState(false);
   const [extractingImage, setExtractingImage] = useState(false);
   const [manualImageUrl, setManualImageUrl] = useState<string>("");
@@ -83,6 +84,7 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
       image_url: product.image_url || "",
     });
     setPriceText(product.price > 0 ? product.price.toFixed(2) : "");
+    setQuantityText(product.quantity.toString());
     setShowManualInput(false);
     setManualImageUrl("");
   }, [product]);
@@ -440,8 +442,25 @@ export const EditProductForm = ({ product, onUpdate, onClose }: EditProductFormP
                   <input
                     type="number"
                     placeholder="1"
-                    value={formData.quantity}
-                    onChange={e => handleInputChange("quantity", Number(e.target.value))}
+                    value={quantityText}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setQuantityText(value);
+                      // Convert to number only if not empty, otherwise keep current quantity
+                      if (value.trim() !== "") {
+                        const numValue = Number(value);
+                        if (!isNaN(numValue) && numValue > 0) {
+                          handleInputChange("quantity", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      // On blur, ensure we have a valid number
+                      if (quantityText.trim() === "" || Number(quantityText) <= 0 || isNaN(Number(quantityText))) {
+                        setQuantityText("1");
+                        handleInputChange("quantity", 1);
+                      }
+                    }}
                     className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                     min="1"
                   />

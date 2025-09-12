@@ -19,6 +19,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const [price, setPrice] = useState<number>(0);
   const [priceText, setPriceText] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
+  const [quantityText, setQuantityText] = useState<string>("1");
   const [status, setStatus] = useState<'planned' | 'purchased'>('planned');
   const [imageUrl, setImageUrl] = useState<string>("");
   const [manualImageUrl, setManualImageUrl] = useState<string>("");
@@ -415,8 +416,25 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                   <input
                     type="number"
                     placeholder="1"
-                    value={quantity}
-                    onChange={e => setQuantity(Number(e.target.value))}
+                    value={quantityText}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setQuantityText(value);
+                      // Convert to number only if not empty, otherwise keep current quantity
+                      if (value.trim() !== "") {
+                        const numValue = Number(value);
+                        if (!isNaN(numValue) && numValue > 0) {
+                          setQuantity(numValue);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      // On blur, ensure we have a valid number
+                      if (quantityText.trim() === "" || Number(quantityText) <= 0 || isNaN(Number(quantityText))) {
+                        setQuantityText("1");
+                        setQuantity(1);
+                      }
+                    }}
                     className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                     min="1"
                   />
