@@ -135,6 +135,7 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
 
 export const GroupedProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [collapsedProducts, setCollapsedProducts] = useState<Set<string>>(new Set());
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; alt: string }>({
     isOpen: false,
@@ -251,6 +252,16 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
       newExpanded.add(groupName);
     }
     setExpandedGroups(newExpanded);
+  };
+
+  const toggleProductCollapse = (productId: string) => {
+    const newCollapsed = new Set(collapsedProducts);
+    if (newCollapsed.has(productId)) {
+      newCollapsed.delete(productId);
+    } else {
+      newCollapsed.add(productId);
+    }
+    setCollapsedProducts(newCollapsed);
   };
 
   return (
@@ -464,13 +475,11 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
             >
               {/* Group Header */}
               <div 
-                className={`group relative p-4 sm:p-6 transition-all duration-200 ${hasMultipleProducts ? 'cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50' : 'cursor-default'}`}
-                onClick={() => hasMultipleProducts && toggleGroup(group.name)}
+                className="group relative p-4 sm:p-6 transition-all duration-200 cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50"
+                onClick={() => toggleGroup(group.name)}
               >
                 {/* Hover effect overlay */}
-                {hasMultipleProducts && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-2xl pointer-events-none"></div>
-                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-2xl pointer-events-none"></div>
                 
                 <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -502,71 +511,41 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                         </span>
                       </div>
                     )}
-                    {hasMultipleProducts && (
-                      <div className="flex items-center gap-2 self-center">
-                        <span className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden sm:block">
-                          {isExpanded ? 'Zwiń' : 'Rozwiń'}
-                        </span>
-                        <div className="p-1 sm:p-2 rounded-lg bg-slate-100 group-hover:bg-indigo-100 transition-colors duration-200">
-                          {isExpanded ? (
-                            <ChevronDown size={14} className="sm:w-4 sm:h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
-                          ) : (
-                            <ChevronRight size={14} className="sm:w-4 sm:h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
-                          )}
-                        </div>
+                    <div className="flex items-center gap-2 self-center">
+                      <span className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden sm:block">
+                        {isExpanded ? 'Zwiń' : 'Rozwiń'}
+                      </span>
+                      <div className="p-1 sm:p-2 rounded-lg bg-slate-100 group-hover:bg-indigo-100 transition-colors duration-200">
+                        {isExpanded ? (
+                          <ChevronDown size={14} className="sm:w-4 sm:h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                        ) : (
+                          <ChevronRight size={14} className="sm:w-4 sm:h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                        )}
                       </div>
-                    )}
-                    
-                                         {/* Edit/Delete buttons for single products */}
-                     {!hasMultipleProducts && group.products.length === 1 && userPermission === 'edit' && (
-                       <div className="flex items-center gap-1 sm:gap-2 self-center">
-                         {onEdit && (
-                           <button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               onEdit(group.products[0]);
-                             }}
-                             className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                             title="Edytuj produkt"
-                           >
-                             <Edit size={14} className="sm:w-4 sm:h-4" />
-                           </button>
-                         )}
-                         {onDelete && (
-                           <button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               onDelete(group.products[0].id!);
-                             }}
-                             className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                             title="Usuń produkt"
-                           >
-                             <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                           </button>
-                         )}
-                       </div>
-                     )}
+                    </div>
                   </div>
                 </div>
               </div>
 
                              {/* Expanded Products */}
-               {isExpanded && hasMultipleProducts && (
+               {isExpanded && (
                  <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-                   {group.products.map((product, index) => (
-                     <div
-                       key={product.id}
-                       className={`p-4 sm:p-6 border-b border-slate-200 last:border-b-0 hover:bg-white/80 transition-all duration-200 ${
-                         index % 2 === 0 ? 'bg-white/30' : 'bg-slate-50/30'
-                       }`}
-                     >
-                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                         <div className="flex-1">
-                           {/* Product Header */}
-                           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                             <div className="flex items-center gap-3">
+                   {group.products.map((product, index) => {
+                     const isProductCollapsed = collapsedProducts.has(product.id!);
+                     return (
+                       <div
+                         key={product.id}
+                         className={`border-b border-slate-200 last:border-b-0 transition-all duration-200 ${
+                           index % 2 === 0 ? 'bg-white/30' : 'bg-slate-50/30'
+                         }`}
+                       >
+                         {/* Product Header - Always Visible */}
+                         <div className="p-4 sm:p-6 hover:bg-white/80 transition-all duration-200">
+                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                             <div className="flex items-center gap-3 flex-1 min-w-0">
+                               {/* Product Image */}
                                {product.image_url ? (
-                                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
                                    <img
                                      src={product.image_url}
                                      alt={product.name}
@@ -580,223 +559,135 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                      }}
                                    />
                                    <div className="w-full h-full bg-indigo-100 flex items-center justify-center" style={{ display: 'none' }}>
-                                     <Package size={24} className="text-indigo-600" />
+                                     <Package size={16} className="text-indigo-600" />
                                    </div>
                                  </div>
                                ) : (
-                                 <div className="p-2 rounded-lg bg-indigo-100">
-                                   <Package size={18} className="text-indigo-600" />
+                                 <div className="p-2 rounded-lg bg-indigo-100 flex-shrink-0">
+                                   <Package size={16} className="text-indigo-600" />
                                  </div>
                                )}
-                               <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
+                               
+                               {/* Product Basic Info */}
+                               <div className="flex-1 min-w-0">
+                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                   <h5 className="text-sm sm:text-base font-semibold text-slate-900 truncate">{product.name}</h5>
+                                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(product.status)} whitespace-nowrap`}>
+                                     {getStatusText(product.status)}
+                                   </span>
+                                 </div>
+                                 <div className="flex flex-wrap items-center gap-2 mt-1">
+                                   <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                     {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                                   </span>
+                                   <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                     x{product.quantity}
+                                   </span>
+                                   {product.shop && (
+                                     <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
+                                       {product.shop}
+                                     </span>
+                                   )}
+                                 </div>
+                               </div>
                              </div>
-                             <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
-                               {getStatusText(product.status)}
-                             </span>
-                           </div>
-                           
-                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
-                             <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                               Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                             </span>
-                             <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                               Ilość: {product.quantity}
-                             </span>
-                             {product.shop && (
-                               <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                                 Sklep: {product.shop}
-                               </span>
-                             )}
-                           </div>
-                           
-                           {/* Product Description */}
-                           {product.description && (
-                             <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                               <p className="text-slate-700 text-sm leading-relaxed">
-                                 {parseTextWithLinks(product.description)}
-                               </p>
-                             </div>
-                           )}
-                             
-                             {/* Product Link */}
-                             {product.link && (
-                               <div 
-                                 className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
-                                 onClick={() => product.link && window.open(product.link, '_blank', 'noopener,noreferrer')}
+
+                             {/* Header Actions */}
+                             <div className="flex items-center gap-2">
+                               {/* Collapse/Expand Button */}
+                               <button
+                                 onClick={() => toggleProductCollapse(product.id!)}
+                                 className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                                 title={isProductCollapsed ? 'Rozwiń szczegóły' : 'Zwiń szczegóły'}
                                >
-                                 <div className="flex items-center gap-2">
-                                   <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
-                                   <span className="text-sm font-medium text-blue-700 flex-1">
-                                     Link do produktu
-                                   </span>
-                                   <button
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       product.link && copyToClipboard(product.link);
-                                     }}
-                                     className="p-2 hover:bg-blue-200 rounded transition-colors"
-                                     title="Kopiuj link"
-                                   >
-                                     <Copy size={16} className="text-blue-600" />
-                                   </button>
-                                 </div>
-                               </div>
-                             )}
-                             
-                             {/* Product Shop */}
-                             {product.shop && (
-                               <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-sm font-medium text-green-700">Sklep:</span>
-                                   <span className="text-green-600 text-sm font-medium">
-                                     {product.shop}
-                                   </span>
-                                 </div>
-                               </div>
-                             )}
-                           
-                           {/* Product Footer */}
-                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                             {product.category && (
-                               <span className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-300">
-                                 Kategoria: {product.category}
-                               </span>
-                             )}
+                                 {isProductCollapsed ? (
+                                   <ChevronRight size={16} />
+                                 ) : (
+                                   <ChevronDown size={16} />
+                                 )}
+                               </button>
+
+                               {/* Edit/Delete Buttons */}
+                               {userPermission === 'edit' && (
+                                 <>
+                                   {onEdit && (
+                                     <button
+                                       onClick={() => onEdit(product)}
+                                       className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                                       title="Edytuj produkt"
+                                     >
+                                       <Edit size={14} />
+                                     </button>
+                                   )}
+                                   {onDelete && (
+                                     <button
+                                       onClick={() => onDelete(product.id!)}
+                                       className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                       title="Usuń produkt"
+                                     >
+                                       <Trash2 size={14} />
+                                     </button>
+                                   )}
+                                 </>
+                               )}
+                             </div>
                            </div>
                          </div>
-                         
-                         {/* Action Buttons */}
-                         {userPermission === 'edit' && (
-                           <div className="flex items-center gap-2 sm:ml-4 self-start sm:self-center">
-                             {onEdit && (
-                               <button
-                                 onClick={() => onEdit(product)}
-                                 className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                 title="Edytuj produkt"
-                               >
-                                 <Edit size={14} className="sm:w-4 sm:h-4" />
-                               </button>
-                             )}
-                             {onDelete && (
-                               <button
-                                 onClick={() => onDelete(product.id!)}
-                                 className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                 title="Usuń produkt"
-                               >
-                                 <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                               </button>
-                             )}
+
+                         {/* Product Details - Collapsible */}
+                         {!isProductCollapsed && (
+                           <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 bg-white/50">
+                             <div className="border-t border-slate-200 pt-4">
+                               {/* Product Description */}
+                               {product.description && (
+                                 <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                   <p className="text-slate-700 text-sm leading-relaxed">
+                                     {parseTextWithLinks(product.description)}
+                                   </p>
+                                 </div>
+                               )}
+                                 
+                               {/* Product Link */}
+                               {product.link && (
+                                 <div 
+                                   className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                                   onClick={() => product.link && window.open(product.link, '_blank', 'noopener,noreferrer')}
+                                 >
+                                   <div className="flex items-center gap-2">
+                                     <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
+                                     <span className="text-sm font-medium text-blue-700 flex-1">
+                                       Link do produktu
+                                     </span>
+                                     <button
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         product.link && copyToClipboard(product.link);
+                                       }}
+                                       className="p-2 hover:bg-blue-200 rounded transition-colors"
+                                       title="Kopiuj link"
+                                     >
+                                       <Copy size={16} className="text-blue-600" />
+                                     </button>
+                                   </div>
+                                 </div>
+                               )}
+                               
+                               {/* Product Category */}
+                               {product.category && (
+                                 <div className="mb-3">
+                                   <span className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-300">
+                                     Kategoria: {product.category}
+                                   </span>
+                                 </div>
+                               )}
+                             </div>
                            </div>
                          )}
                        </div>
-                     </div>
-                   ))}
+                     );
+                   })}
                  </div>
                )}
-
-                                                                                                                                                                                   {/* Single Product Display (when not expanded) */}
-                 {!hasMultipleProducts && (
-                   <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-                     {group.products.map((product) => (
-                       <div key={product.id} className="p-4 sm:p-6 hover:bg-white/80 transition-all duration-200">
-                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                           <div className="flex-1">
-                             {/* Product Header */}
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                               <div className="flex items-center gap-3">
-                                 {product.image_url ? (
-                                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
-                                     <img
-                                       src={product.image_url}
-                                       alt={product.name}
-                                       className="w-full h-full object-cover"
-                                       onClick={() => openImageModal(product.image_url!, product.name)}
-                                       onError={(e) => {
-                                         const target = e.currentTarget as HTMLImageElement;
-                                         target.style.display = 'none';
-                                         const fallback = target.nextElementSibling as HTMLElement;
-                                         if (fallback) fallback.style.display = 'flex';
-                                       }}
-                                     />
-                                     <div className="w-full h-full bg-indigo-100 flex items-center justify-center" style={{ display: 'none' }}>
-                                       <Package size={24} className="text-indigo-600" />
-                                     </div>
-                                   </div>
-                                 ) : (
-                                   <div className="p-2 rounded-lg bg-indigo-100">
-                                     <Package size={18} className="text-indigo-600" />
-                                   </div>
-                                 )}
-                                 <h5 className="text-base font-semibold text-slate-900">{product.name}</h5>
-                               </div>
-                               <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
-                                 {getStatusText(product.status)}
-                               </span>
-                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                 <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                   Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                                 </span>
-                                 <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                                   Ilość: {product.quantity}
-                                 </span>
-                                 {product.shop && (
-                                   <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                                     Sklep: {product.shop}
-                                   </span>
-                                 )}
-                               </div>
-                             </div>
-                             
-                             {/* Product Description */}
-                             {product.description && (
-                               <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                 <p className="text-slate-700 text-sm leading-relaxed">
-                                   {parseTextWithLinks(product.description)}
-                                 </p>
-                               </div>
-                             )}
-                             
-                             {/* Product Link */}
-                             {product.link && (
-                               <div 
-                                 className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
-                                 onClick={() => product.link && window.open(product.link, '_blank', 'noopener,noreferrer')}
-                               >
-                                 <div className="flex items-center gap-2">
-                                   <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
-                                   <span className="text-sm font-medium text-blue-700 flex-1">
-                                     Link do produktu
-                                   </span>
-                                   <button
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       product.link && copyToClipboard(product.link);
-                                     }}
-                                     className="p-2 hover:bg-blue-200 rounded transition-colors"
-                                     title="Kopiuj link"
-                                   >
-                                     <Copy size={16} className="text-blue-600" />
-                                   </button>
-                                 </div>
-                               </div>
-                             )}
-                             
-                             {/* Product Footer */}
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                               {product.category && (
-                                 <span className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-300">
-                                   Kategoria: {product.category}
-                                 </span>
-                               )}
-                             </div>
-                           </div>
-                           
-                           {/* Przyciski edycji/usuwania są w nagłówku grupy dla pojedynczych produktów */}
-                         </div>
-                       </div>
-                     ))}
-                   </div>
-                 )}
             </div>
           );
           })
