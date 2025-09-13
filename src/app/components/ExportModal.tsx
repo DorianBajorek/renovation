@@ -805,6 +805,21 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
                                 <Square size={18} className="text-gray-400" />
                               )}
                             </button>
+
+                            {/* Product Image */}
+                            {product.image_url && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={product.image_url}
+                                  alt={product.name}
+                                  className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border border-gray-200"
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
                             
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-gray-900 text-sm sm:text-base">{product.name}</h3>
