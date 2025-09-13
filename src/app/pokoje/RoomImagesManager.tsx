@@ -101,13 +101,29 @@ export const RoomImagesManager = ({
   };
 
   const handleFileUpload = async () => {
-    if (!selectedFile || !user) return;
+    if (!user) return;
+    
+    // Get file from selectedFile state or from file input as fallback
+    const fileInput = fileInputRef.current;
+    const actualFile = selectedFile || fileInput?.files?.[0];
+    
+    if (!actualFile) {
+      console.error('File upload error: no file available', {
+        hasSelectedFile: !!selectedFile,
+        inputHasFiles: !!fileInput?.files?.length,
+        uploadMethod
+      });
+      showError('Błąd wyboru pliku', 'Nie można odnaleźć wybranego pliku. Spróbuj wybrać plik ponownie.');
+      setSelectedFile(null);
+      setFilePreview(null);
+      return;
+    }
 
     try {
       setLoading(true);
       
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append('file', actualFile);
       formData.append('userId', user.id);
 
       const response = await fetch(`/api/rooms/${roomId}/upload`, {
@@ -133,6 +149,15 @@ export const RoomImagesManager = ({
 
   const handleAddImage = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('handleAddImage called', {
+      uploadMethod,
+      selectedFile: selectedFile?.name,
+      newImageUrl,
+      filePreview: !!filePreview,
+      inputHasFiles: !!fileInputRef.current?.files?.length
+    });
+    
     if (uploadMethod === 'url') {
       await handleAddImageFromUrl();
     } else {
@@ -152,12 +177,20 @@ export const RoomImagesManager = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    
+    // Handle case when user cancels file selection (no file selected)
+    if (!file) {
+      setSelectedFile(null);
+      setFilePreview(null);
+      return;
+    }
 
     // Validate file type
     if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/jpg')) {
       showError('Nieprawidłowy format', 'Tylko pliki JPG są obsługiwane');
       event.target.value = '';
+      setSelectedFile(null);
+      setFilePreview(null);
       return;
     }
 
@@ -166,6 +199,8 @@ export const RoomImagesManager = ({
     if (file.size > maxSize) {
       showError('Plik za duży', 'Rozmiar pliku musi być mniejszy niż 5MB');
       event.target.value = '';
+      setSelectedFile(null);
+      setFilePreview(null);
       return;
     }
 
@@ -431,6 +466,28 @@ export const RoomImagesManager = ({
                       type="file"
                       accept="image/jpeg,image/jpg"
                       onChange={handleFileSelect}
+                      onFocus={() => {
+                        // When file input gets focus, check if we need to sync state
+                        const checkSync = () => {
+                          const currentFiles = fileInputRef.current?.files;
+                          if ((!currentFiles || currentFiles.length === 0) && selectedFile) {
+                            console.log('File input cleared, syncing selectedFile state');
+                            setSelectedFile(null);
+                            setFilePreview(null);
+                          }
+                        };
+                        
+                        // Check after file dialog closes (user returns focus to page)
+                        const handleWindowFocus = () => {
+                          setTimeout(checkSync, 50);
+                          window.removeEventListener('focus', handleWindowFocus);
+                        };
+                        
+                        window.addEventListener('focus', handleWindowFocus);
+                        
+                        // Also check immediately
+                        setTimeout(checkSync, 50);
+                      }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       required={uploadMethod === 'file'}
                     />
@@ -501,7 +558,7 @@ export const RoomImagesManager = ({
                   disabled={
                     loading || 
                     (uploadMethod === 'url' && !newImageUrl.match(/\.(jpg|jpeg)(\?.*)?$/i)) ||
-                    (uploadMethod === 'file' && !selectedFile)
+                    (uploadMethod === 'file' && (!selectedFile && !fileInputRef.current?.files?.[0]))
                   }
                 >
                   {loading 
