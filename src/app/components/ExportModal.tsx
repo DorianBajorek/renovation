@@ -252,9 +252,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         `Lista produktow projektu - ${convertPolishChars(roomName)}` :
         `Lista produktow - ${convertPolishChars(roomName)}`;
       
-      doc.text(title, 20, 20);
+      doc.text(title, 20, 25);
       
-      let yPos = 30;
+      let yPos = 35;
       
       // Dodaj informację o aktywnych filtrach w osobnej linii
       const activeFilters = [];
@@ -271,7 +271,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       doc.setFontSize(12);
       doc.text(`Data eksportu: ${new Date().toLocaleString('pl-PL')}`, 20, yPos);
       
-                   let yPosition = yPos + 20;
+                   let yPosition = yPos + 15;
        const startX = 20;
        // Używamy układu kartowego - nie potrzebujemy kolumn tabeli
       
@@ -290,11 +290,11 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
          let isFirstRoom = true;
          for (const [roomName, roomProducts] of Object.entries(productsByRoom)) {
            // Każdy pokój (oprócz pierwszego) zaczyna się na nowej stronie
-           if (!isFirstRoom) {
-             doc.addPage();
-             addAppBranding(doc);
-             yPosition = 20;
-           }
+          if (!isFirstRoom) {
+            doc.addPage();
+            addAppBranding(doc);
+            yPosition = 25;
+          }
            isFirstRoom = false;
            
            // Nagłówek pokoju
@@ -312,16 +312,16 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              const product = roomProducts[index];
              
              // Sprawdź czy potrzebna jest nowa strona dla produktu
-             if (yPosition > 220) {
-               doc.addPage();
-               addAppBranding(doc);
-               yPosition = 20;
-               // Dodaj ponownie nagłówek pokoju na nowej stronie
-               doc.setFontSize(16);
-               doc.setFont(undefined, 'bold');
-               doc.text(`POKÓJ: ${convertPolishChars(roomName)} (cd.)`, startX, yPosition);
-               yPosition += 15;
-             }
+            if (yPosition > 220) {
+              doc.addPage();
+              addAppBranding(doc);
+              yPosition = 25;
+              // Dodaj ponownie nagłówek pokoju na nowej stronie
+              doc.setFontSize(16);
+              doc.setFont(undefined, 'bold');
+              doc.text(`POKÓJ: ${convertPolishChars(roomName)} (cd.)`, startX, yPosition);
+              yPosition += 15;
+            }
              
              // Ramka wokół produktu - kompaktowa wysokość
              const productBoxHeight = product.description ? 45 : 35;
@@ -432,11 +432,11 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            const product = selectedProductsList[index];
            
            // Sprawdź czy potrzebna jest nowa strona
-           if (yPosition > 200) {
-             doc.addPage();
-             addAppBranding(doc);
-             yPosition = 20;
-           }
+          if (yPosition > 200) {
+            doc.addPage();
+            addAppBranding(doc);
+            yPosition = 25;
+          }
            
            // Ramka wokół produktu - kompaktowa wysokość
            const productBoxHeight = product.description ? 45 : 35;
