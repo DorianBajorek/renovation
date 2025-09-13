@@ -156,6 +156,15 @@ export default function PokojePage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button 
                 onClick={() => {
+                  router.push(`/pokoje/dashboard`);
+                }}
+                className="flex items-center gap-2 px-4 py-3 bg-indigo-100 text-indigo-700 rounded-xl font-medium hover:bg-indigo-200 transition-colors"
+              >
+                <PieChart size={18} />
+                <span>Dashboard</span>
+              </button>
+              <button 
+                onClick={() => {
                   if (!user?.id) {
                     alert('Brak ID użytkownika');
                     return;

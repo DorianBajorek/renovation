@@ -397,6 +397,15 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                   <button 
                     onClick={() => {
+                      router.push(`/projekty/${projectId}/dashboard`);
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-indigo-100 text-indigo-700 rounded-xl font-medium hover:bg-indigo-200 transition-colors text-sm sm:text-base"
+                  >
+                    <PieChart size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    <span>Dashboard</span>
+                  </button>
+                  <button 
+                    onClick={() => {
                       if (!user?.id || !projectId) {
                         alert('Brak ID użytkownika lub projektu');
                         return;
