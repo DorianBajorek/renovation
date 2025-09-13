@@ -1,10 +1,9 @@
 "use client";
-import { Plus, FolderOpen, ChevronRight, PieChart, Download, Calendar, Users, Home, Building, Briefcase, Trash2, Edit, Share2, Eye } from "lucide-react";
+import { Plus, FolderOpen, ChevronRight, PieChart, Calendar, Users, Home, Building, Briefcase, Trash2, Edit, Share2, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Project } from "../types";
 import { AddProjectForm } from "../projekty/AddProjectForm";
 import { EditProjectForm } from "../projekty/EditProjectForm";
-import { ExportModal } from "../components/ExportModal";
 import { ShareProjectModal } from "../projekty/ShareProjectModal";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -17,7 +16,6 @@ export default function ProjektyPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [sharingProject, setSharingProject] = useState<Project | null>(null);
@@ -236,23 +234,6 @@ export default function ProjektyPage() {
               )}
             </div>
 
-            {activeTab === 'own' && (
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                <button 
-                  onClick={() => {
-                    if (!user?.id) {
-                      alert('Brak ID użytkownika');
-                      return;
-                    }
-                    setShowExportModal(true);
-                  }}
-                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors text-sm sm:text-base"
-                >
-                  <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
-                  <span>Eksportuj</span>
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -459,17 +440,6 @@ export default function ProjektyPage() {
         type="danger"
       />
 
-      {showExportModal && (
-        <ExportModal
-          isOpen={showExportModal}
-          onClose={() => setShowExportModal(false)}
-          roomId={"all"}
-          roomName="Wszystkie projekty"
-          userId={user?.id}
-          isProjectExport={true}
-          projectId={undefined}
-        />
-      )}
 
       {showShareModal && sharingProject && (
         <ShareProjectModal
