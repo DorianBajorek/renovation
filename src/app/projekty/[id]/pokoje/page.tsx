@@ -17,6 +17,8 @@ import {
   Car, 
   DoorOpen, 
   TrendingUp, 
+  TrendingDown,
+  Minus,
   Monitor, 
   Dumbbell,
   Baby,
@@ -30,6 +32,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Room } from "../../../types";
+import { Product } from "../../../types/product";
 import { AddRoomForm } from "../../../pokoje/AddRoomForm";
 import { EditRoomForm } from "../../../pokoje/EditRoomForm";
 import { ExportModal } from "../../../components/ExportModal";
@@ -43,11 +46,22 @@ interface ProjectRoomsPageProps {
   }>;
 }
 
+interface ProductGroup {
+  name: string;
+  products: Product[];
+  totalValue: number;
+  maxPrice: number;
+  minPrice: number;
+  avgPrice: number;
+  totalQuantity: number;
+}
+
 export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [project, setProject] = useState<any>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -55,6 +69,141 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
   const [loading, setLoading] = useState(true);
   const [projectId, setProjectId] = useState<string>('');
   const [userPermission, setUserPermission] = useState<'read' | 'edit'>('read');
+  const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
+
+  // Function to toggle cost scenario cards
+  const toggleCard = (cardId: string) => {
+    const newFlipped = new Set(flippedCards);
+    if (newFlipped.has(cardId)) {
+      newFlipped.delete(cardId);
+    } else {
+      newFlipped.add(cardId);
+    }
+    setFlippedCards(newFlipped);
+  };
+
+  // Function to group products by name (within the same room context)
+  const groupProductsByName = (products: Product[]): ProductGroup[] => {
+    const groups: Record<string, Product[]> = {};
+    
+    products.forEach(product => {
+      const normalizedName = product.name.toLowerCase().trim();
+      if (!groups[normalizedName]) {
+        groups[normalizedName] = [];
+      }
+      groups[normalizedName].push(product);
+    });
+
+    return Object.entries(groups).map(([normalizedName, products]) => {
+      const prices = products.map(p => p.price).sort((a, b) => a - b);
+      const maxPrice = Math.max(...prices);
+      const minPrice = Math.min(...prices);
+      
+      const medianPrice = prices.length % 2 === 0 
+        ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+        : prices[Math.floor(prices.length / 2)];
+      
+      const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+      const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
+      const displayName = products[0].name;
+
+      return {
+        name: displayName,
+        products,
+        totalValue,
+        maxPrice,
+        minPrice,
+        avgPrice: medianPrice,
+        totalQuantity
+      };
+    }).sort((a, b) => b.totalValue - a.totalValue);
+  };
+
+  // Function to calculate scenarios for a single room (same logic as GroupedProductList)
+  const calculateRoomScenarios = (roomProducts: Product[]) => {
+    const roomGroups = groupProductsByName(roomProducts);
+    
+    const totalPurchasedValue = roomProducts
+      .filter(product => product.status === 'purchased')
+      .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    
+    let expensiveScenario = totalPurchasedValue;
+    let averageScenario = totalPurchasedValue;
+    let cheapScenario = totalPurchasedValue;
+
+    roomGroups.forEach(group => {
+      const purchasedProducts = group.products.filter(p => p.status === 'purchased');
+      const plannedProducts = group.products.filter(p => p.status === 'planned');
+      
+      if (plannedProducts.length > 0 && purchasedProducts.length === 0) {
+        const plannedValues = plannedProducts.map(p => p.price * p.quantity).sort((a, b) => a - b);
+        
+        const maxValue = Math.max(...plannedValues);
+        const minValue = Math.min(...plannedValues);
+        const medianValue = plannedValues.length % 2 === 0 
+          ? (plannedValues[plannedValues.length / 2 - 1] + plannedValues[plannedValues.length / 2]) / 2
+          : plannedValues[Math.floor(plannedValues.length / 2)];
+        
+        expensiveScenario += maxValue;
+        averageScenario += medianValue;
+        cheapScenario += minValue;
+      }
+    });
+
+    return { expensiveScenario, averageScenario, cheapScenario };
+  };
+
+  // Function to calculate cost scenarios for all products
+  // Oblicza scenariusze dla każdego pokoju osobno, potem sumuje wyniki
+  const calculateProjectScenarios = () => {
+    if (allProducts.length === 0) {
+      return { 
+        expensiveScenario: 0,
+        averageScenario: 0,
+        cheapScenario: 0,
+        totalPurchasedValue: 0,
+        totalPlannedValue: 0
+      };
+    }
+    
+    const totalPurchasedValue = allProducts
+      .filter(product => product.status === 'purchased')
+      .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    
+    const totalPlannedValue = allProducts
+      .filter(product => product.status === 'planned')
+      .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+
+    // Grupuj produkty według pokoji i oblicz scenariusze dla każdego pokoju osobno
+    const productsByRoom = new Map<string, Product[]>();
+    allProducts.forEach(product => {
+      const roomId = product.room_id || 'unknown';
+      if (!productsByRoom.has(roomId)) {
+        productsByRoom.set(roomId, []);
+      }
+      productsByRoom.get(roomId)!.push(product);
+    });
+
+    // Sumuj scenariusze ze wszystkich pokoi
+    let totalExpensiveScenario = 0;
+    let totalAverageScenario = 0;
+    let totalCheapScenario = 0;
+
+    productsByRoom.forEach((roomProducts, roomId) => {
+      const roomScenarios = calculateRoomScenarios(roomProducts);
+      totalExpensiveScenario += roomScenarios.expensiveScenario;
+      totalAverageScenario += roomScenarios.averageScenario;
+      totalCheapScenario += roomScenarios.cheapScenario;
+    });
+
+    return { 
+      expensiveScenario: totalExpensiveScenario,
+      averageScenario: totalAverageScenario,
+      cheapScenario: totalCheapScenario,
+      totalPurchasedValue,
+      totalPlannedValue
+    };
+  };
 
   useEffect(() => {
     const getProjectId = async () => {
@@ -90,17 +239,46 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
               icon: room.icon || 'Home',
             }));
             setRooms(mappedRooms);
-            // Store user permission for conditional rendering
-            setUserPermission(data.userPermission);
-          }
-          setLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching rooms:', error);
-          setLoading(false);
-        });
-    }
-  }, [user, projectId]);
+          // Store user permission for conditional rendering
+          setUserPermission(data.userPermission);
+
+          // Fetch all products from all rooms in the project
+          const fetchAllProducts = async () => {
+            try {
+              const allProductsPromises = mappedRooms.map((room: Room) => 
+                fetch(`/api/products?roomId=${room.id}&userId=${user.id}&projectId=${projectId}`)
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.error) {
+                      console.error('Error fetching products for room:', room.id, data.error);
+                      return [];
+                    }
+                    return data.products || [];
+                  })
+                  .catch(error => {
+                    console.error('Error fetching products for room:', room.id, error);
+                    return [];
+                  })
+              );
+
+              const allProductsArrays = await Promise.all(allProductsPromises);
+              const allProductsFlat = allProductsArrays.flat();
+              setAllProducts(allProductsFlat);
+            } catch (error) {
+              console.error('Error fetching all products:', error);
+            }
+          };
+
+          fetchAllProducts();
+        }
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching rooms:', error);
+        setLoading(false);
+      });
+  }
+}, [user, projectId]);
 
   const handleAddRoom = async (room: Room) => {
     if (!user || !project) return;
@@ -132,6 +310,9 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
 
   // Use project expenses from API instead of summing room expenses
   const totalExpenses = project?.expenses || 0;
+  
+  // Calculate scenarios
+  const scenarios = calculateProjectScenarios();
 
   if (loading) {
     return (
@@ -172,16 +353,17 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
                 <div className="flex-1 text-center md:text-left">
                   <h2 className="text-base sm:text-lg font-medium text-slate-700 mb-2">
-                    Wydatki pokoi w projekcie
+                    Wydatki i przewidywania projektu
                   </h2>
                   <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mb-3">
                     <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
                       {totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                     </span>
                     <span className="text-xs sm:text-sm text-slate-500">
-                      dla {rooms.length} pomieszczeń
+                      wydane z {rooms.length} pomieszczeń
                     </span>
                   </div>
+
                   
                   {/* Pasek postępu budżetu projektu */}
                   {project?.budget && (
@@ -205,8 +387,8 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                         ></div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-slate-500">
-                                          <span>Budżet projektu: {project.budget?.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
-                  <span>Pozostało: {(project.budget - totalExpenses).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
+                        <span>Budżet projektu: {project.budget?.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
+                        <span>Pozostało: {(project.budget - totalExpenses).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</span>
                       </div>
                     </div>
                   )}
@@ -229,26 +411,121 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                 </div>
               </div>
 
-              {project && (
-                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-slate-50 rounded-xl">
-                  <h3 className="font-medium text-slate-700 mb-2 text-sm sm:text-base">Informacje o projekcie</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
-                    <div>
-                      <span className="text-slate-500">Status:</span>
-                      <span className="ml-2 font-medium text-slate-700">
-                        {project.status === 'active' ? 'Aktywny' : 
-                         project.status === 'completed' ? 'Zakończony' : project.status}
-                      </span>
+              {/* Cost Scenarios Section - Only show if we have products */}
+              {allProducts.length > 0 && (
+                <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6 border border-indigo-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-slate-900">Scenariusze kosztów całego projektu</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Scenariusz najdroższy */}
+                    <div 
+                      className="relative h-40 cursor-pointer perspective-1000"
+                      onClick={() => toggleCard('expensive')}
+                    >
+                      <div className={`absolute inset-0 transition-transform duration-500 transform-style-preserve-3d ${
+                        flippedCards.has('expensive') ? 'rotate-y-180' : ''
+                      }`}>
+                        {/* Front */}
+                        <div className="absolute inset-0 bg-white rounded-xl p-4 border border-indigo-200 backface-hidden">
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp size={20} className="text-red-500" />
+                            <span className="text-sm font-medium text-slate-600">Najdroższy</span>
+                          </div>
+                          <div className="text-xl sm:text-2xl font-bold text-red-600">
+                            {scenarios.expensiveScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Kliknij dla szczegółów
+                          </p>
+                        </div>
+                        {/* Back */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200 backface-hidden rotate-y-180">
+                          <div className="h-full flex flex-col justify-center">
+                            <h4 className="text-sm font-semibold text-red-800 mb-2">Scenariusz najdroższy</h4>
+                            <ul className="text-xs text-red-700 space-y-1">
+                              <li>• Zakupione produkty: rzeczywista cena</li>
+                              <li>• W każdym pokoju: najdroższa opcja z grup</li>
+                              <li>• Sumuje się ze wszystkich pokoi</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-500">Budżet:</span>
-                      <span className="ml-2 font-medium text-slate-700">
-                        {project.budget?.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                      </span>
+
+                    {/* Scenariusz średni */}
+                    <div 
+                      className="relative h-40 cursor-pointer perspective-1000"
+                      onClick={() => toggleCard('average')}
+                    >
+                      <div className={`absolute inset-0 transition-transform duration-500 transform-style-preserve-3d ${
+                        flippedCards.has('average') ? 'rotate-y-180' : ''
+                      }`}>
+                        {/* Front */}
+                        <div className="absolute inset-0 bg-white rounded-xl p-4 border border-indigo-200 backface-hidden">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Minus size={20} className="text-blue-500" />
+                            <span className="text-sm font-medium text-slate-600">Średni</span>
+                          </div>
+                          <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                            {scenarios.averageScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Kliknij dla szczegółów
+                          </p>
+                        </div>
+                        {/* Back */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 backface-hidden rotate-y-180">
+                          <div className="h-full flex flex-col justify-center">
+                            <h4 className="text-sm font-semibold text-blue-800 mb-2">Scenariusz średni</h4>
+                            <ul className="text-xs text-blue-700 space-y-1">
+                              <li>• Zakupione produkty: rzeczywista cena</li>
+                              <li>• W każdym pokoju: mediana cen z grup</li>
+                              <li>• Najbardziej prawdopodobny koszt</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Scenariusz najtańszy */}
+                    <div 
+                      className="relative h-40 cursor-pointer perspective-1000"
+                      onClick={() => toggleCard('cheap')}
+                    >
+                      <div className={`absolute inset-0 transition-transform duration-500 transform-style-preserve-3d ${
+                        flippedCards.has('cheap') ? 'rotate-y-180' : ''
+                      }`}>
+                        {/* Front */}
+                        <div className="absolute inset-0 bg-white rounded-xl p-4 border border-indigo-200 backface-hidden">
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingDown size={20} className="text-green-500" />
+                            <span className="text-sm font-medium text-slate-600">Najtańszy</span>
+                          </div>
+                          <div className="text-xl sm:text-2xl font-bold text-green-600">
+                            {scenarios.cheapScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Kliknij dla szczegółów
+                          </p>
+                        </div>
+                        {/* Back */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200 backface-hidden rotate-y-180">
+                          <div className="h-full flex flex-col justify-center">
+                            <h4 className="text-sm font-semibold text-green-800 mb-2">Scenariusz najtańszy</h4>
+                            <ul className="text-xs text-green-700 space-y-1">
+                              <li>• Zakupione produkty: rzeczywista cena</li>
+                              <li>• W każdym pokoju: najtańsza opcja z grup</li>
+                              <li>• Minimalny możliwy koszt</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         </div>
