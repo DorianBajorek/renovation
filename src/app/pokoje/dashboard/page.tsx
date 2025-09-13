@@ -39,15 +39,13 @@ interface RoomExpenseData {
   totalExpenses: number;
   productCount: number;
   averageProductCost: number;
+  purchasedAmount: number;
+  plannedAmount: number;
+  expensiveScenario: number;
+  averageScenario: number;
+  cheapScenario: number;
 }
 
-interface ProductCategoryData {
-  category: string;
-  totalCost: number;
-  productCount: number;
-  averageCost: number;
-  color: string;
-}
 
 // Component for CSS-based pie chart
 const PieChartCSS = ({ data, title, size = 200 }: { 
@@ -182,6 +180,85 @@ export default function RoomsDashboard() {
     }
   }, [user]);
 
+  // Function to group products by name (within the same room context)
+  const groupProductsByName = (products: Product[]): Array<{
+    name: string;
+    products: Product[];
+    totalValue: number;
+    maxPrice: number;
+    minPrice: number;
+    avgPrice: number;
+    totalQuantity: number;
+  }> => {
+    const groups: Record<string, Product[]> = {};
+    
+    products.forEach(product => {
+      const normalizedName = product.name.toLowerCase().trim();
+      if (!groups[normalizedName]) {
+        groups[normalizedName] = [];
+      }
+      groups[normalizedName].push(product);
+    });
+
+    return Object.entries(groups).map(([normalizedName, products]) => {
+      const prices = products.map(p => p.price).sort((a, b) => a - b);
+      const maxPrice = Math.max(...prices);
+      const minPrice = Math.min(...prices);
+      
+      const medianPrice = prices.length % 2 === 0 
+        ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+        : prices[Math.floor(prices.length / 2)];
+      
+      const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+      const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
+      const displayName = products[0].name;
+
+      return {
+        name: displayName,
+        products,
+        totalValue,
+        maxPrice,
+        minPrice,
+        avgPrice: medianPrice,
+        totalQuantity
+      };
+    }).sort((a, b) => b.totalValue - a.totalValue);
+  };
+
+  // Function to calculate scenarios for a single room
+  const calculateRoomScenarios = (roomProducts: Product[]) => {
+    const roomGroups = groupProductsByName(roomProducts);
+    
+    const totalPurchasedValue = roomProducts
+      .filter(product => product.status === 'purchased')
+      .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    
+    let expensiveScenario = totalPurchasedValue;
+    let averageScenario = totalPurchasedValue;
+    let cheapScenario = totalPurchasedValue;
+
+    roomGroups.forEach(group => {
+      const purchasedProducts = group.products.filter(p => p.status === 'purchased');
+      const plannedProducts = group.products.filter(p => p.status === 'planned');
+      
+      if (plannedProducts.length > 0 && purchasedProducts.length === 0) {
+        const plannedValues = plannedProducts.map(p => p.price * p.quantity).sort((a, b) => a - b);
+        
+        const maxValue = Math.max(...plannedValues);
+        const minValue = Math.min(...plannedValues);
+        const medianValue = plannedValues.length % 2 === 0 
+          ? (plannedValues[plannedValues.length / 2 - 1] + plannedValues[plannedValues.length / 2]) / 2
+          : plannedValues[Math.floor(plannedValues.length / 2)];
+        
+        expensiveScenario += maxValue;
+        averageScenario += medianValue;
+        cheapScenario += minValue;
+      }
+    });
+
+    return { expensiveScenario, averageScenario, cheapScenario };
+  };
+
   // Calculate room expense data
   const roomExpenseData: RoomExpenseData[] = rooms.map(room => {
     const roomProducts = allProducts.filter(product => product.room_id === room.id);
@@ -189,45 +266,31 @@ export default function RoomsDashboard() {
     const productCount = roomProducts.length;
     const averageProductCost = productCount > 0 ? totalExpenses / productCount : 0;
     
+    // Calculate purchased and planned amounts
+    const purchasedAmount = roomProducts
+      .filter(product => product.status === 'purchased')
+      .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    
+    const plannedAmount = roomProducts
+      .filter(product => product.status === 'planned')
+      .reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    
+    // Calculate scenarios
+    const scenarios = calculateRoomScenarios(roomProducts);
+    
     return {
       room,
       totalExpenses,
       productCount,
-      averageProductCost
+      averageProductCost,
+      purchasedAmount,
+      plannedAmount,
+      expensiveScenario: scenarios.expensiveScenario,
+      averageScenario: scenarios.averageScenario,
+      cheapScenario: scenarios.cheapScenario
     };
   }).filter(data => data.totalExpenses > 0);
 
-  // Calculate product category data
-  const categoryMap = new Map<string, { totalCost: number; count: number }>();
-  allProducts.forEach(product => {
-    const category = product.category || 'Inne';
-    const cost = product.price * product.quantity;
-    
-    if (categoryMap.has(category)) {
-      const existing = categoryMap.get(category)!;
-      categoryMap.set(category, {
-        totalCost: existing.totalCost + cost,
-        count: existing.count + 1
-      });
-    } else {
-      categoryMap.set(category, { totalCost: cost, count: 1 });
-    }
-  });
-
-  const productCategoryData: ProductCategoryData[] = Array.from(categoryMap.entries()).map(([category, data], index) => {
-    const colors = [
-      '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', 
-      '#EC4899', '#6B7280', '#14B8A6', '#F97316', '#84CC16'
-    ];
-    
-    return {
-      category,
-      totalCost: data.totalCost,
-      productCount: data.count,
-      averageCost: data.totalCost / data.count,
-      color: colors[index % colors.length]
-    };
-  }).sort((a, b) => b.totalCost - a.totalCost);
 
   // Prepare chart data
   const roomChartData = roomExpenseData.map((data, index) => {
@@ -243,11 +306,6 @@ export default function RoomsDashboard() {
     };
   });
 
-  const categoryChartData = productCategoryData.map(data => ({
-    label: data.category,
-    value: data.totalCost,
-    color: data.color
-  }));
 
   // Calculate statistics
   const totalExpenses = roomExpenseData.reduce((sum, data) => sum + data.totalExpenses, 0);
@@ -350,23 +408,44 @@ export default function RoomsDashboard() {
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-              {/* Room Expenses Chart */}
+            <div className="mb-6 sm:mb-8">
               <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
-                <PieChartCSS 
-                  data={roomChartData} 
-                  title="Wydatki według pokoi" 
-                  size={250}
-                />
-              </div>
-
-              {/* Product Categories Chart */}
-              <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
-                <PieChartCSS 
-                  data={categoryChartData} 
-                  title="Wydatki według kategorii" 
-                  size={250}
-                />
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <PieChartCSS 
+                      data={roomChartData} 
+                      title="Wydatki według pokoi" 
+                      size={280}
+                    />
+                  </div>
+                  <div className="flex-1 lg:pl-6">
+                    <h3 className="text-xl font-semibold text-slate-900 mb-4">Analiza wydatków</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-slate-600 font-medium">Łączna kwota:</span>
+                        <span className="text-lg font-bold text-slate-900">
+                          {roomExpenseData.reduce((sum, data) => sum + data.totalExpenses, 0).toLocaleString('pl-PL', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                          })} PLN
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-slate-600 font-medium">Liczba pokoi:</span>
+                        <span className="text-lg font-bold text-slate-900">{roomExpenseData.length}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-slate-600 font-medium">Średnia na pokój:</span>
+                        <span className="text-lg font-bold text-slate-900">
+                          {(roomExpenseData.reduce((sum, data) => sum + data.totalExpenses, 0) / Math.max(roomExpenseData.length, 1)).toLocaleString('pl-PL', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                          })} PLN
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -406,23 +485,45 @@ export default function RoomsDashboard() {
                           <h3 className="text-lg font-semibold text-slate-900">{data.room.name}</h3>
                         </div>
                         
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-slate-600">Wydatki:</span>
-                            <span className="font-semibold text-slate-900">
-                              {data.totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                            </span>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                              <div className="text-xs text-slate-500 font-medium mb-1">Wydano dotychczas</div>
+                              <div className="text-sm font-bold text-slate-900">
+                                {data.purchasedAmount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                              <div className="text-xs text-slate-500 font-medium mb-1">Produktów</div>
+                              <div className="text-sm font-bold text-slate-900">{data.productCount}</div>
+                            </div>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-600">Produktów:</span>
-                            <span className="font-semibold text-slate-900">{data.productCount}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-600">Średni koszt:</span>
-                            <span className="font-semibold text-slate-900">
-                              {data.averageProductCost.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                            </span>
-                          </div>
+                          
+                          {data.plannedAmount > 0 && (
+                            <div className="border-t border-slate-200 pt-3">
+                              <h4 className="text-sm font-semibold text-slate-700 mb-2">Estymaty kosztów</h4>
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center p-2 bg-red-50 rounded border border-red-200">
+                                  <span className="text-xs text-red-600">Najdroższy:</span>
+                                  <span className="text-sm font-bold text-red-700">
+                                    {data.expensiveScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center p-2 bg-yellow-50 rounded border border-yellow-200">
+                                  <span className="text-xs text-yellow-600">Średni:</span>
+                                  <span className="text-sm font-bold text-yellow-700">
+                                    {data.averageScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center p-2 bg-green-50 rounded border border-green-200">
+                                  <span className="text-xs text-green-600">Najtańszy:</span>
+                                  <span className="text-sm font-bold text-green-700">
+                                    {data.cheapScenario.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
