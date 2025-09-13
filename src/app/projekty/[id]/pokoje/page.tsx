@@ -265,13 +265,20 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                   <p className="text-slate-500 mb-4 sm:mb-6 text-sm sm:text-base">
                     Dodaj pierwszy pokój do tego projektu, aby rozpocząć planowanie remontu.
                   </p>
-                  <button
-                    onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors mx-auto text-sm sm:text-base"
-                  >
-                    <Plus size={18} className="sm:w-5 sm:h-5" />
-                    <span>Dodaj pierwszy pokój</span>
-                  </button>
+                  {userPermission === 'edit' && (
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors mx-auto text-sm sm:text-base"
+                    >
+                      <Plus size={18} className="sm:w-5 sm:h-5" />
+                      <span>Dodaj pierwszy pokój</span>
+                    </button>
+                  )}
+                  {userPermission === 'read' && (
+                    <p className="text-sm text-slate-600 text-center">
+                      Nie masz uprawnień do dodawania pokoi w tym projekcie.
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -398,18 +405,18 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
           </div>
         </main>
 
-         {showForm && (
-           <AddRoomForm
-             onAdd={handleAddRoom}
-             onClose={handleRoomFormClose}
-             projectId={projectId}
-           />
-         )}
+       {showForm && userPermission === 'edit' && (
+         <AddRoomForm
+           onAdd={handleAddRoom}
+           onClose={handleRoomFormClose}
+           projectId={projectId}
+         />
+       )}
 
-         {showEditForm && editingRoom && (
-           <EditRoomForm
-             room={editingRoom}
-             onUpdate={(updatedRoom) => {
+       {showEditForm && editingRoom && userPermission === 'edit' && (
+         <EditRoomForm
+           room={editingRoom}
+           onUpdate={(updatedRoom) => {
                setRooms(prev => prev.map(r => r.id === updatedRoom.id ? updatedRoom : r));
                setShowEditForm(false);
                setEditingRoom(null);

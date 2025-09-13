@@ -470,7 +470,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           </div>
         </main>
 
-        {showAddProductForm && (
+        {showAddProductForm && userPermission === 'edit' && (
           <AddProductForm
             roomId={roomId}
             onAdd={async (newProduct) => {
@@ -510,7 +510,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           </div>
         )}
 
-        {showEditProductForm && editingProduct && (
+        {showEditProductForm && editingProduct && userPermission === 'edit' && (
           <EditProductForm
             product={editingProduct}
             onUpdate={(updatedProduct) => {
