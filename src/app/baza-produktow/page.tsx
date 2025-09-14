@@ -191,7 +191,7 @@ export default function ProductDatabasePage() {
                 placeholder="Nazwa, opis, sklep..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500"
               />
             </div>
             <div>
@@ -199,11 +199,11 @@ export default function ProductDatabasePage() {
               <select
                 value={filterRoom}
                 onChange={(e) => setFilterRoom(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
-                <option value="all">Wszystkie pokoje</option>
+                <option value="all" className="text-gray-700">Wszystkie pokoje</option>
                 {rooms.map(room => (
-                  <option key={room} value={room}>{room}</option>
+                  <option key={room} value={room} className="text-gray-900">{room}</option>
                 ))}
               </select>
             </div>
@@ -212,11 +212,11 @@ export default function ProductDatabasePage() {
               <select
                 value={filterShop}
                 onChange={(e) => setFilterShop(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
-                <option value="all">Wszystkie sklepy</option>
+                <option value="all" className="text-gray-700">Wszystkie sklepy</option>
                 {shops.map(shop => (
-                  <option key={shop} value={shop}>{shop}</option>
+                  <option key={shop} value={shop} className="text-gray-900">{shop}</option>
                 ))}
               </select>
             </div>
