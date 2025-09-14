@@ -244,7 +244,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
       doc.setFont('helvetica');
       
       // Branding aplikacji w prawym górnym rogu
-      addAppBranding(doc);
+      await addAppBranding(doc);
       
       // Tytuł
       doc.setFontSize(20);
@@ -252,9 +252,9 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
         `Lista produktow projektu - ${convertPolishChars(roomName)}` :
         `Lista produktow - ${convertPolishChars(roomName)}`;
       
-      doc.text(title, 20, 25);
+      doc.text(title, 20, 35);
       
-      let yPos = 35;
+      let yPos = 45;
       
       // Dodaj informację o aktywnych filtrach w osobnej linii
       const activeFilters = [];
@@ -292,7 +292,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            // Każdy pokój (oprócz pierwszego) zaczyna się na nowej stronie
           if (!isFirstRoom) {
             doc.addPage();
-            addAppBranding(doc);
+            await addAppBranding(doc);
             yPosition = 25;
           }
            isFirstRoom = false;
@@ -314,7 +314,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
              // Sprawdź czy potrzebna jest nowa strona dla produktu
             if (yPosition > 220) {
               doc.addPage();
-              addAppBranding(doc);
+              await addAppBranding(doc);
               yPosition = 25;
               // Dodaj ponownie nagłówek pokoju na nowej stronie
               doc.setFontSize(16);
@@ -434,7 +434,7 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
            // Sprawdź czy potrzebna jest nowa strona
           if (yPosition > 200) {
             doc.addPage();
-            addAppBranding(doc);
+            await addAppBranding(doc);
             yPosition = 25;
           }
            
@@ -576,12 +576,53 @@ export const ExportModal = ({ isOpen, onClose, roomId, roomName, userId, project
 
 
 
+  // Funkcja do konwersji SVG na canvas
+  const svgToCanvas = (svgString: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Nie można utworzyć kontekstu canvas'));
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Błąd ładowania obrazu SVG'));
+      
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(svgBlob);
+      img.src = url;
+    });
+  };
+
   // Funkcja do dodawania brandingu aplikacji
-  const addAppBranding = (doc: jsPDF) => {
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(100, 100, 100);
-    doc.text('PlanRemontu', 170, 15);
+  const addAppBranding = async (doc: jsPDF) => {
+    try {
+      // Załaduj SVG i przekonwertuj na canvas
+      const logoResponse = await fetch('/PlanRemontuLogo.svg');
+      const svgString = await logoResponse.text();
+      
+      // Przekonwertuj SVG na canvas
+      const logoBase64 = await svgToCanvas(svgString);
+      
+      // Dodaj logo do PDF
+      doc.addImage(logoBase64, 'PNG', 140, 3, 40, 20);
+      console.log('Logo SVG przekonwertowane i dodane do PDF');
+      
+    } catch (error) {
+      console.warn('Nie udało się załadować logo SVG, używam tekstu:', error);
+      // Fallback do tekstu jeśli logo się nie załaduje
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(100, 100, 100);
+      doc.text('PlanRemontu', 170, 15);
+    }
     
     // Reset koloru i fontu
     doc.setTextColor(0, 0, 0);
