@@ -62,6 +62,7 @@ export default function Nav() {
         {isAuthenticated ? (
           <>
             <Link href="/projekty" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Projekty</Link>
+            <Link href="/baza-produktow" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Baza produktów</Link>
             <Link href="/profil" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Profil</Link>
             <div className="flex items-center gap-4">
               <span className="text-gray-600 text-sm">Witaj, {user?.firstName}!</span>
@@ -113,6 +114,13 @@ export default function Nav() {
                 onClick={handleMenuOptionClick}
               >
                 Projekty
+              </Link>
+              <Link 
+                href="/baza-produktow" 
+                className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors"
+                onClick={handleMenuOptionClick}
+              >
+                Baza produktów
               </Link>
               <Link 
                 href="/profil" 
