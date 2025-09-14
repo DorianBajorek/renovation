@@ -62,6 +62,7 @@ export default function Nav() {
         {isAuthenticated ? (
           <>
             <Link href="/projekty" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Projekty</Link>
+            <Link href="/profil" className="text-gray-800 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg">Profil</Link>
             <div className="flex items-center gap-4">
               <span className="text-gray-600 text-sm">Witaj, {user?.firstName}!</span>
               <button 
@@ -112,6 +113,13 @@ export default function Nav() {
                 onClick={handleMenuOptionClick}
               >
                 Projekty
+              </Link>
+              <Link 
+                href="/profil" 
+                className="py-3 px-4 hover:bg-blue-50 rounded-lg text-gray-800 hover:text-blue-600 transition-colors"
+                onClick={handleMenuOptionClick}
+              >
+                Profil
               </Link>
               <div className="py-3 px-4 text-gray-600 text-sm">Witaj, {user?.firstName}!</div>
               <button 
