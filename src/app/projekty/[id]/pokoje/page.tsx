@@ -342,11 +342,11 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
         <div className="px-4 sm:px-6 md:px-12 mb-8">
           <div className="max-w-7xl mx-auto">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/projekty')}
               className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 text-slate-700 hover:bg-white transition-colors mb-4 sm:mb-6"
             >
               <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base">Powrót do projektu</span>
+              <span className="text-sm sm:text-base">Powrót do projektów</span>
             </button>
 
             <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
