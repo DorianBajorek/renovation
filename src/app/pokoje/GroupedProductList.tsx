@@ -1,7 +1,7 @@
 "use client";
 import { Product } from "../types/product";
 import { Package, Edit, Trash2, CheckCircle, Clock, ShoppingCart, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus, Search, X, Copy, ExternalLink } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ImageModal } from "../../components/ImageModal";
 
 interface ProductListProps {
@@ -134,7 +134,11 @@ const groupProductsByName = (products: Product[]): ProductGroup[] => {
 };
 
 export const GroupedProductList = ({ products, onEdit, onDelete, userPermission = 'edit' }: ProductListProps) => {
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  // Initialize expandedGroups with all group names to keep them open by default
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
+    const groups = groupProductsByName(products);
+    return new Set(groups.map(group => group.name));
+  });
   const [collapsedProducts, setCollapsedProducts] = useState<Set<string>>(new Set());
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; alt: string }>({
@@ -145,6 +149,19 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
   
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Update expandedGroups when products change to ensure new groups are also expanded
+  useEffect(() => {
+    const groups = groupProductsByName(products);
+    const groupNames = new Set(groups.map(group => group.name));
+    
+    // Add any new group names to the existing expanded groups
+    setExpandedGroups(prevExpanded => {
+      const newExpanded = new Set(prevExpanded);
+      groupNames.forEach(name => newExpanded.add(name));
+      return newExpanded;
+    });
+  }, [products]);
 
   const toggleCard = (cardId: string) => {
     const newFlipped = new Set(flippedCards);
