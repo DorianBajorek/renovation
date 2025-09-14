@@ -14,6 +14,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // First get all room IDs for the user
+    const { data: userRooms, error: roomsError } = await supabase
+      .from('rooms')
+      .select('id')
+      .eq('user_id', userId);
+
+    if (roomsError) {
+      console.error('Database error fetching user rooms:', roomsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch user rooms' },
+        { status: 500 }
+      );
+    }
+
+    if (!userRooms || userRooms.length === 0) {
+      return NextResponse.json([], {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
+    const roomIds = userRooms.map(room => room.id);
+
     // Get all products for user's rooms
     const { data: products, error } = await supabase
       .from('products')
@@ -25,7 +54,7 @@ export async function GET(request: NextRequest) {
           user_id
         )
       `)
-      .eq('rooms.user_id', userId)
+      .in('room_id', roomIds)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -36,8 +65,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform data to include room name
-    const transformedProducts = products?.map(product => ({
+    // Transform data to include room name and double-check user ownership
+    const transformedProducts = products?.filter(product => 
+      product.rooms?.user_id === userId
+    ).map(product => ({
       ...product,
       room_name: product.rooms?.name || 'Nieznany pokój',
       rooms: undefined // Remove rooms object from response

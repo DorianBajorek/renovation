@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "../types/product";
-import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link, Store } from "lucide-react";
+import { Package, X, Tag, FileText, Banknote, Hash, ShoppingCart, CheckCircle, Link, Store, Database, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AddProductFormProps {
@@ -12,6 +12,9 @@ interface AddProductFormProps {
 
 export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'new' | 'database'>('new');
+  
+  // States for new product form
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
@@ -26,6 +29,95 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
   const [showManualInput, setShowManualInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [extractingImage, setExtractingImage] = useState(false);
+
+  // States for database selection
+  const [databaseProducts, setDatabaseProducts] = useState<Product[]>([]);
+  const [loadingDatabase, setLoadingDatabase] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+
+  // Fetch products from database
+  useEffect(() => {
+    if (activeTab === 'database' && user?.id) {
+      fetchDatabaseProducts();
+    }
+  }, [activeTab, user?.id]);
+
+  const fetchDatabaseProducts = async () => {
+    if (!user?.id) return;
+    
+    setLoadingDatabase(true);
+    try {
+      const response = await fetch(`/api/products/all?userId=${user.id}`);
+      if (response.ok) {
+        const products = await response.json();
+        setDatabaseProducts(products);
+      }
+    } catch (error) {
+      console.error('Error fetching database products:', error);
+    } finally {
+      setLoadingDatabase(false);
+    }
+  };
+
+  // Filter products based on search
+  const filteredDatabaseProducts = databaseProducts.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.shop?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Get unique products by link (same logic as in database page)
+  const uniqueProducts = filteredDatabaseProducts.reduce((acc, product) => {
+    const key = product.link || product.id;
+    if (!acc[key] || acc[key].created_at < product.created_at) {
+      acc[key] = product;
+    }
+    return acc;
+  }, {} as Record<string, Product>);
+  
+  const uniqueProductsList = Object.values(uniqueProducts);
+
+  const handleAddFromDatabase = async () => {
+    if (!selectedProduct || !user?.id) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: selectedProduct.name,
+          description: selectedProduct.description,
+          link: selectedProduct.link,
+          shop: selectedProduct.shop,
+          price: selectedProduct.price,
+          quantity: selectedQuantity,
+          status: 'planned', // Default to planned when adding from database
+          roomId,
+          userId: user.id,
+          image_url: selectedProduct.image_url,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Błąd podczas dodawania produktu');
+      }
+
+      const newProduct = await response.json();
+      onAdd(newProduct);
+      onClose();
+    } catch (error) {
+      console.error("Błąd podczas dodawania produktu z bazy:", error);
+      alert(error instanceof Error ? error.message : 'Wystąpił błąd podczas dodawania produktu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to extract shop name from URL
   const extractShopFromUrl = (url: string): string => {
@@ -178,7 +270,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
       <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col border border-white/20">
         {/* Header - Fixed */}
         <div className="p-6 sm:p-8 border-b border-slate-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-100 rounded-xl">
                 <Package size={24} className="text-indigo-600" />
@@ -188,7 +280,7 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
                   Dodaj produkt
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Wypełnij szczegóły nowego produktu
+                  {activeTab === 'new' ? 'Wypełnij szczegóły nowego produktu' : 'Wybierz produkt z twojej bazy'}
                 </p>
               </div>
             </div>
@@ -199,11 +291,38 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
               <X size={20} className="text-slate-500" />
             </button>
           </div>
+          
+          {/* Tabs */}
+          <div className="flex bg-slate-100 rounded-xl p-1">
+            <button
+              onClick={() => setActiveTab('new')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'new'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Plus size={16} />
+              Dodaj nowy
+            </button>
+            <button
+              onClick={() => setActiveTab('database')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'database'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Database size={16} />
+              Z bazy
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8">
-          <form id="add-product-form" onSubmit={handleSubmit} className="space-y-6">
+          {activeTab === 'new' ? (
+            <form id="add-product-form" onSubmit={handleSubmit} className="space-y-6">
             {/* Nazwa produktu */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -501,6 +620,113 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
             )}
 
           </form>
+          ) : (
+            /* Database Products Selection */
+            <div className="space-y-6">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Wyszukaj produkt
+                </label>
+                <div className="relative">
+                  <Tag size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Wpisz nazwę produktu..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              {/* Products List */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Dostępne produkty ({uniqueProductsList.length})
+                </label>
+                
+                {loadingDatabase ? (
+                  <div className="flex items-center justify-center py-12 text-slate-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-3"></div>
+                    Ładowanie produktów...
+                  </div>
+                ) : uniqueProductsList.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <Database size={48} className="mx-auto mb-4 text-slate-300" />
+                    <p className="text-sm">
+                      {searchTerm ? 'Brak produktów spełniających kryteria' : 'Brak produktów w bazie'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto space-y-2 border border-slate-200 rounded-xl">
+                    {uniqueProductsList.map((product) => (
+                      <div
+                        key={product.id}
+                        onClick={() => setSelectedProduct(product)}
+                        className={`p-4 cursor-pointer transition-all hover:bg-slate-50 border-l-4 ${
+                          selectedProduct?.id === product.id
+                            ? 'border-l-indigo-500 bg-indigo-50'
+                            : 'border-l-transparent'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {product.image_url ? (
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
+                              <Package size={20} className="text-slate-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-slate-900 truncate">{product.name}</h4>
+                            <p className="text-sm text-slate-600 mb-1">
+                              {new Intl.NumberFormat('pl-PL', {
+                                style: 'currency',
+                                currency: 'PLN'
+                              }).format(product.price)}
+                              {product.shop && ` • ${product.shop}`}
+                            </p>
+                            {product.description && (
+                              <p className="text-xs text-slate-500 line-clamp-2">{product.description}</p>
+                            )}
+                          </div>
+                          {selectedProduct?.id === product.id && (
+                            <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                              <CheckCircle size={14} className="text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity for selected product */}
+              {selectedProduct && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Ilość
+                  </label>
+                  <div className="relative">
+                    <Hash size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="number"
+                      min="1"
+                      value={selectedQuantity}
+                      onChange={(e) => setSelectedQuantity(parseInt(e.target.value) || 1)}
+                      className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer - Fixed */}
@@ -514,24 +740,45 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
             >
               Anuluj
             </button>
-            <button
-              type="submit"
-              form="add-product-form"
-              className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              disabled={loading || !name || price <= 0}
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Dodawanie...
-                </>
-              ) : (
-                <>
-                  <Package size={16} />
-                  Dodaj produkt
-                </>
-              )}
-            </button>
+            {activeTab === 'new' ? (
+              <button
+                type="submit"
+                form="add-product-form"
+                className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={loading || !name || price <= 0}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Dodawanie...
+                  </>
+                ) : (
+                  <>
+                    <Package size={16} />
+                    Dodaj produkt
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAddFromDatabase}
+                disabled={!selectedProduct || loading}
+                className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Dodawanie...
+                  </>
+                ) : (
+                  <>
+                    <Database size={16} />
+                    Dodaj z bazy
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
