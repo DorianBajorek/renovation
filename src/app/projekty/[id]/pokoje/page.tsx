@@ -145,11 +145,22 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
           ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
           : prices[Math.floor(prices.length / 2)];
         
-        // For each scenario, choose the best option (one product from the group)
-        // This represents choosing the best single option for this product type
-        expensiveScenario += maxPrice;
-        averageScenario += medianPrice;
-        cheapScenario += minPrice;
+        // Check if all products in the group have the same price (same product, different quantities)
+        const uniquePrices = [...new Set(plannedProducts.map(p => p.price))];
+        const isSameProduct = uniquePrices.length === 1;
+        
+        if (isSameProduct) {
+          // Same product with different quantities - multiply by total quantity
+          const totalQuantity = plannedProducts.reduce((sum, product) => sum + product.quantity, 0);
+          expensiveScenario += maxPrice * totalQuantity;
+          averageScenario += medianPrice * totalQuantity;
+          cheapScenario += minPrice * totalQuantity;
+        } else {
+          // Different products in the same group - choose one best option
+          expensiveScenario += maxPrice;
+          averageScenario += medianPrice;
+          cheapScenario += minPrice;
+        }
       }
     });
 
@@ -422,6 +433,7 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
                   </button>
                 </div>
               </div>
+
 
               {/* Cost Scenarios Section - Only show if we have products */}
               {allProducts.length > 0 && (
