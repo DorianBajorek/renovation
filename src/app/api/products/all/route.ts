@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // First get all room IDs for the user
+    // Get all room IDs for the user (own rooms)
     const { data: userRooms, error: roomsError } = await supabase
       .from('rooms')
       .select('id')
@@ -28,7 +28,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!userRooms || userRooms.length === 0) {
+    // Get all room IDs from shared projects
+    const { data: sharedProjectRooms, error: sharedRoomsError } = await supabase
+      .from('project_shares')
+      .select(`
+        projects!project_shares_project_id_fkey(
+          id,
+          name,
+          user_id,
+          rooms:rooms(
+            id,
+            name,
+            user_id
+          )
+        )
+      `)
+      .eq('shared_with_id', userId);
+
+    if (sharedRoomsError) {
+      console.error('Database error fetching shared project rooms:', sharedRoomsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch shared project rooms' },
+        { status: 500 }
+      );
+    }
+
+    // Combine all room IDs (own + shared)
+    const ownRoomIds = userRooms?.map(room => room.id) || [];
+    const sharedRoomIds = sharedProjectRooms?.flatMap(share => 
+      share.projects?.rooms?.map((room: any) => room.id) || []
+    ) || [];
+    
+    const allRoomIds = [...ownRoomIds, ...sharedRoomIds];
+
+    if (allRoomIds.length === 0) {
       return NextResponse.json([], {
         status: 200,
         headers: {
@@ -41,9 +74,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const roomIds = userRooms.map(room => room.id);
-
-    // Get all products for user's rooms
+    // Get all products for user's rooms and shared project rooms
     const { data: products, error } = await supabase
       .from('products')
       .select(`
@@ -51,10 +82,20 @@ export async function GET(request: NextRequest) {
         rooms:rooms(
           id,
           name,
-          user_id
+          user_id,
+          project_id,
+          projects:projects(
+            id,
+            name,
+            user_id,
+            users:users!projects_user_id_fkey(
+              first_name,
+              last_name
+            )
+          )
         )
       `)
-      .in('room_id', roomIds)
+      .in('room_id', allRoomIds)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -65,14 +106,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform data to include room name and double-check user ownership
-    const transformedProducts = products?.filter(product => 
-      product.rooms?.user_id === userId
-    ).map(product => ({
-      ...product,
-      room_name: product.rooms?.name || 'Nieznany pokój',
-      rooms: undefined // Remove rooms object from response
-    })) || [];
+    // Transform data to include room name, project info, and ownership info
+    const transformedProducts = products?.map(product => {
+      const room = product.rooms;
+      const project = room?.projects;
+      const owner = project?.users;
+      
+      // Determine if this is a shared product
+      const isShared = project?.user_id !== userId;
+      const isOwnRoom = room?.user_id === userId;
+      
+      return {
+        ...product,
+        room_name: room?.name || 'Nieznany pokój',
+        project_name: project?.name || 'Brak projektu',
+        project_id: project?.id || null,
+        is_shared: isShared,
+        is_own_room: isOwnRoom,
+        owner_name: isShared && owner ? `${owner.first_name} ${owner.last_name}` : 'Ty',
+        rooms: undefined // Remove rooms object from response
+      };
+    }) || [];
 
     return NextResponse.json(transformedProducts, {
       status: 200,

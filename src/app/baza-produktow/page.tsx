@@ -19,6 +19,12 @@ interface Product {
   created_at: string;
   updated_at: string;
   room_name?: string;
+  // New fields for shared projects
+  project_name?: string;
+  project_id?: string;
+  is_shared?: boolean;
+  is_own_room?: boolean;
+  owner_name?: string;
 }
 
 export default function ProductDatabasePage() {
@@ -29,6 +35,7 @@ export default function ProductDatabasePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterShop, setFilterShop] = useState<string>('all');
   const [filterRoom, setFilterRoom] = useState<string>('all');
+  const [filterProject, setFilterProject] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -76,21 +83,24 @@ export default function ProductDatabasePage() {
 
   const uniqueProductsList = Object.values(uniqueProducts);
 
-  // Get unique shops and rooms for filters
+  // Get unique shops, rooms, and projects for filters
   const shops = [...new Set(uniqueProductsList.map(p => p.shop).filter((shop): shop is string => Boolean(shop)))];
   const rooms = [...new Set(uniqueProductsList.map(p => p.room_name).filter((room): room is string => Boolean(room)))];
+  const projects = [...new Set(uniqueProductsList.map(p => p.project_name).filter((project): project is string => Boolean(project)))];
 
-  // Filter products based on search term, shop and room
+  // Filter products based on search term, shop, room, and project
   const filteredProducts = uniqueProductsList.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.shop?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.room_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      product.room_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesShop = filterShop === 'all' || product.shop === filterShop;
     const matchesRoom = filterRoom === 'all' || product.room_name === filterRoom;
+    const matchesProject = filterProject === 'all' || product.project_name === filterProject;
 
-    return matchesSearch && matchesShop && matchesRoom;
+    return matchesSearch && matchesShop && matchesRoom && matchesProject;
   });
 
   // Sort products
@@ -183,7 +193,7 @@ export default function ProductDatabasePage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtry i sortowanie</h3>
           
           {/* Filters Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Szukaj</label>
               <input
@@ -217,6 +227,19 @@ export default function ProductDatabasePage() {
                 <option value="all" className="text-gray-700">Wszystkie sklepy</option>
                 {shops.map(shop => (
                   <option key={shop} value={shop} className="text-gray-900">{shop}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Projekt</label>
+              <select
+                value={filterProject}
+                onChange={(e) => setFilterProject(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              >
+                <option value="all" className="text-gray-700">Wszystkie projekty</option>
+                {projects.map(project => (
+                  <option key={project} value={project} className="text-gray-900">{project}</option>
                 ))}
               </select>
             </div>
@@ -337,6 +360,16 @@ export default function ProductDatabasePage() {
                     <p className="text-xs text-gray-500">
                       {product.room_name} • {product.quantity} szt.
                     </p>
+                    {product.is_shared && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          📤 {product.project_name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          przez {product.owner_name}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Price */}
