@@ -312,10 +312,10 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
       averageScenario: scenarios.averageScenario,
       cheapScenario: scenarios.cheapScenario
     };
-  }).filter(data => data.totalExpenses > 0);
+  }).filter(data => data.purchasedAmount > 0 || data.plannedAmount > 0);
 
 
-  // Prepare chart data
+  // Prepare chart data for real expenses
   const roomChartData = roomExpenseData.map((data, index) => {
     const colors = [
       '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', 
@@ -324,22 +324,22 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
     
     return {
       label: data.room.name,
-      value: data.totalExpenses,
+      value: data.purchasedAmount,
       color: colors[index % colors.length]
     };
-  });
+  }).filter(data => data.value > 0);
 
 
-  // Calculate statistics
-  const totalExpenses = roomExpenseData.reduce((sum, data) => sum + data.totalExpenses, 0);
-  const averageRoomExpense = roomExpenseData.length > 0 ? totalExpenses / roomExpenseData.length : 0;
+  // Calculate statistics - use purchased amounts for real expenses
+  const totalPurchasedExpenses = roomExpenseData.reduce((sum, data) => sum + data.purchasedAmount, 0);
+  const averageRoomExpense = roomExpenseData.length > 0 ? totalPurchasedExpenses / roomExpenseData.length : 0;
   const mostExpensiveRoom = roomExpenseData.reduce((max, current) => 
-    current.totalExpenses > max.totalExpenses ? current : max, 
-    { room: { name: 'N/A' }, totalExpenses: 0 } as RoomExpenseData
+    current.purchasedAmount > max.purchasedAmount ? current : max, 
+    { room: { name: 'N/A' }, purchasedAmount: 0 } as RoomExpenseData
   );
   const cheapestRoom = roomExpenseData.reduce((min, current) => 
-    current.totalExpenses < min.totalExpenses ? current : min, 
-    { room: { name: 'N/A' }, totalExpenses: Infinity } as RoomExpenseData
+    current.purchasedAmount < min.purchasedAmount ? current : min, 
+    { room: { name: 'N/A' }, purchasedAmount: Infinity } as RoomExpenseData
   );
 
   if (loading) {
@@ -386,7 +386,7 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
                   <span className="text-slate-600 font-medium">Całkowite wydatki</span>
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-slate-900">
-                  {totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {totalPurchasedExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
               </div>
 
@@ -409,7 +409,7 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
                   {mostExpensiveRoom.room.name}
                 </div>
                 <div className="text-sm text-slate-600">
-                  {mostExpensiveRoom.totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
+                  {mostExpensiveRoom.purchasedAmount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
                 </div>
               </div>
 
@@ -419,11 +419,11 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
                   <span className="text-slate-600 font-medium">Najtańszy pokój</span>
                 </div>
                 <div className="text-lg sm:text-xl font-bold text-slate-900">
-                  {cheapestRoom.totalExpenses !== Infinity ? cheapestRoom.room.name : 'N/A'}
+                  {cheapestRoom.purchasedAmount !== Infinity ? cheapestRoom.room.name : 'N/A'}
                 </div>
                 <div className="text-sm text-slate-600">
-                  {cheapestRoom.totalExpenses !== Infinity 
-                    ? `${cheapestRoom.totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
+                  {cheapestRoom.purchasedAmount !== Infinity 
+                    ? `${cheapestRoom.purchasedAmount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
                     : 'Brak danych'
                   }
                 </div>
@@ -432,22 +432,27 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
 
             {/* Charts Section */}
             <div className="mb-6 sm:mb-8">
-              <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6">
+                Analiza wydatków - wykresy kołowe
+              </h2>
+              
+              {/* Real Expenses Chart */}
+              <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60 mb-6">
                 <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
                   <div className="flex-shrink-0">
                     <PieChartCSS 
                       data={roomChartData} 
-                      title="Wydatki według pokoi" 
+                      title="Rzeczywiste wydatki według pokoi" 
                       size={280}
                     />
                   </div>
                   <div className="flex-1 lg:pl-6">
-                    <h3 className="text-xl font-semibold text-slate-900 mb-4">Analiza wydatków</h3>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-4">Analiza rzeczywistych wydatków</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <span className="text-slate-600 font-medium">Łączna kwota:</span>
+                        <span className="text-slate-600 font-medium">Rzeczywiste wydatki:</span>
                         <span className="text-lg font-bold text-slate-900">
-                          {roomExpenseData.reduce((sum, data) => sum + data.totalExpenses, 0).toLocaleString('pl-PL', { 
+                          {roomExpenseData.reduce((sum, data) => sum + data.purchasedAmount, 0).toLocaleString('pl-PL', { 
                             minimumFractionDigits: 2, 
                             maximumFractionDigits: 2 
                           })} PLN
@@ -460,7 +465,7 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
                       <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <span className="text-slate-600 font-medium">Średnia na pokój:</span>
                         <span className="text-lg font-bold text-slate-900">
-                          {(roomExpenseData.reduce((sum, data) => sum + data.totalExpenses, 0) / Math.max(roomExpenseData.length, 1)).toLocaleString('pl-PL', { 
+                          {(roomExpenseData.reduce((sum, data) => sum + data.purchasedAmount, 0) / Math.max(roomExpenseData.length, 1)).toLocaleString('pl-PL', { 
                             minimumFractionDigits: 2, 
                             maximumFractionDigits: 2 
                           })} PLN
@@ -468,6 +473,66 @@ export default function ProjectDashboard({ params }: ProjectDashboardProps) {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Prediction Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Expensive Scenario Chart */}
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
+                  <PieChartCSS 
+                    data={roomExpenseData.map((data, index) => {
+                      const colors = [
+                        '#8B5CF6', '#EF4444', '#3B82F6', '#F59E0B', '#10B981',
+                        '#EC4899', '#F97316', '#06B6D4', '#84CC16', '#F43F5E'
+                      ];
+                      return {
+                        label: data.room.name,
+                        value: data.expensiveScenario,
+                        color: colors[index % colors.length]
+                      };
+                    }).filter(data => data.value > 0)} 
+                    title="Scenariusz najdroższy" 
+                    size={200}
+                  />
+                </div>
+
+                {/* Average Scenario Chart */}
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
+                  <PieChartCSS 
+                    data={roomExpenseData.map((data, index) => {
+                      const colors = [
+                        '#F59E0B', '#8B5CF6', '#EF4444', '#10B981', '#3B82F6',
+                        '#F97316', '#EC4899', '#06B6D4', '#84CC16', '#F43F5E'
+                      ];
+                      return {
+                        label: data.room.name,
+                        value: data.averageScenario,
+                        color: colors[index % colors.length]
+                      };
+                    }).filter(data => data.value > 0)} 
+                    title="Scenariusz średni" 
+                    size={200}
+                  />
+                </div>
+
+                {/* Cheap Scenario Chart */}
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 sm:p-6 border border-white/60">
+                  <PieChartCSS 
+                    data={roomExpenseData.map((data, index) => {
+                      const colors = [
+                        '#10B981', '#8B5CF6', '#EF4444', '#3B82F6', '#F59E0B',
+                        '#06B6D4', '#EC4899', '#F97316', '#84CC16', '#F43F5E'
+                      ];
+                      return {
+                        label: data.room.name,
+                        value: data.cheapScenario,
+                        color: colors[index % colors.length]
+                      };
+                    }).filter(data => data.value > 0)} 
+                    title="Scenariusz najtańszy" 
+                    size={200}
+                  />
                 </div>
               </div>
             </div>
