@@ -70,8 +70,8 @@ export const AddProductForm = ({ onAdd, onClose, roomId }: AddProductFormProps) 
 
   // Get unique products by link (same logic as in database page)
   const uniqueProducts = filteredDatabaseProducts.reduce((acc, product) => {
-    const key = product.link || product.id;
-    if (!acc[key] || acc[key].created_at < product.created_at) {
+    const key = product.link || product.id || `temp-${product.name}-${Date.now()}`;
+    if (!acc[key] || (acc[key].created_at && product.created_at && acc[key].created_at < product.created_at)) {
       acc[key] = product;
     }
     return acc;
