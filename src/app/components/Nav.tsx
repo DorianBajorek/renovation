@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Nav() {
@@ -39,9 +40,15 @@ export default function Nav() {
   // Pokaż loading state podczas ładowania danych autoryzacji
   if (loading) {
     return (
-      <header className="relative w-full flex justify-between items-center p-6 border-b border-gray-200 bg-white shadow-sm">
-        <div className="text-2xl font-bold text-black flex items-center gap-2">
-          🏡 PlanRemontu
+      <header className="relative w-full flex justify-between items-center p-4 border-b border-gray-200 bg-white shadow-sm h-20">
+        <div className="flex items-center ml-8">
+          <Image 
+            src="/PlanRemontuLogo.svg" 
+            alt="PlanRemontu Logo" 
+            width={200} 
+            height={60}
+            className="object-contain"
+          />
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-medium">
           <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
@@ -51,10 +58,16 @@ export default function Nav() {
   }
 
   return (
-    <header className="relative w-full flex justify-between items-center p-6 border-b border-gray-200 bg-white shadow-sm">
+    <header className="relative w-full flex justify-between items-center p-4 border-b border-gray-200 bg-white shadow-sm h-20">
       {/* Logo jako link do strony głównej */}
-      <Link href="/" className="text-2xl font-bold text-black flex items-center gap-2">
-        🏡 PlanRemontu
+      <Link href="/" className="flex items-center ml-8">
+        <Image 
+          src="/PlanRemontuLogo.svg" 
+          alt="PlanRemontu Logo" 
+          width={200} 
+          height={60}
+          className="object-contain"
+        />
       </Link>
       
       {/* Desktop Navigation */}

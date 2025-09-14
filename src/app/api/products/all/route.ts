@@ -55,9 +55,10 @@ export async function GET(request: NextRequest) {
 
     // Combine all room IDs (own + shared)
     const ownRoomIds = userRooms?.map(room => room.id) || [];
-    const sharedRoomIds = sharedProjectRooms?.flatMap(share => 
-      share.projects?.rooms?.map((room: any) => room.id) || []
-    ) || [];
+    const sharedRoomIds = sharedProjectRooms?.flatMap(share => {
+      const project = share.projects;
+      return project?.rooms?.map((room: any) => room.id) || [];
+    }) || [];
     
     const allRoomIds = [...ownRoomIds, ...sharedRoomIds];
 
