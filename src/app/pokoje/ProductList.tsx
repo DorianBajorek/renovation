@@ -502,7 +502,7 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
 
                 {/* Shop */}
                 {product.shop && (
-                  <div className="text-sm text-gray-600 truncate">
+                  <div className="text-base text-gray-700 truncate font-medium">
                     🏪 {product.shop}
                   </div>
                 )}
@@ -521,7 +521,7 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
                       href={product.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                      className="text-blue-600 hover:text-blue-800 text-base font-semibold flex items-center gap-1"
                     >
                       🔗 Zobacz produkt
                     </a>

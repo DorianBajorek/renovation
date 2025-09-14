@@ -543,7 +543,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
 
                              {/* Expanded Products - Tile Layout */}
               {isExpanded && (
-                <div className="bg-gradient-to-br from-gray-50 to-white p-6 border-t-2 border-dashed border-gray-200">
+                <div className="bg-gradient-to-br from-gray-50 to-white p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {group.products.map((product) => (
                       <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 relative border border-slate-200">
@@ -618,7 +618,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
 
                           {/* Shop */}
                           {product.shop && (
-                            <div className="text-xs text-gray-600 truncate">
+                            <div className="text-sm text-gray-700 truncate font-medium">
                               🏪 {product.shop}
                             </div>
                           )}
@@ -637,7 +637,7 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
                                 href={product.link} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1"
+                                className="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1"
                               >
                                 🔗 Zobacz
                               </a>
@@ -677,6 +677,8 @@ export const GroupedProductList = ({ products, onEdit, onDelete, userPermission 
     </div>
   );
 };
+
+
 
 
 
