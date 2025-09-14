@@ -136,17 +136,20 @@ export default function ProjectRoomsPage({ params }: ProjectRoomsPageProps) {
       const plannedProducts = group.products.filter(p => p.status === 'planned');
       
       if (plannedProducts.length > 0 && purchasedProducts.length === 0) {
-        const plannedValues = plannedProducts.map(p => p.price * p.quantity).sort((a, b) => a - b);
+        // Get all prices from planned products in this group
+        const prices = plannedProducts.map(p => p.price).sort((a, b) => a - b);
         
-        const maxValue = Math.max(...plannedValues);
-        const minValue = Math.min(...plannedValues);
-        const medianValue = plannedValues.length % 2 === 0 
-          ? (plannedValues[plannedValues.length / 2 - 1] + plannedValues[plannedValues.length / 2]) / 2
-          : plannedValues[Math.floor(plannedValues.length / 2)];
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const medianPrice = prices.length % 2 === 0 
+          ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+          : prices[Math.floor(prices.length / 2)];
         
-        expensiveScenario += maxValue;
-        averageScenario += medianValue;
-        cheapScenario += minValue;
+        // For each scenario, choose the best option (one product from the group)
+        // This represents choosing the best single option for this product type
+        expensiveScenario += maxPrice;
+        averageScenario += medianPrice;
+        cheapScenario += minPrice;
       }
     });
 
