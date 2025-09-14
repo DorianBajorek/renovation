@@ -416,166 +416,134 @@ export const ProductList = ({ products, onEdit, onDelete, userPermission = 'edit
         </div>
       </div>
 
-      <div className="space-y-4">
-        {searchTerm && filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <Search size={64} className="text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-slate-700 mb-2">
-              Nie znaleziono produktów
-            </h3>
-            <p className="text-slate-500 mb-4">
-              Spróbuj zmienić kryteria wyszukiwania.
-            </p>
-            <button
-              onClick={() => setSearchTerm('')}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Wyczyść wyszukiwanie
-            </button>
-          </div>
-        ) : (
-          filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/60 overflow-hidden hover:shadow-xl transition-all duration-200"
+      {/* Products Grid */}
+      {searchTerm && filteredProducts.length === 0 ? (
+        <div className="text-center py-12">
+          <Search size={64} className="text-slate-300 mx-auto mb-4" />
+          <h3 className="text-xl font-medium text-slate-700 mb-2">
+            Nie znaleziono produktów
+          </h3>
+          <p className="text-slate-500 mb-4">
+            Spróbuj zmienić kryteria wyszukiwania.
+          </p>
+          <button
+            onClick={() => setSearchTerm('')}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
-            <div className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div className="flex-1">
-                  {/* Product Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                    <div className="flex items-center gap-3">
-                      {product.image_url ? (
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow duration-200">
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            onClick={() => openImageModal(product.image_url!, product.name)}
-                            onError={(e) => {
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                          <div className="w-full h-full bg-indigo-100 flex items-center justify-center" style={{ display: 'none' }}>
-                            <Package size={24} className="text-indigo-600" />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="p-2 rounded-lg bg-indigo-100">
-                          <Package size={18} className="text-indigo-600" />
-                        </div>
-                      )}
-                      <h4 className="text-lg font-semibold text-slate-900">{product.name}</h4>
-                    </div>
-                    <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(product.status)}`}>
-                      {getStatusText(product.status)}
-                    </span>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                      <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                        Cena: {product.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                      </span>
-                      <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                        Ilość: {product.quantity}
-                      </span>
-                      <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                        Wartość: {(product.price * product.quantity).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN
-                      </span>
-                      {product.shop && (
-                        <span className="text-sm font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                          Sklep: {product.shop}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Product Description */}
-                  {product.description && (
-                    <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-slate-700 text-sm leading-relaxed">
-                        {parseTextWithLinks(product.description)}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Product Link */}
-                  {product.link && (
-                    <div 
-                      className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
-                      onClick={() => product.link && window.open(product.link, '_blank', 'noopener,noreferrer')}
+            Wyczyść wyszukiwanie
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {filteredProducts.map((product) => (
+            <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 relative">
+              {/* Action Buttons - Always visible */}
+              {userPermission === 'edit' && (
+                <div className="absolute top-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 shadow-sm border border-gray-200 z-10">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(product)}
+                      className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all duration-200"
+                      title="Edytuj produkt"
                     >
-                      <div className="flex items-center gap-2">
-                        <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
-                        <span className="text-sm font-medium text-blue-700 flex-1">
-                          Link do produktu
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            product.link && copyToClipboard(product.link);
-                          }}
-                          className="p-2 hover:bg-blue-200 rounded transition-colors"
-                          title="Kopiuj link"
-                        >
-                          <Copy size={16} className="text-blue-600" />
-                        </button>
-                      </div>
-                    </div>
+                      <Edit size={14} />
+                    </button>
                   )}
-                  
-                  {/* Product Shop */}
-                  {product.shop && (
-                    <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-green-700">Sklep:</span>
-                        <span className="text-green-600 text-sm font-medium">
-                          {product.shop}
-                        </span>
-                      </div>
-                    </div>
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(product.id!)}
+                      className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
+                      title="Usuń produkt"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   )}
-                  
-                  {/* Product Footer */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                    {product.category && (
-                      <span className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-300">
-                        Kategoria: {product.category}
-                      </span>
-                    )}
-                  </div>
                 </div>
-                
-                {/* Action Buttons */}
-                {userPermission === 'edit' && (
-                  <div className="flex items-center gap-2 sm:ml-4 self-start sm:self-center">
-                    {onEdit && (
-                      <button
-                        onClick={() => onEdit(product)}
-                        className="p-1.5 sm:p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                        title="Edytuj produkt"
-                      >
-                        <Edit size={14} className="sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={() => onDelete(product.id!)}
-                        className="p-1.5 sm:p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                        title="Usuń produkt"
-                      >
-                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                      </button>
-                    )}
+              )}
+
+              {/* Image */}
+              <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                {product.image_url ? (
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name}
+                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
+                    onClick={() => openImageModal(product.image_url!, product.name)}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full flex items-center justify-center text-gray-400 text-3xl ${product.image_url ? 'hidden' : ''}`}>
+                  📦
+                </div>
+              </div>
+
+              {/* Product Info */}
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {product.quantity} szt. • {getStatusText(product.status)}
+                  </p>
+                </div>
+
+                {/* Price */}
+                <div className="text-lg font-bold text-green-600">
+                  {(product.price * product.quantity).toLocaleString('pl-PL', { 
+                    style: 'currency', 
+                    currency: 'PLN' 
+                  })}
+                </div>
+
+                {/* Shop */}
+                {product.shop && (
+                  <div className="text-sm text-gray-600 truncate">
+                    🏪 {product.shop}
+                  </div>
+                )}
+
+                {/* Category */}
+                {product.category && (
+                  <div className="text-xs text-gray-500 truncate">
+                    📂 {product.category}
+                  </div>
+                )}
+
+                {/* Link */}
+                {product.link && (
+                  <div className="pt-2">
+                    <a 
+                      href={product.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                    >
+                      🔗 Zobacz produkt
+                    </a>
+                  </div>
+                )}
+
+                {/* Description tooltip */}
+                {product.description && (
+                  <div className="pt-2">
+                    <div 
+                      className="text-xs text-gray-500 line-clamp-2 cursor-help"
+                      title={product.description}
+                    >
+                      {product.description}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Image Modal */}
       <ImageModal
