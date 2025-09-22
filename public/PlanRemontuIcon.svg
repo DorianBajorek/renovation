@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 720 280"
-     width="720" height="280"
+     viewBox="30 60 126 138"
+     width="126" height="138"
      role="img" aria-labelledby="title desc">
-  <title id="title">PlanRemontu — logo</title>
-  <desc id="desc">Ikona domu z listą kontrolną oraz napis PlanRemontu.</desc>
+  <title id="title">PlanRemontu — ikona domu</title>
+  <desc id="desc">Ikona domu z listą kontrolną, minimalna przestrzeń tła.</desc>
 
   <style type="text/css"><![CDATA[
     :root {
@@ -14,15 +14,12 @@
     .house-outline { fill: none; stroke: var(--navy); stroke-width: 10; stroke-linejoin: round; stroke-linecap: round; }
     .check { fill: none; stroke: var(--light); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
     .line { stroke: var(--light); stroke-width: 7; stroke-linecap: round; }
-    .brand { fill: var(--navy); font-family: "Inter", system-ui, sans-serif; font-weight: 700; letter-spacing: -0.5px; }
     .subtle { fill: var(--navy); opacity: 0.9; }
   ]]></style>
 
-  <!-- Ikona domu (pomniejszona do 70%) -->
   <g transform="translate(30,60) scale(0.7)">
     <path class="house-outline" d="M 90 0 L 180 60 L 180 170 C 180 185 168 197 153 197 L 27 197 C 12 197 0 185 0 170 L 0 60 Z" />
     <path class="house-outline" d="M 90 0 L 180 60" stroke-width="10" />
-    <!-- Usunięto cztery kwadraty z góry loga -->
     <g transform="translate(18,68)">
       <path class="check" d="M8 14 L18 24 L36 6" />
       <line class="line" x1="46" y1="12" x2="120" y2="12" />
@@ -31,10 +28,5 @@
       <path class="check" d="M8 94 L18 104 L36 86" />
       <line class="line" x1="46" y1="92" x2="120" y2="92" />
     </g>
-  </g>
-
-  <!-- Tekst: bliżej i minimalnie wyżej -->
-  <g transform="translate(190,170)">
-    <text class="brand" x="0" y="0" font-size="78">PlanRemontu</text>
   </g>
 </svg>
